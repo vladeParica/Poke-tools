@@ -143,5 +143,7 @@ Guarda contra dos instancias (`train_running.lock`).
 
 ## Créditos
 
-Direcciones base y tablas de nombres: script "FRLG_RNG_2.0.lua" (Devon Studios x Real.96).
+Direcciones base y tablas de nombres: "FRLG_RNG_2.0.lua" y "E_RNG_2.0.lua" de
+https://github.com/DevonStudios/LuaScripts (Devon Studios x Real.96, GPL-3.0). Allí hay
+más scripts útiles (Pickup, críticos, BizHawk, RSE); ver la sección Créditos del README.
 Datos del juego: proyecto de decompilación pret/pokefirered.
