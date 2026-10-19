@@ -34,7 +34,8 @@ registrada en SELECT**. Ejemplos de semillas en [`docs/semillas.md`](docs/semill
 2. Pon al Pokémon que vas a entrenar **primero en el equipo**.
 3. Graba la ruta al Centro (una vez): **6** en el punto de entreno → camina hasta quedar
    **frente a la enfermera** (o dentro de la zona que cura si usas `"healMode": "tile"`)
-   → **6** → vuelve al punto → **6**.
+   → **6** → vuelve al punto → **6**. También puedes usar una ruta ya grabada de
+   `trainbot/examples/routes/` (Cueva Diglett → Velocidad, Torre Pokémon → At. Esp.).
 4. **7** para iniciar. **8** muestra la ficha completa (stats, IVs, EVs, ataques).
 
 Lo que configuras en el JSON: `evs` objetivo, `targetLevel`, `species` (contra quién
