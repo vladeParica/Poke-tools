@@ -14,7 +14,26 @@ cualquier partida (FRLG USA o EUR), siempre que empieces **en el mismo punto de 
 2. En tu `FRLG_TrainBot.json` pon `"routeFile"` con ese nombre y el `healMode` de la tabla.
    Para entrenar solo contra los Pokémon que dan esos EVs, usa `"species"`
    (por ejemplo, `["Diglett", "Dugtrio"]`).
-3. Ve al punto de entreno (el primer paso de `GO`) y pulsa **7**.
+3. Ve a uno de los puntos de inicio (ver abajo) y pulsa **7**.
+
+## Dónde empezar
+
+No hace falta saber la coordenada exacta del punto de entreno. Al pulsar **7**, el bot:
+
+- **entrena ahí mismo** si estás a 2 casillas o menos del punto de entreno, en el mismo mapa;
+- **camina hasta el punto de entreno** si estás parado en cualquier casilla del camino
+  de vuelta (`BACK`), mire hacia donde mire;
+- **se detiene** con "El personaje no está en el punto de entreno" en cualquier otro sitio.
+
+Lo más fácil es empezar donde cura, que es el primer paso de `BACK`:
+
+| Ruta | Empieza aquí |
+|---|---|
+| Diglett | Centro Pokémon de Ciudad Carmín, **frente a la enfermera** (mapa 9.1, casilla 14,11) |
+| Torre | Torre Pokémon 5F, **dentro de la zona purificada** (mapa 1.92, casilla 19,16) |
+
+Para ver tu posición, pulsa **9** hasta el panel de diagnóstico: la línea `Pos` muestra
+`grupo.mapa (x,y)` con las mismas coordenadas que el archivo de ruta.
 
 ## Formato
 
