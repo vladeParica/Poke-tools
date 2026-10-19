@@ -1,0 +1,92 @@
+{
+  // ================================================================
+  //  Configuracion de FRLG_ShinyBot.lua
+  //  Guarda este archivo en la MISMA carpeta que el script.
+  //  Las lineas que empiezan con // son comentarios.
+  //  Tras cambiar algo: deten el bot (7) y pulsa 0 para recargar.
+  // ================================================================
+
+  // ---------------------- QUE BUSCAR ------------------------------
+  // true  = solo se detiene con un shiny
+  // false = no exige shiny (sirve para buscar naturaleza / IVs perfectos)
+  "shiny": true,
+
+  // Especies (solo modos Salvaje y Salvaje RNG). null = cualquiera.
+  // Ejemplo: "species": ["Magnemite"]   o   ["Pikachu", "Magnemite"]
+  "species": null,
+
+  // Naturalezas, en ingles o espanol. null = cualquiera.
+  // Ejemplo: "natures": ["Modest", "Timida"]
+  "natures": null,
+
+  // IVs minimos y maximos por estadistica (0 a 31). Para IVs exactos,
+  // pon el mismo numero en los dos. Estadisticas: hp, atk, def, spa, spd, spe
+  // (tambien sirven ps, ata, def, ate, dfe, vel).
+  // Ejemplo: "minIVs": {"hp": 31, "spa": 31, "spe": 31},  "maxIVs": {"atk": 0}
+  "minIVs": null,
+  "maxIVs": null,
+
+  // Suma minima de los 6 IVs (0-186). null = sin minimo.
+  "minIVTotal": null,
+
+  // Poder Oculto. Ejemplo: {"type": "Fuego", "minPower": 60}
+  "hiddenPower": null,
+
+  // Modo al cargar el script: "Salvaje", "Estatico", "Regalo", "Roamer",
+  // "Estatico RNG", "Regalo RNG", "Roamer RNG", "Salvaje RNG" o "Partida nueva".
+  "mode": "Salvaje RNG",
+
+  // Partida nueva: rangos de "TID xor SID" que quieres (en hex).
+  // null = los que hacen shiny a un Ditto 6x31:
+  //   "9630" Ruta 14 / Mansion (semillas 448B, BC75)
+  //   "B378" Ruta 14 / Mansion / Cueva Celeste (38F2, BDD1)
+  //   "79F8" Cueva Celeste 1P/2P (5433)
+  "newGameTSV": null,
+
+  // Semilla inicial: el bot reinicia y prueba tiempos en la pantalla de
+  // titulo hasta caer en una de estas semillas (hex). Luego carga la
+  // partida y lanza "afterSeedMode" sin cambiar de semilla.
+  // Ej. Squirtle 6x31 shiny Modest: ["BC75", "0A16", "9BAF"]
+  "initialSeeds": null,
+  "afterSeedMode": null,        // ej. "Regalo RNG" o "Salvaje RNG"
+
+  // ---------------------- CAMINAR ---------------------------------
+  "walkAxis": "horizontal",     // "horizontal" (izq/der) o "vertical" (arriba/abajo)
+  "walkFrames": 16,             // frames por paso (16 = 1 casilla caminando)
+  "holdB": false,               // correr con B (solo modo Salvaje normal)
+  "wildOneStep": true,          // Salvaje RNG: acercarse a 1 paso del encuentro antes de ir al frame
+
+  // ---------------------- SOFT RESET ------------------------------
+  "pressGapMin": 2,             // espera minima entre pulsaciones de A
+  "pressGapMax": 24,            // espera maxima (al azar, cambia la semilla)
+  "resetTimeout": 5400,         // frames sin resultado antes de reiniciar
+
+  // ---------------------- RNG -------------------------------------
+  "farSearch": 20000000,        // avances a revisar buscando el objetivo (20 millones)
+
+  // Tele Pokemon (Teachy TV): REGISTRALA EN SELECT. Si el objetivo esta
+  // lejos, el bot la abre (el RNG avanza ~313 veces por frame), la cierra
+  // poco antes del objetivo, guarda un savestate alli y sigue normal.
+  "teachy": true,
+  "teachyBeyond": 5000,         // usar la Tele si ahorra mas de estos avances de espera
+  "teachyMargin": null,         // cerrarla estos avances antes; null = automatico
+
+  "triesPerTarget": 10,         // intentos de correccion por objetivo (+-1, +-2...)
+
+  // Nueva semilla automatica (soft reset). Necesitas haber GUARDADO la
+  // partida en el lugar de la caza (frente al Pokemon o en la hierba).
+  "reseed": true,               // si no hay objetivo o fallan varios seguidos
+  "reseedAfterFailedTargets": 3,
+  "maxReseeds": 10,
+
+  // ---------------------- AL ENCONTRARLO --------------------------
+  // Guardar solo un savestate en una ranura (1-10) al encontrarlo.
+  // En VBA-rr v22 esto muestra "Error creating file", por eso viene apagado:
+  // el juego queda en pausa y tu guardas con Shift+F1.
+  "savestateSlot": null,
+  "logFile": "shiny_log.txt",
+  "stopOthers": true,           // detener las demas instancias
+  "sharedDir": null,            // carpeta compartida; null = la del script
+  "logDir": "logs",             // subcarpeta para el log y los archivos de trabajo
+  "resetOnLoad": true           // reiniciar el juego al cargar el script
+}

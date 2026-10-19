@@ -1,0 +1,83 @@
+{
+  // ================================================================
+  //  Configuracion de FRLG_TrainBot.lua (entrenar EVs y nivel)
+  //  Guarda este archivo en la MISMA carpeta que el script.
+  //  Las lineas que empiezan con // son comentarios.
+  //  Tras cambiar algo: deten el bot (7) y pulsa 0 para recargar.
+  //
+  //  Se entrena SIEMPRE el primer Pokemon del equipo.
+  // ================================================================
+
+  // ---------------------- OBJETIVO --------------------------------
+  // EVs que quieres (maximo 255 por estadistica y 510 en total).
+  // Estadisticas: hp, atk, def, spa, spd, spe  (tambien ps, ata, ate, dfe, vel).
+  // El bot solo pelea contra especies que dan EVs en estas estadisticas
+  // y huye de las que darian EVs en otras.
+  // null = sin EVs (solo subir de nivel, pelea contra todo).
+  "evs": {"atk": 252, "spe": 252, "hp": 4},
+
+  // Nivel objetivo. Se detiene cuando tiene los EVs Y este nivel.
+  // null = solo EVs.
+  "targetLevel": null,
+
+  // Detenerse al llegar a este nivel aunque falten EVs. null = sin limite.
+  "maxLevel": null,
+
+  // Pelear SOLO contra estas especies (null = las decide segun los EVs).
+  // Ejemplo: ["Rattata", "Pidgey"]
+  "species": null,
+
+  // Nunca pelear contra estas (ej. las que tienen Autodestruccion).
+  "avoidSpecies": ["Geodude", "Graveler", "Voltorb", "Electrode", "Koffing", "Weezing"],
+
+  // true = permite pasarse un poco del objetivo en las estadisticas que pediste
+  // (ej. 253 en vez de 252). false = exacto.
+  "allowOvershoot": false,
+
+  // ---------------------- COMBATE ---------------------------------
+  "healBelow": 40,      // ir al Centro si los PS quedan bajo este % al terminar un combate
+  "fleeBelow": 20,      // huir en pleno combate si los PS bajan de este %
+  "minPP": 3,           // ir al Centro si quedan menos PP en ataques que hacen dano
+
+  // Ataques nuevos al subir de nivel (cuando ya tiene 4):
+  //   "auto"  = lo aprende si hace mas dano que el peor de sus ataques y olvida
+  //             ese (primero los que no hacen dano, como Grunido). Nunca olvida MOs.
+  //   "never" = nunca aprende (responde NO)
+  //   "ask"   = te avisa y espera tu decision; si nadie responde en
+  //             "askTimeout" segundos, decide como "auto"
+  "learnMoves": "auto",
+  // Ataques que quieres al final (maximo 4, nombre en ingles). Con esta lista,
+  // en "auto" SOLO aprende estos (olvidando uno que no este en la lista) y
+  // rechaza todo lo demas. Al iniciar, el log y el panel dicen a que nivel
+  // aprende cada uno, o si necesita MT / tutor / Recordador de ataques.
+  // Ejemplo: ["Flamethrower", "Slash", "Dragon Rage", "Fire Spin"]
+  "wantedMoves": null,
+  "keepMoves": null,      // ataques que nunca debe olvidar (nombre en ingles), ej. ["Thunder Wave", "Sleep Powder"]
+  "askTimeout": 300,      // segundos; null = esperar siempre
+
+  // false = cancela las evoluciones (mantiene B)
+  // true  = deja evolucionar; tu terminas la escena y el bot sigue solo
+  "evolve": false,
+
+  "stopOnShiny": true,  // pausar si aparece un shiny salvaje (para que lo captures)
+
+  // ---------------------- AVISOS AL CELULAR -----------------------
+  // Te avisa cuando termina, encuentra un shiny, quiere aprender un ataque
+  // (modo "ask") o se detiene por algun problema.
+  // ntfy: instala la app "ntfy" (gratis, Android/iPhone), suscribete a un tema
+  // con un nombre dificil de adivinar y ponlo aqui. Discord: URL de un webhook.
+  // Ejemplo: "notify": {"ntfy": "frlg-victor-8k2p"}
+  "notify": null,
+
+  // ---------------------- CAMINAR ---------------------------------
+  "walkAxis": "horizontal",   // "horizontal" (izq/der) o "vertical" (arriba/abajo)
+  "walkFrames": 16,           // frames por paso
+
+  // ---------------------- ARCHIVOS --------------------------------
+  "routeFile": "FRLG_TrainRoute.txt",   // ruta grabada al Centro Pokemon (tecla 6)
+  // "nurse" = la ida termina frente a la enfermera y le habla.
+  // "tile"  = la ida termina en una casilla que cura al pisarla (zona purificada, Torre Pokemon 5F).
+  "healMode": "nurse",
+  "logFile": "train_log.txt",
+  "logDir": "logs"
+}

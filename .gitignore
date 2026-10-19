@@ -1,0 +1,15 @@
+# Generados al usar los bots
+logs/
+*.lock
+*.flag
+FRLG_TrainRoute*.txt
+!trainbot/examples/routes/*.txt
+# Partidas, estados y ROMs (nunca subirlas)
+*.gba
+*.sav
+*.sgm
+*.sg[0-9]
+# Caches
+__pycache__/
+trainbot/tools/pret_cache/
+*.o
