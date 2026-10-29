@@ -1,0 +1,27 @@
+name: Proponer una mejora
+description: Un modo nuevo, una opción o un bot nuevo
+labels: [mejora]
+body:
+  - type: dropdown
+    id: bot
+    attributes:
+      label: ¿Dónde encaja?
+      description: El Shiny Bot solo busca; lo demás va en un bot aparte (ADR-0003).
+      options: [Shiny Bot, Train Bot, Bot nuevo, tools/rng, Documentación]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Qué problema resuelve
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Cómo lo imaginas
+      description: Opciones del JSON, teclas, qué haría el bot paso a paso.
+  - type: textarea
+    id: edge
+    attributes:
+      label: Casos límite que se te ocurran

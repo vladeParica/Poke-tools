@@ -1,0 +1,54 @@
+name: Reportar un error
+description: El bot hace algo que no debería o se detiene sin motivo
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Gracias por avisar. **No pegues tu webhook de Discord ni tu tema de ntfy**, ni
+        adjuntes ROMs o partidas.
+  - type: dropdown
+    id: bot
+    attributes:
+      label: Bot
+      options: [Shiny Bot, Train Bot, tools/rng]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versión del bot
+      description: La primera línea de la consola de Lua (ej. "FRLG Train Bot v1.10")
+    validations:
+      required: true
+  - type: input
+    id: game
+    attributes:
+      label: Juego e idioma
+      description: La línea "Juego:" de la consola (ej. "FireRed USA v1.0")
+    validations:
+      required: true
+  - type: input
+    id: mode
+    attributes:
+      label: Modo (Shiny Bot) o estado (Train Bot)
+  - type: textarea
+    id: what
+    attributes:
+      label: Qué pasó y qué esperabas
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducirlo
+  - type: textarea
+    id: config
+    attributes:
+      label: Tu JSON (sin "notify")
+      render: jsonc
+  - type: textarea
+    id: log
+    attributes:
+      label: Últimas líneas del log y de la consola
+      render: text

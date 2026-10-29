@@ -1,0 +1,17 @@
+root = true
+
+[*]
+charset = utf-8
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{lua,c,json,md,yml}]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+# Generados por build.py (CRLF para Windows): no tocarlos a mano
+[{shinybot/FRLG_ShinyBot.lua,trainbot/FRLG_TrainBot.lua}]
+end_of_line = crlf

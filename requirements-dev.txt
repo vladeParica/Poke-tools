@@ -1,0 +1,2 @@
+# Pruebas del simulador (Lua 5.1 desde Python)
+lupa>=2.0,<3
