@@ -46,7 +46,7 @@
   // Semilla inicial: el bot reinicia y prueba tiempos en la pantalla de
   // titulo hasta caer en una de estas semillas (hex). Luego carga la
   // partida y lanza "afterSeedMode" sin cambiar de semilla.
-  // Ej. Squirtle 6x31 shiny Modest: ["BC75", "0A16", "9BAF"]
+  // Las semillas dependen de tu TID/SID: calculalas con tools/rng/. Ej. ["BC75", "0A16"]
   "initialSeeds": null,
   "afterSeedMode": null,        // ej. "Regalo RNG" o "Salvaje RNG"
 

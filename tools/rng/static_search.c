@@ -2,11 +2,14 @@
  * iniciales) shiny para una partida, con naturaleza e IVs minimos.
  * Imprime: estado(s1 = llamada del PID bajo) PID naturaleza PS At Df AtE DfE Vel total
  * Para semillas: seeds_near_target.py con el estado ANTERIOR a s1.
- * Compilar:  gcc -O2 -o static static_search.c
- * Editar tsv, naturalezas (3 Adamant, 23 Careful) y el total minimo abajo. */
+ * Compilar:  gcc -O2 -o static static_search.c -DTID=<tu TID> -DSID=<tu SID>
+ * Editar naturalezas (3 Adamant, 23 Careful) y el total minimo abajo. */
 #include <stdio.h>
 #include <stdint.h>
-int main(){ uint32_t tsv=39422^4042; uint32_t s=0;
+#if !defined(TID) || !defined(SID)
+#error "Compila con -DTID=<tu TID> -DSID=<tu SID>"
+#endif
+int main(){ uint32_t tsv=TID^SID; uint32_t s=0;
  for(uint64_t i=0;i<4294967296ULL;i++,s++){
   uint32_t s2=s*0x41C64E6Du+0x6073u; uint32_t lo=s>>16, hi=s2>>16;
   if(((lo^hi^tsv))>=8) continue;

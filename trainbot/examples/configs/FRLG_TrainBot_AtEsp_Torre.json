@@ -1,0 +1,31 @@
+{
+  // EJEMPLO: 252 EVs de At. Esp. en la Torre Pokemon (Gastly +1, Haunter +2).
+  // Ruta lista: ../routes/FRLG_TrainRoute_Torre.txt (cura en la zona purificada del 5F).
+  // Copia este archivo junto al script con el nombre FRLG_TrainBot.json
+  "evs": {"spa": 252},
+  "targetLevel": null,
+  "maxLevel": null,
+  "species": ["Gastly", "Haunter"],        // pelear SOLO contra estas; huye de las demas
+  "avoidSpecies": null,
+  "allowOvershoot": false,
+
+  "healBelow": 50,
+  "fleeBelow": 25,
+  "minPP": 3,
+
+  "learnMoves": "auto",
+  "wantedMoves": null,     // ataques que quieres al final (nombre en ingles), ej. ["Thunderbolt", "Psychic"]
+  "keepMoves": null,       // ataques que nunca debe olvidar
+  "askTimeout": 300,
+  "evolve": false,
+  "stopOnShiny": true,
+  "notify": null,
+
+  "walkAxis": "horizontal",
+  "walkFrames": 16,
+
+  "healMode": "tile",          // curarse en la zona purificada del 5F (no hace falta la enfermera)
+  "routeFile": "FRLG_TrainRoute_Torre.txt",
+  "logFile": "train_log.txt",
+  "logDir": "logs"
+}

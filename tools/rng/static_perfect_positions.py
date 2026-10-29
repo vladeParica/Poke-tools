@@ -2,7 +2,12 @@ M=0xFFFFFFFF
 A,C=0x41C64E6D,0x6073; RA,RC=0xEEB9EB65,0x0A3561A1
 nx=lambda s:(s*A+C)&M; pv=lambda s:(s*RA+RC)&M
 N="Hardy Lonely Brave Adamant Naughty Bold Docile Relaxed Impish Lax Timid Hasty Serious Jolly Naive Modest Mild Quiet Bashful Rash Calm Gentle Sassy Careful Quirky".split()
-saves={"nueva 39422/4042":39422^4042,"FR vieja 26945/3475":26945^3475,"VH 34299/8508":34299^8508}
+# Uso: python static_perfect_positions.py [TID SID [TID SID ...]]
+# Sin argumentos lista las posiciones; con TID/SID dice en cuales partidas son shiny.
+import sys
+_a=[int(x) for x in sys.argv[1:]]
+if len(_a)%2: sys.exit("Uso: python static_perfect_positions.py [TID SID [TID SID ...]]")
+saves={f"{_a[i]}/{_a[i+1]}":_a[i]^_a[i+1] for i in range(0,len(_a),2)}
 res=[]
 for hi in range(0x7FFF<<1|0, (0x7FFF<<1)+2):
   pass

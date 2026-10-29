@@ -5,16 +5,13 @@
  * (estado_inicial = estado del RNG justo antes de la llamada del slot;
  *  k = pares de PID rechazados por no coincidir con la naturaleza).
  * Luego usa seeds_near_target.py con estado_inicial para sacar semillas.
- * Compilar:  gcc -O2 -o wild wild_h1_search.c  [-DTID=.. -DSID=.. -DNAT1=.. -DNAT2=.. -DMASK=..]
+ * Compilar:  gcc -O2 -o wild wild_h1_search.c -DTID=<tu TID> -DSID=<tu SID> [-DNAT1=.. -DNAT2=.. -DMASK=..]
  * Naturalezas: indice = PID % 25 (3 Adamant, 10 Timid, 13 Jolly, 15 Modest, 23 Careful...)
  * MASK: bit N = slot N valido (Torre Pokemon 3F-6F: todos menos 7 y 9 = 0xD7F;
  *       Tunel Roca: slots 0 y 4 = 0x011; Cueva Alterada: 0xFFF). */
 #include <stdio.h>
-#ifndef TID
-#define TID 39422
-#endif
-#ifndef SID
-#define SID 4042
+#if !defined(TID) || !defined(SID)
+#error "Compila con -DTID=<tu TID> -DSID=<tu SID>"
 #endif
 #ifndef NAT1
 #define NAT1 10

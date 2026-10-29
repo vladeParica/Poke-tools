@@ -5,8 +5,8 @@ cualquier partida (FRLG USA o EUR), siempre que empieces **en el mismo punto de 
 
 | Archivo | EVs | Dónde se entrena | Dónde cura | `healMode` | JSON de ejemplo |
 |---|---|---|---|---|---|
-| `FRLG_TrainRoute_Diglett.txt` | Velocidad (Diglett +1, Dugtrio +2) | Cueva Diglett B1F, lado de Ruta 11 | Centro Pokémon de Ciudad Carmín | `nurse` | `../gastly/FRLG_TrainBot_Gastly_Fase1.json` |
-| `FRLG_TrainRoute_Torre.txt` | At. Esp. (Gastly +1, Haunter +2) | Torre Pokémon, 2 pisos sobre el 5F | Zona purificada del 5F | `tile` | `../gastly/FRLG_TrainBot_Gastly_Fase2.json` |
+| `FRLG_TrainRoute_Diglett.txt` | Velocidad (Diglett +1, Dugtrio +2) | Cueva Diglett B1F, lado de Ruta 11 | Centro Pokémon de Ciudad Carmín | `nurse` | `../configs/FRLG_TrainBot_Velocidad_Diglett.json` |
+| `FRLG_TrainRoute_Torre.txt` | At. Esp. (Gastly +1, Haunter +2) | Torre Pokémon, 2 pisos sobre el 5F | Zona purificada del 5F | `tile` | `../configs/FRLG_TrainBot_AtEsp_Torre.json` |
 
 ## Cómo usarlas
 

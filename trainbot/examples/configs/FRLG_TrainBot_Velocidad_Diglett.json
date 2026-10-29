@@ -1,0 +1,30 @@
+{
+  // EJEMPLO: 252 EVs de Velocidad en la Cueva Diglett B1F (Diglett +1, Dugtrio +2).
+  // Ruta lista: ../routes/FRLG_TrainRoute_Diglett.txt (cura en el Centro de Ciudad Carmin).
+  // Copia este archivo junto al script con el nombre FRLG_TrainBot.json
+  "evs": {"spe": 252},
+  "targetLevel": null,
+  "maxLevel": null,
+  "species": ["Diglett", "Dugtrio"],        // pelear SOLO contra estas; huye de las demas
+  "avoidSpecies": null,
+  "allowOvershoot": false,
+
+  "healBelow": 40,
+  "fleeBelow": 25,
+  "minPP": 3,
+
+  "learnMoves": "auto",
+  "wantedMoves": null,     // ataques que quieres al final (nombre en ingles), ej. ["Thunderbolt", "Psychic"]
+  "keepMoves": null,       // ataques que nunca debe olvidar
+  "askTimeout": 300,
+  "evolve": false,
+  "stopOnShiny": true,
+  "notify": null,
+
+  "walkAxis": "horizontal",
+  "walkFrames": 16,
+
+  "routeFile": "FRLG_TrainRoute_Diglett.txt",
+  "logFile": "train_log.txt",
+  "logDir": "logs"
+}
