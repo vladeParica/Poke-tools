@@ -295,6 +295,7 @@ if CONFIG.logDir and CONFIG.logDir ~= "" then
   if not okDir then
     pcall(function()
       local d = LOGDIR:gsub("/$", "")
+      if d:find('["%%$`]') then return end   -- no pasar al shell rutas con comillas o variables
       if package and package.config and package.config:sub(1, 1) == "\\" then
         os.execute('mkdir "' .. d:gsub("/", "\\") .. '" 2>nul')
       else os.execute('mkdir -p "' .. d .. '" 2>/dev/null') end

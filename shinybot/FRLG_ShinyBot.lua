@@ -426,6 +426,7 @@ end
 if not dirWritable(LOGDIR) then
   pcall(function()
     local d = LOGDIR:gsub("/$", "")
+    if d:find('["%%$`]') then return end   -- no pasar al shell rutas con comillas o variables
     if IS_WINDOWS then
       os.execute('mkdir "' .. d:gsub("/", "\\") .. '" 2>nul')
     else
