@@ -1,39 +1,51 @@
-# Poke-tools — bots para Pokémon Rojo Fuego / Verde Hoja
+<p align="center">
+  <img src="assets/logo.svg" alt="Poke-tools logo" width="160">
+</p>
 
-[![CI](https://github.com/vladeParica/Poke-tools/actions/workflows/ci.yml/badge.svg)](https://github.com/vladeParica/Poke-tools/actions/workflows/ci.yml)
-[![Licencia: GPL-3.0](https://img.shields.io/badge/licencia-GPL--3.0-blue.svg)](LICENSE)
-![Lua 5.1](https://img.shields.io/badge/Lua-5.1-2C2D72.svg)
-![VBA-rr](https://img.shields.io/badge/emulador-VBA--rr-555.svg)
+<h1 align="center">Poke-tools</h1>
 
-Scripts Lua para el emulador **VBA-rr** que cazan shinies manipulando el RNG y entrenan
-EVs y nivel de forma automática en **Pokémon Rojo Fuego y Verde Hoja** (GBA).
+<p align="center">
+  Lua bots for <b>Pokémon FireRed &amp; LeafGreen</b>: RNG-based shiny hunting and automatic EV training.
+</p>
 
-| Bot | Para qué |
+<p align="center">
+  <a href="https://github.com/vladeParica/Poke-tools/actions/workflows/ci.yml"><img src="https://github.com/vladeParica/Poke-tools/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0-blue.svg" alt="License: GPL-3.0"></a>
+  <img src="https://img.shields.io/badge/Lua-5.1-2C2D72.svg" alt="Lua 5.1">
+  <img src="https://img.shields.io/badge/emulator-VBA--rr-555.svg" alt="VBA-rr">
+</p>
+
+Scripts for the **VBA-rr** emulator that hunt shinies by manipulating the RNG and train
+EVs and levels automatically in **Pokémon FireRed and LeafGreen** (GBA).
+
+| Bot | What it does |
 |---|---|
-| [**Shiny Bot**](shinybot/) | Shinies y Pokémon perfectos: a ciegas o con RNG exacto (estáticos, regalos, roamers, salvajes), semilla inicial y SID en partida nueva |
-| [**Train Bot**](trainbot/) | EVs exactos y nivel: elige rivales y ataques, aprende ataques y va solo al Centro Pokémon |
+| [**Shiny Bot**](shinybot/) | Shiny and perfect-IV Pokémon: blind or frame-exact RNG (statics, gifts, roamers, wild), initial seed and SID on a new game |
+| [**Train Bot**](trainbot/) | Exact EVs and levels: picks opponents and moves, learns moves, walks back to the Pokémon Center on its own |
 
-## Inicio rápido
+> The bots' in-game text (panel, console, logs, JSON comments) is in **Spanish**.
 
-1. Instala VBA-rr y desactiva *Pause When Inactive*. La ROM no se incluye.
-2. Copia el `.lua` y el `.json` del bot a una carpeta.
-3. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → abre el `.lua` → *Run*.
-4. Pulsa **7** para iniciar.
+## Quick start
 
-Carga **un solo script a la vez**. Cómo usar cada bot: [Shiny Bot](shinybot/README.md) ·
+1. Install VBA-rr and turn off *Pause When Inactive*. The ROM is not included.
+2. Copy the bot's `.lua` and `.json` into a folder.
+3. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
+4. Press **7** to start.
+
+Load **only one script at a time**. How to use each bot: [Shiny Bot](shinybot/README.md) ·
 [Train Bot](trainbot/README.md).
 
-## Documentación
+## Documentation
 
-- [Documentación del proyecto](docs/README.md): requisitos, arquitectura, decisiones (ADR),
-  pruebas e instalación.
-- [Cómo contribuir](CONTRIBUTING.md) · [Cambios](CHANGELOG.md) · [Seguridad](SECURITY.md)
+- [Project documentation](docs/README.md): requirements, architecture, decisions (ADRs),
+  testing and installation.
+- [Contributing](CONTRIBUTING.md) · [Changelog](CHANGELOG.md) · [Security](SECURITY.md)
 
-## Créditos y licencia
+## Credits and license
 
-Basado en [DevonStudios/LuaScripts](https://github.com/DevonStudios/LuaScripts)
-(Devon Studios x Real.96) y en los datos de [pret/pokefirered](https://github.com/pret/pokefirered).
-Detalle en [docs/00-project/creditos.md](docs/00-project/creditos.md).
+Built on [DevonStudios/LuaScripts](https://github.com/DevonStudios/LuaScripts)
+(Devon Studios x Real.96) and data from [pret/pokefirered](https://github.com/pret/pokefirered).
+Details in [docs/00-project/credits.md](docs/00-project/credits.md).
 
-Licencia [GPL-3.0](LICENSE). Pokémon es una marca de Nintendo, Game Freak y Creatures;
-este proyecto no está afiliado a ellos.
+Licensed under [GPL-3.0](LICENSE). Pokémon is a trademark of Nintendo, Game Freak and
+Creatures; this project is not affiliated with them.
