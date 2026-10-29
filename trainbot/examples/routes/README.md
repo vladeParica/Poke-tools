@@ -1,53 +1,53 @@
-# Rutas de entrenamiento listas para usar
+# Ready-to-use training routes
 
-Rutas grabadas con la tecla **6** del Train Bot. Sirven para cualquier Pokémon y
-cualquier partida (FRLG USA o EUR), siempre que empieces **en el mismo punto de entreno**.
+Routes recorded with the Train Bot's **6** key. They work for any Pokémon and any save
+file (FRLG USA or EUR), as long as you start **from the same training spot**.
 
-| Archivo | EVs | Dónde se entrena | Dónde cura | `healMode` | JSON de ejemplo |
+| File | EVs | Training spot | Healing | `healMode` | Example JSON |
 |---|---|---|---|---|---|
-| `FRLG_TrainRoute_Diglett.txt` | Velocidad (Diglett +1, Dugtrio +2) | Cueva Diglett B1F, lado de Ruta 11 | Centro Pokémon de Ciudad Carmín | `nurse` | `../configs/FRLG_TrainBot_Velocidad_Diglett.json` |
-| `FRLG_TrainRoute_Torre.txt` | At. Esp. (Gastly +1, Haunter +2) | Torre Pokémon, 2 pisos sobre el 5F | Zona purificada del 5F | `tile` | `../configs/FRLG_TrainBot_AtEsp_Torre.json` |
+| `FRLG_TrainRoute_Diglett.txt` | Speed (Diglett +1, Dugtrio +2) | Diglett's Cave B1F, Route 11 side | Vermilion City Pokémon Center | `nurse` | `../configs/FRLG_TrainBot_Speed_Diglett.json` |
+| `FRLG_TrainRoute_Tower.txt` | Sp. Atk (Gastly +1, Haunter +2) | Pokémon Tower, two floors above 5F | 5F purified zone | `tile` | `../configs/FRLG_TrainBot_SpAtk_Tower.json` |
 
-## Cómo usarlas
+## How to use them
 
-1. Copia el `.txt` junto a `FRLG_TrainBot.lua` (con el mismo nombre).
-2. En tu `FRLG_TrainBot.json` pon `"routeFile"` con ese nombre y el `healMode` de la tabla.
-   Para entrenar solo contra los Pokémon que dan esos EVs, usa `"species"`
-   (por ejemplo, `["Diglett", "Dugtrio"]`).
-3. Ve a uno de los puntos de inicio (ver abajo) y pulsa **7**.
+1. Copy the `.txt` next to `FRLG_TrainBot.lua` (keep the file name).
+2. In your `FRLG_TrainBot.json`, set `"routeFile"` to that name and the `healMode` from
+   the table. To fight only the Pokémon that give those EVs, use `"species"`
+   (for example `["Diglett", "Dugtrio"]`).
+3. Go to one of the starting points (see below) and press **7**.
 
-## Dónde empezar
+## Where to start
 
-No hace falta saber la coordenada exacta del punto de entreno. Al pulsar **7**, el bot:
+You don't need to know the exact tile of the training spot. When you press **7**, the bot:
 
-- **entrena ahí mismo** si estás a 2 casillas o menos del punto de entreno, en el mismo mapa;
-- **camina hasta el punto de entreno** si estás parado en cualquier casilla del camino
-  de vuelta (`BACK`), mire hacia donde mire;
-- **se detiene** con "El personaje no está en el punto de entreno" en cualquier otro sitio.
+- **trains right there** if you are within 2 tiles of the training spot, on the same map;
+- **walks to the training spot** if you are standing on any tile of the way back (`BACK`),
+  facing any direction;
+- **stops** with "El personaje no está en el punto de entreno" anywhere else.
 
-Lo más fácil es empezar donde cura, que es el primer paso de `BACK`:
+The easiest is to start where you heal, which is the first step of `BACK`:
 
-| Ruta | Empieza aquí |
+| Route | Start here |
 |---|---|
-| Diglett | Centro Pokémon de Ciudad Carmín, **frente a la enfermera** (mapa 9.1, casilla 14,11) |
-| Torre | Torre Pokémon 5F, **dentro de la zona purificada** (mapa 1.92, casilla 19,16) |
+| Diglett | Vermilion City Pokémon Center, **in front of the nurse** (map 9.1, tile 14,11) |
+| Tower | Pokémon Tower 5F, **inside the purified zone** (map 1.92, tile 19,16) |
 
-Para ver tu posición, pulsa **9** hasta el panel de diagnóstico: la línea `Pos` muestra
-`grupo.mapa (x,y)` con las mismas coordenadas que el archivo de ruta.
+To see your position, press **9** until the diagnostics panel: the `Pos` line shows
+`group.map (x,y)` with the same coordinates as the route file.
 
-## Formato
+## Format
 
-Dos líneas, `GO` (punto de entreno → curación) y `BACK` (curación → punto de entreno).
-Cada paso es `grupo mapa x y dirección`, separados por `;`. Las coordenadas son las de
-memoria (mapa + 7). Al cargar, el bot limpia los pasos falsos de las puertas (`cleanRoute`).
+Two lines, `GO` (training spot → healing) and `BACK` (healing → training spot). Each step
+is `group map x y direction`, separated by `;`. Coordinates are memory coordinates (map
+tile + 7). On load, the bot removes the bogus steps recorded at doors (`cleanRoute`).
 
-Recorridos:
+Paths:
 
-- **Diglett:** B1F (1-37, x86 y77) → salida sur (1-38) → Ruta 11 (3-29) → Ciudad Carmín
-  (3-5) → Centro Pokémon (9-1), frente a la enfermera.
-- **Torre:** mapa 1-94 (x17 y21) → 1-93 → 1-92 (5F), hasta x19 y16, dentro de la zona que cura.
+- **Diglett:** B1F (1-37, x86 y77) → south exit (1-38) → Route 11 (3-29) → Vermilion City
+  (3-5) → Pokémon Center (9-1), in front of the nurse.
+- **Tower:** map 1-94 (x17 y21) → 1-93 → 1-92 (5F), to x19 y16, inside the healing zone.
 
-## Añadir una ruta
+## Adding a route
 
-Graba la tuya con la tecla **6** (ver el README principal), renómbrala
-`FRLG_TrainRoute_<Lugar>.txt`, cópiala aquí y añade una fila a la tabla.
+Record yours with the **6** key (see the [Train Bot README](../../README.md)), rename it
+`FRLG_TrainRoute_<Place>.txt`, copy it here and add a row to the table.

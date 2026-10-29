@@ -1,6 +1,6 @@
 {
   // EJEMPLO: 252 EVs de At. Esp. en la Torre Pokemon (Gastly +1, Haunter +2).
-  // Ruta lista: ../routes/FRLG_TrainRoute_Torre.txt (cura en la zona purificada del 5F).
+  // Ruta lista: ../routes/FRLG_TrainRoute_Tower.txt (cura en la zona purificada del 5F).
   // Copia este archivo junto al script con el nombre FRLG_TrainBot.json
   "evs": {"spa": 252},
   "targetLevel": null,
@@ -25,7 +25,7 @@
   "walkFrames": 16,
 
   "healMode": "tile",          // curarse en la zona purificada del 5F (no hace falta la enfermera)
-  "routeFile": "FRLG_TrainRoute_Torre.txt",
+  "routeFile": "FRLG_TrainRoute_Tower.txt",
   "logFile": "train_log.txt",
   "logDir": "logs"
 }
