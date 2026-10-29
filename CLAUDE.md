@@ -15,19 +15,28 @@ seguir trabajando sin perder lo aprendido.
 - Editar siempre `*/src/*` y regenerar con `build.py`. Los `.lua` de la raíz de
   cada bot son generados (CRLF, para Windows).
 - Lo que no se pudo probar en el juego real se dice así. Solo hay simulador.
-- **Commits:** formato Conventional Commits (`feat:`, `fix:`, `docs:`,
+- **Commits en inglés**, formato Conventional Commits (`feat:`, `fix:`, `docs:`,
   `refactor:`, `test:`, `chore:`…), **máximo 3 líneas** en total y **sin
   `Co-Authored-By` ni otras líneas de atribución**. El hook `.githooks/commit-msg`
   lo verifica (activar con `git config core.hooksPath .githooks`).
+- **No hacer `git push` sin el OK explícito del usuario** en ese momento. Commits locales sí.
+- **El repo es genérico:** nada de una partida concreta (TID/SID, semillas calculadas para
+  ella, equipo, Pokémon conseguidos). Los ejemplos usan valores neutros (TID 12345 / SID 54321).
+- **Documentación AI-DLC** en `docs/` (fases 00–06, ADRs en `docs/00-project/adr/`, puertas
+  en `.ai-dlc/gates/`). Si un cambio altera una decisión, actualizar o reemplazar su ADR.
+  Al cambiar el formato del JSON, de las rutas o las teclas, actualizar
+  `docs/02-design/api-contracts.md` y `CHANGELOG.md`.
 
 ## Estructura
 
 ```
 shinybot/   FRLG_ShinyBot.lua (generado) + .json   src/bot_body.lua, src/tables2.lua   tests/
 trainbot/   FRLG_TrainBot.lua (generado) + .json   src/train_body.lua, src/train_tables.lua
-            tools/gen_tables.py (datos de pret)   tests/   examples/ (JSON de Gastly, rutas)
+            tools/gen_tables.py (datos de pret)   tests/   examples/ (configs/, routes/)
 tools/rng/  búsquedas de RNG (C y Python) para encontrar objetivos y semillas
-docs/       semillas calculadas, equipo para la Liga
+docs/       documentación AI-DLC por fase (00-project … 06-monitoring, architecture/)
+.ai-dlc/    puertas (gates) y plantillas de la documentación
+.github/    CI (build al día + simulador), plantillas de issues y PR
 ```
 
 Build: `python shinybot/build.py`, `python trainbot/build.py`.
@@ -130,16 +139,6 @@ tipos, habilidades), aprende ataques (`auto`/`never`/`ask` con `wantedMoves`,
 Centro con la tecla 6 (ida/vuelta) y la repite. `healMode`: `nurse` o `tile`.
 Avisos con ntfy/Discord (`notify`). Tecla 8: inspección (stats, IVs, EVs, ataques).
 Guarda contra dos instancias (`train_running.lock`).
-
-## Partidas del usuario
-
-- **Partida nueva "solo shinies" (Rojo Fuego): TID 39422 / SID 4042** (xor 0x9634).
-- Rojo Fuego vieja: 26945 / 3475. Verde Hoja: 34299 / 8508.
-- Conseguidos: Squirtle Modest 6×31 shiny (semilla 9BAF), Snorlax Adamant/Careful shiny,
-  **Gastly/Haunter Modest 6×31 shiny** (PID F9426F72, Torre Pokémon) entrenado
-  252 AtE / 252 Vel / 6 PS.
-- Equipo objetivo para la Liga: Arcanine, Blastoise, Nidoking, Exeggutor, Kangaskhan,
-  Gengar. Ver `docs/equipo-liga.md`.
 
 ## Créditos
 
