@@ -1,148 +1,153 @@
-# CLAUDE.md — contexto del proyecto FRLG Bots
+# CLAUDE.md — FRLG Bots project context
 
-Bots en Lua para **Pokémon Rojo Fuego / Verde Hoja** en el emulador **VBA-rr**
-(VBA-ReRecording, Lua 5.1). El usuario juega en español y todo lo que ve
-(panel, consola, log, JSON) va **en español**. Este archivo es el contexto para
-seguir trabajando sin perder lo aprendido.
+Lua bots for **Pokémon FireRed / LeafGreen** on the **VBA-rr** emulator
+(VBA-ReRecording, Lua 5.1). This file is the context needed to keep working without
+losing what was learned.
 
-## Reglas de trabajo
+## Working rules
 
-- **No romper lo que ya funciona.** Cada cambio en un modo no debe tocar los demás.
-  El usuario lo pidió explícitamente: "estamos calibrando todos, la idea es
-  mejorarlos, no arreglar uno ni dañar otro". Antes de entregar, correr las pruebas.
-- **El Shiny Bot es "estándar, solo búsquedas".** Lo nuevo (entrenamiento, etc.) va
-  en scripts aparte (por ejemplo, `trainbot/`).
-- Editar siempre `*/src/*` y regenerar con `build.py`. Los `.lua` de la raíz de
-  cada bot son generados (CRLF, para Windows).
-- Lo que no se pudo probar en el juego real se dice así. Solo hay simulador.
-- **Commits en inglés**, formato Conventional Commits (`feat:`, `fix:`, `docs:`,
-  `refactor:`, `test:`, `chore:`…), **máximo 3 líneas** en total y **sin
-  `Co-Authored-By` ni otras líneas de atribución**. El hook `.githooks/commit-msg`
-  lo verifica (activar con `git config core.hooksPath .githooks`).
-- **No hacer `git push` sin el OK explícito del usuario** en ese momento. Commits locales sí.
-- **El repo es genérico:** nada de una partida concreta (TID/SID, semillas calculadas para
-  ella, equipo, Pokémon conseguidos). Los ejemplos usan valores neutros (TID 12345 / SID 54321).
-- **Documentación AI-DLC** en `docs/` (fases 00–06, ADRs en `docs/00-project/adr/`, puertas
-  en `.ai-dlc/gates/`). Si un cambio altera una decisión, actualizar o reemplazar su ADR.
-  Al cambiar el formato del JSON, de las rutas o las teclas, actualizar
-  `docs/02-design/api-contracts.md` y `CHANGELOG.md`.
+- **Languages:** the user plays in Spanish, so everything the player sees **in the game**
+  (panel, console, log, JSON comments) is **in Spanish**. Repository documentation
+  (README, `docs/`, CONTRIBUTING…) and commit messages are **in English**. Talk to the user
+  in Spanish.
+- **Don't break what already works.** A change in one mode must not touch the others.
+  The user asked for it explicitly: "estamos calibrando todos, la idea es mejorarlos, no
+  arreglar uno ni dañar otro". Run the tests before delivering.
+- **The Shiny Bot is "standard, search only".** New things (training, etc.) go in
+  separate scripts (e.g. `trainbot/`).
+- Always edit `*/src/*` and rebuild with `build.py`. The `.lua` files at each bot's root
+  are generated (CRLF, for Windows).
+- Anything that couldn't be tested in the real game is reported as such. There is only
+  a simulator.
+- **Commits in English**, Conventional Commits format (`feat:`, `fix:`, `docs:`,
+  `refactor:`, `test:`, `chore:`…), **3 lines at most** and **no `Co-Authored-By` or other
+  attribution lines**. The `.githooks/commit-msg` hook checks it
+  (enable with `git config core.hooksPath .githooks`).
+- **Never `git push` without the user's explicit OK** at that moment. Local commits are fine.
+- **The repo is generic:** nothing from a specific save file (TID/SID, seeds computed for
+  it, team, Pokémon obtained). Examples use neutral values (TID 12345 / SID 54321).
+- **AI-DLC documentation** in `docs/` (phases 00–06, ADRs in `docs/00-project/adr/`, gates
+  in `.ai-dlc/gates/`). If a change alters a decision, update or supersede its ADR. When
+  the JSON format, routes or keys change, update `docs/02-design/api-contracts.md` and
+  `CHANGELOG.md`.
 
-## Estructura
+## Structure
 
 ```
-shinybot/   FRLG_ShinyBot.lua (generado) + .json   src/bot_body.lua, src/tables2.lua   tests/
-trainbot/   FRLG_TrainBot.lua (generado) + .json   src/train_body.lua, src/train_tables.lua
-            tools/gen_tables.py (datos de pret)   tests/   examples/ (configs/, routes/)
-tools/rng/  búsquedas de RNG (C y Python) para encontrar objetivos y semillas
-docs/       documentación AI-DLC por fase (00-project … 06-monitoring, architecture/)
-.ai-dlc/    puertas (gates) y plantillas de la documentación
-.github/    CI (build al día + simulador), plantillas de issues y PR
+shinybot/   FRLG_ShinyBot.lua (generated) + .json   src/bot_body.lua, src/tables2.lua   tests/
+trainbot/   FRLG_TrainBot.lua (generated) + .json   src/train_body.lua, src/train_tables.lua
+            tools/gen_tables.py (pret data)   tests/   examples/ (configs/, routes/)
+tools/rng/  RNG searches (C and Python) to find targets and seeds
+docs/       AI-DLC documentation per phase (00-project … 06-monitoring, architecture/)
+.ai-dlc/    documentation gates and templates
+.github/    CI (up-to-date build + simulator), issue and PR templates
+assets/     logo and social preview image
 ```
 
 Build: `python shinybot/build.py`, `python trainbot/build.py`.
-Datos del Train Bot: `python trainbot/tools/gen_tables.py`, que descarga pokefirered a `tools/pret_cache/`.
+Train Bot data: `python trainbot/tools/gen_tables.py`, which downloads pokefirered to `tools/pret_cache/`.
 
-## Pruebas (simulador)
+## Tests (simulator)
 
-Necesitan `pip install lupa` (Lua 5.1 desde Python). Los mocks simulan memoria,
-botones y la lógica mínima del juego.
-- Shiny Bot: `cd shinybot/tests && python run_test.py` (se esperan PAUSED en wild,
-  static, gift y roamer), `python run_rng.py`, `python run_wild.py`, `python run_cfg.py`,
+They need `pip install -r requirements-dev.txt` (lupa: Lua 5.1 from Python). The mocks
+simulate memory, buttons and the minimum game logic.
+- Shiny Bot: `cd shinybot/tests && python run_test.py` (PAUSED expected for wild,
+  static, gift and roamer), `python run_rng.py`, `python run_wild.py`, `python run_cfg.py`,
   `python run_far.py`.
-- Train Bot: `python trainbot/tests/run_train.py` (escenarios evs/record), `run_learn.py`
-  (aprender ataques), `run_want.py` (wantedMoves). El mock simula mapa, puertas,
-  enfermera, combate con menús reales, prompts de aprender ataque (opcodes 0x5A/0x5B),
-  pantalla de datos, evolución (`evo`/`evono`) y casilla que cura (`tile`).
+- Train Bot: `python trainbot/tests/run_train.py` (evs/record scenarios), `run_learn.py`
+  (move learning), `run_want.py` (wantedMoves). The mock simulates the map, doors, the
+  nurse, battles with real menus, move-learning prompts (opcodes 0x5A/0x5B), the summary
+  screen, evolution (`evo`/`evono`) and the healing tile (`tile`).
 
-## Datos clave de Gen 3 / FRLG
+## Key Gen 3 / FRLG facts
 
 - Shiny: `(TID ^ SID ^ PIDhi ^ PIDlo) < 8`.
-- LCRNG: `s = s*0x41C64E6D + 0x6073`; hacia atrás: `s*0xEEB9EB65 + 0x0A3561A1`.
-  `Random()` devuelve `s >> 16`.
-- **Method 1** (estáticos, regalos, iniciales, roamer): PIDbajo, PIDalto, IV1
-  (PS/At/Df), IV2 (Vel/AtE/DfE).
-- **Method H-1** (salvajes): slot (`r%100`; tierra 20,40,50,60,70,80,85,90,94,98,99,100;
-  agua 60,90,95,99,100), nivel (1 llamada), naturaleza (`r%25`), pares de PID hasta
-  `PID%25 == naturaleza`, 2 llamadas de IVs. El RNG de la tasa de encuentro es aparte.
-- En FRLG **Sincronía y Gran Encanto no funcionan**. En crianza la naturaleza no se hereda
-  (eso es de Esmeralda).
-- Físico/especial **por tipo**: Normal, Lucha, Volador, Veneno, Tierra, Roca, Bicho,
-  Fantasma, Acero = físicos; el resto, especiales.
-- Tele Pokémon (Teachy TV): 313 llamadas al RNG por frame. El bot la abre desde SELECT
-  para llegar a avances lejanos.
-- Semilla inicial: el valor de Timer1 al pulsar A en el título se guarda en `0x02020000`.
-  Cada frame de retraso suma 18752 (mod 65536, múltiplo de 64). Por eso en cada
-  reinicio solo se alcanzan semillas de **una clase mod 64**: conviene dar
-  muchas semillas candidatas.
-- Obediencia: solo afecta a Pokémon de otro entrenador original. 2ª medalla → Nv 30,
-  4ª → 50, 6ª → 70, 8ª → todos.
-- Vitaminas: +10 EVs solo si la estadística tiene < 100. Recalculan stats al instante.
-  Los EVs de combate se reflejan al subir de nivel o al pasar por el PC.
+- LCRNG: `s = s*0x41C64E6D + 0x6073`; backwards: `s*0xEEB9EB65 + 0x0A3561A1`.
+  `Random()` returns `s >> 16`.
+- **Method 1** (statics, gifts, starters, roamers): PIDlow, PIDhigh, IV1
+  (HP/Atk/Def), IV2 (Spe/SpA/SpD).
+- **Method H-1** (wild): slot (`r%100`; land 20,40,50,60,70,80,85,90,94,98,99,100;
+  water 60,90,95,99,100), level (1 call), nature (`r%25`), PID pairs until
+  `PID%25 == nature`, 2 IV calls. The encounter-rate RNG is separate.
+- In FRLG **Synchronize and Cute Charm don't work**. In breeding the nature is not
+  inherited (that's Emerald).
+- Physical/special **by type**: Normal, Fighting, Flying, Poison, Ground, Rock, Bug,
+  Ghost, Steel = physical; the rest special.
+- Teachy TV (*Tele Pokémon*): 313 RNG calls per frame. The bot opens it from SELECT to
+  reach far advances.
+- Initial seed: Timer1's value when A is pressed on the title screen is stored at
+  `0x02020000`. Each frame of delay adds 18752 (mod 65536, a multiple of 64). That's why
+  each reset can only reach seeds of **one class mod 64**: provide many candidate seeds.
+- Obedience: only affects Pokémon from another original trainer. 2nd badge → Lv 30,
+  4th → 50, 6th → 70, 8th → all.
+- Vitamins: +10 EVs only if the stat has < 100. They recalculate stats immediately.
+  Battle EVs show up on level-up or after going through the PC.
 
-## Direcciones (pokefirered USA; EUR igual en EWRAM)
+## Addresses (pokefirered USA; EUR is the same in EWRAM)
 
-| Símbolo | USA | Nota |
+| Symbol | USA | Note |
 |---|---|---|
-| gEnemyParty | 0x0202402C | base para offsets relativos |
+| gEnemyParty | 0x0202402C | base for relative offsets |
 | gPlayerParty / count | 0x02024284 / 0x02024029 | |
 | gRngValue | 0x03005000 (EUR 0x03004F50) | |
-| gSaveBlock1Ptr / 2Ptr | 0x03005008 / 0x0300500C (EUR 0x03004F58/5C) | se mueven al cambiar de mapa |
-| gMain | 0x030030F0 | inBattle = bit1 de +0x439; callback2 = +4 |
-| gActionSelectionCursor | enemy − 0x34 | LUCHA 0, MOCHILA 1, POKéMON 2, HUIR 3 |
+| gSaveBlock1Ptr / 2Ptr | 0x03005008 / 0x0300500C (EUR 0x03004F58/5C) | move when the map changes |
+| gMain | 0x030030F0 | inBattle = bit1 of +0x439; callback2 = +4 |
+| gActionSelectionCursor | enemy − 0x34 | FIGHT 0, BAG 1, POKéMON 2, RUN 3 |
 | gMoveSelectionCursor | enemy − 0x30 | 2x2 |
-| gBattleMons | enemy − 0x448 | 0x58 c/u (species, stats, moves, ivs, ability, types, pp, hp, level…) |
+| gBattleMons | enemy − 0x448 | 0x58 each (species, stats, moves, ivs, ability, types, pp, hp, level…) |
 | gBattleBufferA[0][0] | enemy − 0x1468 | 18 = CHOOSEACTION, 20 = CHOOSEMOVE |
-| gBattleControllerExecFlags | enemy − 0x464 | bit0 = jugador esperando |
+| gBattleControllerExecFlags | enemy − 0x464 | bit0 = player waiting |
 | gBattlescriptCurrInstr | enemy − 0x2B8 | opcode 0x5A learn-move, 0x5B stop-learning |
-| gBattleCommunication[1] | enemy − 0x1A9 | cursor SÍ/NO |
-| gBattleOutcome | enemy − 0x1A2 | 4 = huyó |
+| gBattleCommunication[1] | enemy − 0x1A9 | YES/NO cursor |
+| gBattleOutcome | enemy − 0x1A2 | 4 = ran away |
 | gMoveToLearn | enemy − 0xA | |
-| gBattleStruct (ptr) | enemy − 0x44 | expGetterMonId en +0x10 |
-| sMoveSelectionCursorPos | enemy + 0x17141 | pantalla de datos al olvidar ataque |
-| gPlayerAvatar | 0x02037078 (JPN 0x02036FAC) | objectEventId en +5 |
-| gObjectEvents | avatar − 0x240 | 0x24 c/u; coords +0x10/+0x12, facing +0x18 |
-| SaveBlock1 | +4/+5 mapa (grupo/número); +0x30D0 roamer | |
+| gBattleStruct (ptr) | enemy − 0x44 | expGetterMonId at +0x10 |
+| sMoveSelectionCursorPos | enemy + 0x17141 | summary screen when forgetting a move |
+| gPlayerAvatar | 0x02037078 (JPN 0x02036FAC) | objectEventId at +5 |
+| gObjectEvents | avatar − 0x240 | 0x24 each; coords +0x10/+0x12, facing +0x18 |
+| SaveBlock1 | +4/+5 map (group/number); +0x30D0 roamer | |
 | sWildEncounterData | 0x020386D0 | |
 
-Party struct (100 bytes): PID, OTID, checksum +0x1C, 4 subestructuras cifradas
-(orden por PID%24: G A E M), estado +0x50, nivel +0x54, PS +0x56/+0x58, stats +0x5A…+0x62.
+Party struct (100 bytes): PID, OTID, checksum +0x1C, 4 encrypted substructures
+(order by PID%24: G A E M), status +0x50, level +0x54, HP +0x56/+0x58, stats +0x5A…+0x62.
 
-## Comportamientos del juego/emulador descubiertos (importantes)
+## Game/emulator behaviors discovered (important)
 
-- VBA-rr: `savestate.create(n)` numerado abre un diálogo de error; `savestate.load`
-  puede aplicarse al final del frame; "Pause When Inactive" debe estar apagado.
-- El Pokémon puede estar a medio crear al terminar un frame: leerlo solo tras 3 frames
-  estables y con nivel 1–100.
-- La **escena de evolución ocurre con `gMain.inBattle` aún activo** (se distingue por
-  `callback2` ≠ el del combate). Mantener B la cancela.
-- Al cruzar puertas, SaveBlock1 cambia de mapa antes que las coordenadas del objeto y
-  el bloque se mueve: las rutas grabadas tenían puntos falsos. `cleanRoute()` los filtra.
-- Zona purificada de la Torre Pokémon 5F: cura al ENTRAR (casillas de mapa x10–12,
-  y8–10 = memoria x17–19, y15–17). La columna de alrededor es la salida y no cura.
-- Snorlax: la flauta (MSGBOX_YESNO con SÍ por defecto) y `setwildbattle` crean el PID
-  antes del combate. El modo Estático RNG lo cubre pulsando solo A.
+- VBA-rr: numbered `savestate.create(n)` opens an error dialog; `savestate.load` may be
+  applied at the end of the frame; "Pause When Inactive" must be off.
+- The Pokémon may be half-created when a frame ends: read it only after 3 stable frames
+  and with level 1–100.
+- The **evolution scene happens with `gMain.inBattle` still set** (told apart by
+  `callback2` ≠ the battle's). Holding B cancels it.
+- When going through doors, SaveBlock1 changes map before the object's coordinates do
+  and the block moves: recorded routes had bogus points. `cleanRoute()` filters them.
+- Pokémon Tower 5F purified zone: heals on ENTERING (map tiles x10–12, y8–10 = memory
+  x17–19, y15–17). The surrounding column is the exit and doesn't heal.
+- Snorlax: the Poké Flute (MSGBOX_YESNO with YES as default) and `setwildbattle` create
+  the PID before the battle. Static RNG mode handles it by pressing only A.
 
 ## Shiny Bot (`shinybot/`, v4.3)
 
-Modos 1–10: Salvaje, Estático, Regalo, Roamer, Estático RNG, Regalo RNG, Roamer RNG,
-Salvaje RNG, Partida nueva (elegir SID), Semilla inicial (encadena `afterSeedMode`).
-Teclas: 7 iniciar/detener, 8 modo, 9 panel, 0 recargar JSON.
-Multi-instancia (`inst_N.lock`, `shiny_stop.flag`); logs en `logs/`.
-Salvaje RNG: se acerca a un paso del encuentro y da el paso en el frame exacto.
+Modes 1–10 (in-game names in Spanish): Salvaje (Wild), Estático (Static), Regalo (Gift),
+Roamer, Estático RNG, Regalo RNG, Roamer RNG, Salvaje RNG, Partida nueva (New game, pick
+SID), Semilla inicial (Initial seed, chains `afterSeedMode`).
+Keys: 7 start/stop, 8 mode, 9 panel, 0 reload JSON.
+Multi-instance (`inst_N.lock`, `shiny_stop.flag`); logs in `logs/`.
+Wild RNG: walks to one step before the encounter and takes the step on the exact frame.
 
 ## Train Bot (`trainbot/`, v1.10)
 
-Entrena al Pokémon 1 del equipo: EVs exactos y nivel, pelea solo contra especies útiles
-(`evs`, `species`, `avoidSpecies`), elige el ataque de más daño (fórmula Gen 3, STAB,
-tipos, habilidades), aprende ataques (`auto`/`never`/`ask` con `wantedMoves`,
-`keepMoves`, `askTimeout`) y pausa al evolucionar si `evolve: true`. Graba la ruta al
-Centro con la tecla 6 (ida/vuelta) y la repite. `healMode`: `nurse` o `tile`.
-Avisos con ntfy/Discord (`notify`). Tecla 8: inspección (stats, IVs, EVs, ataques).
-Guarda contra dos instancias (`train_running.lock`).
+Trains party Pokémon #1: exact EVs and level, fights only useful species (`evs`,
+`species`, `avoidSpecies`), picks the most damaging move (Gen 3 formula, STAB, types,
+abilities), learns moves (`auto`/`never`/`ask` with `wantedMoves`, `keepMoves`,
+`askTimeout`) and pauses on evolution if `evolve: true`. Records the route to the Center
+with key 6 (there/back) and replays it. `healMode`: `nurse` or `tile`.
+Notifications via ntfy/Discord (`notify`). Key 8: inspection (stats, IVs, EVs, moves).
+Guards against two instances (`train_running.lock`).
 
-## Créditos
+## Credits
 
-Direcciones base y tablas de nombres: "FRLG_RNG_2.0.lua" y "E_RNG_2.0.lua" de
-https://github.com/DevonStudios/LuaScripts (Devon Studios x Real.96, GPL-3.0). Allí hay
-más scripts útiles (Pickup, críticos, BizHawk, RSE); ver la sección Créditos del README.
-Datos del juego: proyecto de decompilación pret/pokefirered.
+Base addresses and name tables: "FRLG_RNG_2.0.lua" and "E_RNG_2.0.lua" from
+https://github.com/DevonStudios/LuaScripts (Devon Studios x Real.96, GPL-3.0). It has
+more useful scripts (Pickup, critical hits, BizHawk, RSE); see `docs/00-project/credits.md`.
+Game data: the pret/pokefirered decompilation project.

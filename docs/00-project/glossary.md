@@ -1,36 +1,36 @@
-# Glosario — Poke-tools
+# Glossary — Poke-tools
 
-> **Fase AI-DLC:** `00-project`
-> El vocabulario común del proyecto. Los nombres del juego van en español (como los ve el
-> jugador); los de código o datos de pret, en inglés.
+> **AI-DLC phase:** `00-project`
+> The project's shared vocabulary. In-game names use the official English names; the
+> Spanish name the player sees in the bots is given where it matters.
 
-| Término | Definición |
+| Term | Definition |
 |---|---|
-| **FRLG** | Pokémon Rojo Fuego (FireRed) y Verde Hoja (LeafGreen), GBA. |
-| **VBA-rr** | VisualBoyAdvance-ReRecording: emulador de GBA con Lua 5.1 para leer memoria y pulsar botones. |
-| **Bot** | Script Lua que juega solo. Hay dos: **Shiny Bot** y **Train Bot**. |
-| **Modo** | Lo que hace el Shiny Bot en una corrida (Salvaje, Estático RNG…). Se cambia con la tecla 8. |
-| **Instancia** | Una ventana de Lua corriendo un bot. El Shiny Bot admite varias; el Train Bot solo una. |
-| **Corrida** | Desde que se pulsa 7 hasta que el bot se detiene o encuentra el objetivo. |
-| **RNG / LCRNG** | Generador de números aleatorios del juego: `s = s*0x41C64E6D + 0x6073`. Todo lo aleatorio sale de él. |
-| **Avance** | Una llamada al RNG. "El objetivo está en el avance 2786" = tras 2786 llamadas desde la semilla. |
-| **Semilla inicial** | Estado del RNG al cargar la partida; la fija el momento en que se pulsa A en el título (16 bits). |
-| **Objetivo** | Avance del RNG que produce el Pokémon buscado. |
-| **Calibrar** | Medir cuántos avances pasan entre la pulsación del bot y la creación del Pokémon (el **retraso**). |
-| **Method 1 / Method H-1** | Orden en que el juego pide números al RNG para crear un Pokémon (estáticos/regalos vs. salvajes). |
-| **PID** | Número de 32 bits que fija naturaleza, género, habilidad y si es shiny. |
-| **TID / SID** | ID de entrenador visible y secreta. Junto con el PID deciden el shiny. |
-| **TSV** | `TID xor SID`; lo que busca el modo Partida nueva. |
-| **Shiny** | `(TID ^ SID ^ PIDalto ^ PIDbajo) < 8`. |
-| **IVs** | Valores individuales (0–31) por estadística. "6×31" = los seis al máximo. |
-| **EVs** | Puntos de esfuerzo que da cada combate; máx. 255 por estadística y 510 en total. |
-| **Soft reset** | Reiniciar el juego (A+B+START+SELECT) para cambiar la semilla. |
-| **Tele Pokémon** | Objeto (Teachy TV) que avanza el RNG ~313 veces por frame; el bot la abre registrada en SELECT. |
-| **Roamer** | Pokémon legendario que se mueve por el mapa (Raikou, Entei, Suicune). |
-| **Punto de entreno** | Casilla donde el Train Bot camina buscando combates. |
-| **Ruta** | Archivo `FRLG_TrainRoute*.txt` con la ida (`GO`) al lugar de curación y la vuelta (`BACK`). |
-| **`healMode`** | Cómo se cura el Train Bot: `nurse` (enfermera) o `tile` (casilla que cura, Torre Pokémon 5F). |
-| **Panel** | Texto que el bot dibuja sobre el juego (tecla 9). |
-| **Simulador / mock** | Lua que imita la memoria y los botones del juego para probar los bots sin emulador. |
-| **pret** | Proyecto de decompilación `pret/pokefirered`: fuente de símbolos y datos del juego. |
-| **Generado** | `FRLG_ShinyBot.lua` y `FRLG_TrainBot.lua`: salen de `src/` con `build.py`; no se editan a mano. |
+| **FRLG** | Pokémon FireRed (*Rojo Fuego*) and LeafGreen (*Verde Hoja*), GBA. |
+| **VBA-rr** | VisualBoyAdvance-ReRecording: GBA emulator with Lua 5.1 to read memory and press buttons. |
+| **Bot** | A Lua script that plays by itself. There are two: **Shiny Bot** and **Train Bot**. |
+| **Mode** | What the Shiny Bot does in a run (Wild, Static RNG…). Changed with key 8. |
+| **Instance** | A Lua window running a bot. The Shiny Bot allows several; the Train Bot only one. |
+| **Run** | From pressing 7 until the bot stops or finds the target. |
+| **RNG / LCRNG** | The game's random number generator: `s = s*0x41C64E6D + 0x6073`. Everything random comes from it. |
+| **Advance** | One RNG call. "The target is at advance 2786" = after 2786 calls since the seed. |
+| **Initial seed** | RNG state when the save is loaded; set by the moment A is pressed on the title screen (16 bits). |
+| **Target** | The RNG advance that produces the wanted Pokémon. |
+| **Calibrate** | Measure how many advances pass between the bot's button press and the Pokémon's creation (the **delay**). |
+| **Method 1 / Method H-1** | The order in which the game asks the RNG for numbers when creating a Pokémon (statics/gifts vs. wild). |
+| **PID** | 32-bit number that sets nature, gender, ability and whether it's shiny. |
+| **TID / SID** | Visible and secret trainer IDs. Together with the PID they decide shininess. |
+| **TSV** | `TID xor SID`; what the New game mode searches for. |
+| **Shiny** | `(TID ^ SID ^ PIDhigh ^ PIDlow) < 8`. |
+| **IVs** | Individual values (0–31) per stat. "6×31" = all six maxed. |
+| **EVs** | Effort values gained from each battle; max 255 per stat and 510 total. |
+| **Soft reset** | Resetting the game (A+B+START+SELECT) to change the seed. |
+| **Teachy TV** | Item (*Tele Pokémon*) that advances the RNG ~313 times per frame; the bot opens it when registered on SELECT. |
+| **Roamer** | Legendary Pokémon that moves around the map (Raikou, Entei, Suicune). |
+| **Training spot** | Tile where the Train Bot walks looking for battles. |
+| **Route** | `FRLG_TrainRoute*.txt` file with the way to the healing place (`GO`) and back (`BACK`). |
+| **`healMode`** | How the Train Bot heals: `nurse` or `tile` (healing tile, Pokémon Tower 5F). |
+| **Panel** | Text the bot draws over the game (key 9). |
+| **Simulator / mock** | Lua code that imitates the game's memory and buttons to test the bots without an emulator. |
+| **pret** | The `pret/pokefirered` decompilation project: source of game symbols and data. |
+| **Generated** | `FRLG_ShinyBot.lua` and `FRLG_TrainBot.lua`: built from `src/` with `build.py`; never edited by hand. |

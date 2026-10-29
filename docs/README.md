@@ -1,31 +1,36 @@
-# Documentación de Poke-tools
+# Poke-tools documentation
 
-La documentación sigue la práctica **AI-DLC**: una carpeta por fase del ciclo de vida, y
-entre fases una **puerta** (*gate*) que una persona revisa antes de avanzar. Las listas de
-las puertas están en [`.ai-dlc/gates/`](../.ai-dlc/gates/) y las plantillas en
+The documentation follows the **AI-DLC** practice: one folder per lifecycle phase and,
+between phases, a **gate** that a person reviews before moving on. The gate checklists
+are in [`.ai-dlc/gates/`](../.ai-dlc/gates/) and the templates in
 [`.ai-dlc/templates/`](../.ai-dlc/templates/).
 
-| Fase | Contenido |
+| Phase | Contents |
 |---|---|
-| [00 · Proyecto](00-project/) | [Carta del proyecto](00-project/charter.md) · [Glosario](00-project/glossary.md) · [Clasificación de datos](00-project/data-classification.md) · [Decisiones (ADR)](00-project/adr/) · [Créditos](00-project/creditos.md) |
-| [01 · Requisitos](01-requirements/) | [PRD Shiny Bot](01-requirements/prd-shinybot.md) · [PRD Train Bot](01-requirements/prd-trainbot.md) |
-| [02 · Diseño](02-design/) | [Arquitectura](02-design/architecture.md) · [Contratos: JSON, archivos, teclas y memoria](02-design/api-contracts.md) · [Modelo de amenazas](02-design/threat-model.md) · [Diagramas C4](architecture/) |
-| [03 · Implementación](03-implementation/) | [Backlog y notas](03-implementation/backlog.md) |
-| [04 · Pruebas](04-testing/) | [Estrategia de pruebas](04-testing/test-strategy.md) |
-| [05 · Despliegue](05-deployment/) | [Instalación y publicación de versiones](05-deployment/deploy-guide.md) |
-| [06 · Monitoreo](06-monitoring/) | [Panel, logs y avisos](06-monitoring/monitoring.md) |
+| [00 · Project](00-project/) | [Project charter](00-project/charter.md) · [Glossary](00-project/glossary.md) · [Data classification](00-project/data-classification.md) · [Decisions (ADRs)](00-project/adr/) · [Credits](00-project/credits.md) |
+| [01 · Requirements](01-requirements/) | [Shiny Bot PRD](01-requirements/prd-shinybot.md) · [Train Bot PRD](01-requirements/prd-trainbot.md) |
+| [02 · Design](02-design/) | [Architecture](02-design/architecture.md) · [Contracts: JSON, files, keys and memory](02-design/api-contracts.md) · [Threat model](02-design/threat-model.md) · [C4 diagrams](architecture/) |
+| [03 · Implementation](03-implementation/) | [Backlog and notes](03-implementation/backlog.md) |
+| [04 · Testing](04-testing/) | [Test strategy](04-testing/test-strategy.md) |
+| [05 · Deployment](05-deployment/) | [Installation and releases](05-deployment/deploy-guide.md) |
+| [06 · Monitoring](06-monitoring/) | [Panel, logs and notifications](06-monitoring/monitoring.md) |
 
-El contexto técnico completo para desarrollar (direcciones de memoria, comportamientos
-del juego descubiertos) está en [`CLAUDE.md`](../CLAUDE.md).
+The full technical context for development (memory addresses, game behaviors we
+discovered) is in [`CLAUDE.md`](../CLAUDE.md).
 
-## Estado de las puertas
+## Language
 
-La documentación se escribió **después** del código (documentación retroactiva) y las
-puertas se revisaron contra el código del 2026-10-29.
+Repository documentation is in English. Everything the player sees **in the game** (panel,
+console, logs, JSON comments) is in Spanish, so in-game messages are quoted in Spanish.
 
-| Puerta | Estado |
+## Gate status
+
+The documentation was written **after** the code (retroactive documentation) and the
+gates were reviewed against the code on 2026-10-29.
+
+| Gate | Status |
 |---|---|
-| [Gate 0 · Inicio → Requisitos](../.ai-dlc/gates/gate-0-inception-to-requirements.md) | Aprobada |
-| [Gate 1 · Diseño → Implementación](../.ai-dlc/gates/gate-1-design-to-implementation.md) | Aprobada |
-| [Gate 2 · Implementación → Pruebas](../.ai-dlc/gates/gate-2-implementation-to-testing.md) | Aprobada |
-| [Gate 3 · Pruebas → Versión](../.ai-dlc/gates/gate-3-testing-to-release.md) | Aprobada con condiciones (probar en el juego real la carpeta de logs) |
+| [Gate 0 · Inception → Requirements](../.ai-dlc/gates/gate-0-inception-to-requirements.md) | Passed |
+| [Gate 1 · Design → Implementation](../.ai-dlc/gates/gate-1-design-to-implementation.md) | Passed |
+| [Gate 2 · Implementation → Testing](../.ai-dlc/gates/gate-2-implementation-to-testing.md) | Passed |
+| [Gate 3 · Testing → Release](../.ai-dlc/gates/gate-3-testing-to-release.md) | Passed with conditions (check the log folder in the real game) |

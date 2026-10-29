@@ -1,45 +1,45 @@
 # Train Bot — `FRLG_TrainBot.lua`
 
-Entrena al **primer Pokémon del equipo** hasta unos EVs exactos y/o un nivel: elige contra
-quién pelear, usa el ataque que más daño hace, aprende los ataques que quieras y vuelve
-solo al Centro Pokémon a curarse.
+Trains the **first Pokémon in your party** to exact EVs and/or a level: it picks which
+opponents to fight, uses the most damaging move, learns the moves you want and walks back
+to the Pokémon Center to heal on its own.
 
-## Uso
+## Usage
 
-1. Copia `FRLG_TrainBot.lua` y un JSON (el de esta carpeta o uno de [`examples/configs/`](examples/configs/))
-   con el nombre `FRLG_TrainBot.json`.
-2. Pon al Pokémon que vas a entrenar **primero en el equipo**.
-3. Ten una ruta al Centro Pokémon:
-   - **Usa una ya grabada** de [`examples/routes/`](examples/routes/) (Cueva Diglett →
-     Velocidad, Torre Pokémon → At. Esp.), o
-   - **graba la tuya** (una vez): **6** en el punto de entreno → camina hasta quedar frente
-     a la enfermera (o dentro de la zona que cura con `"healMode": "tile"`) → **6** →
-     vuelve al punto → **6**.
-4. Pulsa **7** para iniciar.
+1. Copy `FRLG_TrainBot.lua` and a JSON (the one in this folder or one from
+   [`examples/configs/`](examples/configs/)) named `FRLG_TrainBot.json`.
+2. Put the Pokémon you want to train **first in the party**.
+3. Have a route to the Pokémon Center:
+   - **Use a recorded one** from [`examples/routes/`](examples/routes/) (Diglett's Cave →
+     Speed, Pokémon Tower → Sp. Atk), or
+   - **record your own** (once): **6** at the training spot → walk until you stand in front
+     of the nurse (or inside the healing area with `"healMode": "tile"`) → **6** → walk back
+     to the spot → **6**.
+4. Press **7** to start.
 
-| Tecla | Acción |
+| Key | Action |
 |---|---|
-| **6** | Grabar la ruta al Centro (ida y vuelta) |
-| **7** | Iniciar / detener |
-| **8** | Ficha completa: stats, IVs, EVs, ataques |
-| **9** | Panel: compacto, completo u oculto |
-| **0** | Recargar el JSON (con el bot detenido) |
+| **6** | Record the route to the Center (there and back) |
+| **7** | Start / stop |
+| **8** | Full summary: stats, IVs, EVs, moves |
+| **9** | Panel: compact, full or hidden |
+| **0** | Reload the JSON (with the bot stopped) |
 
-## Configuración
+## Configuration
 
-`FRLG_TrainBot.json`, comentado línea por línea:
+`FRLG_TrainBot.json`, commented line by line (in Spanish):
 
-- **Objetivo:** `evs`, `targetLevel`, `maxLevel`, `allowOvershoot`.
-- **Rivales:** `species` (solo estas), `avoidSpecies` (nunca estas).
-- **Combate:** `healBelow`, `fleeBelow`, `minPP`.
-- **Ataques:** `learnMoves` (`auto`, `never`, `ask`), `wantedMoves`, `keepMoves`, `askTimeout`.
-- **Otros:** `evolve`, `stopOnShiny`, `healMode` (`nurse` o `tile`), `routeFile`.
-- **Avisos al celular:** `notify` con ntfy o un webhook de Discord.
+- **Goal:** `evs`, `targetLevel`, `maxLevel`, `allowOvershoot`.
+- **Opponents:** `species` (only these), `avoidSpecies` (never these).
+- **Battle:** `healBelow`, `fleeBelow`, `minPP`.
+- **Moves:** `learnMoves` (`auto`, `never`, `ask`), `wantedMoves`, `keepMoves`, `askTimeout`.
+- **Other:** `evolve`, `stopOnShiny`, `healMode` (`nurse` or `tile`), `routeFile`.
+- **Phone notifications:** `notify` with ntfy or a Discord webhook.
 
-La referencia completa está en [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
+Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
 
-## Ejemplos
+## Examples
 
-- [`examples/configs/`](examples/configs/): configuraciones listas por estadística
-  (Velocidad en la Cueva Diglett, At. Esp. en la Torre Pokémon).
-- [`examples/routes/`](examples/routes/): rutas listas para reutilizar.
+- [`examples/configs/`](examples/configs/): ready-made configs per stat
+  (Speed in Diglett's Cave, Sp. Atk in the Pokémon Tower).
+- [`examples/routes/`](examples/routes/): routes ready to reuse.

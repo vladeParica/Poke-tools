@@ -1,24 +1,24 @@
-# Gate 0 — Inicio → Requisitos
+# Gate 0 — Inception → Requirements
 
-> **Fase AI-DLC:** salida de `00-project` y `01-requirements`.
-> **Objetivo:** confirmar que el problema, el alcance y los flujos principales están definidos y acordados antes de diseñar.
+> **AI-DLC phase:** exit of `00-project` and `01-requirements`.
+> **Goal:** confirm the problem, scope and main flows are defined and agreed before designing.
 
-Marca cada punto solo cuando esté completo **y revisado por una persona**.
+Tick each item only when it is complete **and reviewed by a person**.
 
-## Proyecto
-- [x] [`charter.md`](../../docs/00-project/charter.md) completo: visión, contexto, problema, alcance, métricas, riesgos.
-- [x] [`glossary.md`](../../docs/00-project/glossary.md) define el vocabulario y los demás documentos lo usan.
-- [x] [`data-classification.md`](../../docs/00-project/data-classification.md) clasifica los datos por sensibilidad.
+## Project
+- [x] [`charter.md`](../../docs/00-project/charter.md) complete: vision, context, problem, scope, metrics, risks.
+- [x] [`glossary.md`](../../docs/00-project/glossary.md) defines the vocabulary and the other documents use it.
+- [x] [`data-classification.md`](../../docs/00-project/data-classification.md) classifies data by sensitivity.
 
-## Requisitos
-- [x] Un PRD por bot en [`docs/01-requirements/`](../../docs/01-requirements/) con el flujo completo.
-- [x] Escenarios límite y de riesgo documentados (no solo el camino feliz).
-- [x] Principios no negociables explícitos (no romper otros modos, todo en español, repo genérico).
-- [x] Criterios de aceptación verificables.
+## Requirements
+- [x] One PRD per bot in [`docs/01-requirements/`](../../docs/01-requirements/) with the full flow.
+- [x] Edge and risk scenarios documented (not only the happy path).
+- [x] Non-negotiable principles made explicit (don't break other modes, in-game text in Spanish, generic repo).
+- [x] Verifiable acceptance criteria.
 
-## Decisiones abiertas
-- [x] Lo que decide el dueño está marcado `TODO — Human-in-the-Loop` y no se inventó.
+## Open decisions
+- [x] Owner decisions are marked `TODO — Human-in-the-Loop` and were not invented.
 
-## Veredicto
-- [x] **Gate 0 passed** (aprobada) — se puede pasar a `02-design`.
-- Aprobada por: vladeParica (revisión delegada a Claude)  ·  Fecha: 2026-10-29
+## Verdict
+- [x] **Gate 0 passed** — cleared to move to `02-design`.
+- Approved by: vladeParica (review delegated to Claude)  ·  Date: 2026-10-29

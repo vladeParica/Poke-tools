@@ -1,27 +1,27 @@
-name: Proponer una mejora
-description: Un modo nuevo, una opción o un bot nuevo
-labels: [mejora]
+name: Feature request
+description: A new mode, option or bot
+labels: [enhancement]
 body:
   - type: dropdown
     id: bot
     attributes:
-      label: ¿Dónde encaja?
-      description: El Shiny Bot solo busca; lo demás va en un bot aparte (ADR-0003).
-      options: [Shiny Bot, Train Bot, Bot nuevo, tools/rng, Documentación]
+      label: Where does it fit?
+      description: The Shiny Bot only searches; anything else goes in a separate bot (ADR-0003).
+      options: [Shiny Bot, Train Bot, New bot, tools/rng, Documentation]
     validations:
       required: true
   - type: textarea
     id: problem
     attributes:
-      label: Qué problema resuelve
+      label: What problem does it solve?
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Cómo lo imaginas
-      description: Opciones del JSON, teclas, qué haría el bot paso a paso.
+      label: How do you picture it?
+      description: JSON options, keys, what the bot would do step by step.
   - type: textarea
     id: edge
     attributes:
-      label: Casos límite que se te ocurran
+      label: Edge cases you can think of

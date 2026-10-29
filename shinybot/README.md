@@ -1,47 +1,48 @@
 # Shiny Bot — `FRLG_ShinyBot.lua`
 
-Caza shinies y Pokémon con naturaleza e IVs exactos en Rojo Fuego / Verde Hoja, a ciegas
-(soft reset) o manipulando el RNG.
+Hunts shiny Pokémon, and Pokémon with exact natures and IVs, in FireRed / LeafGreen,
+either blind (soft resets) or by manipulating the RNG.
 
-## Uso
+## Usage
 
-1. Copia `FRLG_ShinyBot.lua` y `FRLG_ShinyBot.json` a la misma carpeta.
-2. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → abre el `.lua` → *Run*.
-3. Elige el modo con **8** y pulsa **7** para iniciar.
+1. Copy `FRLG_ShinyBot.lua` and `FRLG_ShinyBot.json` into the same folder.
+2. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
+3. Pick a mode with **8** and press **7** to start.
 
-| Tecla | Acción |
+| Key | Action |
 |---|---|
-| **7** | Iniciar / detener |
-| **8** | Cambiar de modo |
-| **9** | Panel: compacto, completo u oculto |
-| **0** | Recargar el JSON (con el bot detenido) |
+| **7** | Start / stop |
+| **8** | Change mode |
+| **9** | Panel: compact, full or hidden |
+| **0** | Reload the JSON (with the bot stopped) |
 
-Cuando encuentra lo que buscas, el juego queda **en pausa**: guarda un estado con
-**Shift+F1** y captúralo.
+When it finds a match, the game is **paused**: save a state with **Shift+F1** and catch it.
 
-## Modos
+## Modes
 
-| # | Modo | Qué hace |
+The in-game mode names are in Spanish (shown in parentheses).
+
+| # | Mode | What it does |
 |---|---|---|
-| 1 | Salvaje | Camina en la hierba y huye hasta que sale lo que buscas |
-| 2–4 | Estático, Regalo, Roamer | Soft reset a ciegas frente al Pokémon |
-| 5–7 | Estático RNG, Regalo RNG, Roamer RNG | Calcula el avance exacto y pulsa A en ese frame |
-| 8 | Salvaje RNG | Se acerca a un paso del encuentro y da el paso en el frame exacto |
-| 9 | Partida nueva | Reinicia hasta conseguir el TID/SID que pides |
-| 10 | Semilla inicial | Busca una semilla en la pantalla de título y lanza `afterSeedMode` |
+| 1 | Wild (*Salvaje*) | Walks in the grass and runs from battles until the target appears |
+| 2–4 | Static, Gift, Roamer (*Estático, Regalo, Roamer*) | Blind soft resets in front of the Pokémon |
+| 5–7 | Static RNG, Gift RNG, Roamer RNG | Computes the exact advance and presses A on that frame |
+| 8 | Wild RNG (*Salvaje RNG*) | Walks to one step before the encounter and takes the step on the exact frame |
+| 9 | New game (*Partida nueva*) | Restarts until it gets the TID/SID you want |
+| 10 | Initial seed (*Semilla inicial*) | Hits a seed on the title screen, then launches `afterSeedMode` |
 
-Para objetivos lejanos, **registra la Tele Pokémon en SELECT**: el bot la abre para
-avanzar el RNG unas 313 veces por frame.
+For far targets, **register the Teachy TV on SELECT**: the bot opens it to advance the RNG
+about 313 times per frame.
 
-## Configuración
+## Configuration
 
-Todo está en `FRLG_ShinyBot.json`, comentado línea por línea: `shiny`, `species`,
-`natures`, `minIVs`/`maxIVs`, `hiddenPower`, `mode`, `initialSeeds`, `afterSeedMode`…
-La referencia completa está en [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
+Everything lives in `FRLG_ShinyBot.json`, commented line by line (in Spanish): `shiny`,
+`species`, `natures`, `minIVs`/`maxIVs`, `hiddenPower`, `mode`, `initialSeeds`,
+`afterSeedMode`… Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
 
-Las semillas para `initialSeeds` dependen de tu TID/SID: calcúlalas con [tools/rng/](../tools/rng/).
+Seeds for `initialSeeds` depend on your TID/SID: compute them with [tools/rng/](../tools/rng/).
 
-## Varias ventanas
+## Multiple windows
 
-Puedes correr varias instancias a la vez (cada una crea `inst_N.lock`). Con
-`"stopOthers": true`, la que encuentra el objetivo detiene a las demás.
+You can run several instances at once (each one creates `inst_N.lock`). With
+`"stopOthers": true`, the one that finds the target stops the others.

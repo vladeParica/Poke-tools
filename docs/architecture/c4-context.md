@@ -1,31 +1,31 @@
-# C4 — Contexto
+# C4 — Context
 
-> **Fase AI-DLC:** `02-design`  ·  Nivel 1: el sistema en su entorno.
+> **AI-DLC phase:** `02-design`  ·  Level 1: the system in its environment.
 
 ```mermaid
 C4Context
-    title Contexto — Poke-tools
+    title Context — Poke-tools
 
-    Person(jugador, "Jugador", "Configura el JSON, coloca al personaje y guarda el estado al final")
-    Person(dev, "Desarrollador", "Edita src/, corre build.py y las pruebas")
+    Person(player, "Player", "Fills in the JSON, positions the character and saves the state at the end")
+    Person(dev, "Developer", "Edits src/, runs build.py and the tests")
 
-    System(bots, "Poke-tools", "Shiny Bot y Train Bot: scripts Lua que juegan solos")
+    System(bots, "Poke-tools", "Shiny Bot and Train Bot: Lua scripts that play by themselves")
 
-    System_Ext(vba, "VBA-rr", "Emulador de GBA con Lua 5.1; ejecuta la ROM de FRLG")
-    System_Ext(ntfy, "ntfy.sh", "Avisos push al celular (opcional)")
-    System_Ext(discord, "Discord", "Webhook de un canal (opcional)")
-    System_Ext(pret, "pret/pokefirered", "Decompilación: símbolos y datos del juego")
-    System_Ext(github, "GitHub Actions", "CI: build al día + simulador")
+    System_Ext(vba, "VBA-rr", "GBA emulator with Lua 5.1; runs the FRLG ROM")
+    System_Ext(ntfy, "ntfy.sh", "Push notifications to the phone (optional)")
+    System_Ext(discord, "Discord", "Channel webhook (optional)")
+    System_Ext(pret, "pret/pokefirered", "Decompilation: game symbols and data")
+    System_Ext(github, "GitHub Actions", "CI: up-to-date build + simulator")
 
-    Rel(jugador, vba, "Juega y carga el script")
-    Rel(vba, bots, "Ejecuta cada frame")
-    Rel(bots, ntfy, "Envía avisos", "HTTPS / curl")
-    Rel(bots, discord, "Envía avisos", "HTTPS / curl")
-    Rel(dev, bots, "Desarrolla y prueba")
-    Rel(dev, pret, "Genera tablas", "gen_tables.py")
-    Rel(github, bots, "Verifica cada push y PR")
+    Rel(player, vba, "Plays and loads the script")
+    Rel(vba, bots, "Runs every frame")
+    Rel(bots, ntfy, "Sends notifications", "HTTPS / curl")
+    Rel(bots, discord, "Sends notifications", "HTTPS / curl")
+    Rel(dev, bots, "Develops and tests")
+    Rel(dev, pret, "Generates tables", "gen_tables.py")
+    Rel(github, bots, "Checks every push and PR")
 ```
 
-**Notas**
-- La ROM y las partidas son del jugador y nunca entran al repositorio.
-- ntfy.sh y Discord solo se usan si el Train Bot tiene `notify` configurado.
+**Notes**
+- The ROM and the save files belong to the player and never enter the repository.
+- ntfy.sh and Discord are only used if the Train Bot has `notify` configured.

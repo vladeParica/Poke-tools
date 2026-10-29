@@ -10,42 +10,42 @@ permissions:
 
 jobs:
   build:
-    name: Generados al día
+    name: Generated files up to date
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
-      - name: Regenerar los bots desde src/
+      - name: Rebuild the bots from src/
         run: |
           python shinybot/build.py
           python trainbot/build.py
-      - name: Comprobar que no cambió nada
+      - name: Check nothing changed
         run: |
           if ! git diff --exit-code -- shinybot/FRLG_ShinyBot.lua trainbot/FRLG_TrainBot.lua; then
-            echo "::error::Los .lua generados no coinciden con src/. Corre build.py y haz commit."
+            echo "::error::The generated .lua files do not match src/. Run build.py and commit."
             exit 1
           fi
 
   shinybot:
-    name: Simulador Shiny Bot
+    name: Shiny Bot simulator
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-dev.txt
       - run: pip install -r requirements-dev.txt
-      - name: Modos a ciegas (se esperan 8 PAUSED)
+      - name: Blind modes (8 PAUSED expected)
         working-directory: shinybot/tests
         run: |
           python run_test.py | tee out.txt
           n=$(grep -c "PAUSED'" out.txt || true)
-          if [ "$n" -lt 8 ]; then echo "::error::Se esperaban 8 escenarios en PAUSED y hubo $n"; exit 1; fi
-      - name: Modos RNG y configuración
+          if [ "$n" -lt 8 ]; then echo "::error::Expected 8 scenarios in PAUSED, got $n"; exit 1; fi
+      - name: RNG modes and configuration
         working-directory: shinybot/tests
         run: |
           python run_rng.py
@@ -54,17 +54,17 @@ jobs:
           python run_cfg.py
 
   trainbot:
-    name: Simulador Train Bot
+    name: Train Bot simulator
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements-dev.txt
       - run: pip install -r requirements-dev.txt
-      - name: Escenarios
+      - name: Scenarios
         run: |
           python trainbot/tests/run_train.py
           python trainbot/tests/run_learn.py

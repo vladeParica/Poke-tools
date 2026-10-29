@@ -1,10 +1,10 @@
-# 01 · Requisitos
+# 01 · Requirements
 
-> **Fase AI-DLC:** `01-requirements` — Poke-tools
+> **AI-DLC phase:** `01-requirements` — Poke-tools
 
-Qué tiene que hacer cada bot, incluidos los casos límite y de riesgo.
+What each bot must do, including edge and risk cases.
 
-- [prd-shinybot.md](prd-shinybot.md) — Shiny Bot (búsqueda de shinies / IVs, a ciegas y con RNG)
-- [prd-trainbot.md](prd-trainbot.md) — Train Bot (EVs, nivel, ataques, curación)
+- [prd-shinybot.md](prd-shinybot.md) — Shiny Bot (shiny / IV search, blind and with RNG)
+- [prd-trainbot.md](prd-trainbot.md) — Train Bot (EVs, levels, moves, healing)
 
-Plantilla: `.ai-dlc/templates/prd.md`. Cada función nueva grande lleva su propio PRD.
+Template: `.ai-dlc/templates/prd.md`. Every major new feature gets its own PRD.

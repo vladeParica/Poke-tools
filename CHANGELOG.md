@@ -1,36 +1,39 @@
-# Cambios
+# Changelog
 
-Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Cada bot
-tiene su propia versión. Anota aquí cualquier cambio en el JSON, las rutas o las teclas:
-son el contrato con los usuarios ([contratos](docs/02-design/api-contracts.md)).
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Each bot has
+its own version. Record here any change to the JSON, the route format or the keys: they
+are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 
-## [Sin publicar]
+## [Unreleased]
 
-### Añadido
-- Documentación AI-DLC en `docs/` (carta del proyecto, PRD, arquitectura, C4, modelo de
-  amenazas, ADRs, pruebas, instalación, monitoreo) y puertas en `.ai-dlc/gates/`.
-- Guías de uso de cada bot (`shinybot/README.md`, `trainbot/README.md`).
-- Rutas reutilizables documentadas en `trainbot/examples/routes/`.
-- CI en GitHub Actions: comprueba que los `.lua` generados están al día y corre el simulador.
-- Licencia GPL-3.0, `CONTRIBUTING.md`, `SECURITY.md`, plantillas de issues y PR.
+### Added
+- AI-DLC documentation in `docs/` (project charter, PRDs, architecture, C4 diagrams,
+  threat model, ADRs, testing, installation, monitoring) and gates in `.ai-dlc/gates/`.
+- Usage guides for each bot (`shinybot/README.md`, `trainbot/README.md`).
+- Reusable routes documented in `trainbot/examples/routes/`.
+- GitHub Actions CI: checks that the generated `.lua` files are up to date and runs the simulator.
+- GPL-3.0 license, `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
+- Project logo (`assets/logo.svg`) and social preview image.
 
-### Cambiado
-- Ejemplos del Train Bot movidos a `trainbot/examples/configs/` con nombres por
-  estadística (`FRLG_TrainBot_Velocidad_Diglett.json`, `FRLG_TrainBot_AtEsp_Torre.json`).
-- `tools/rng/`: el TID y el SID se pasan al compilar (`-DTID -DSID`) o como argumentos;
-  ya no vienen fijos.
+### Changed
+- Train Bot examples moved to `trainbot/examples/configs/` with per-stat names
+  (`FRLG_TrainBot_Speed_Diglett.json`, `FRLG_TrainBot_SpAtk_Tower.json`).
+- Pokémon Tower route renamed to `FRLG_TrainRoute_Tower.txt`.
+- `tools/rng/`: TID and SID are passed at compile time (`-DTID -DSID`) or as arguments;
+  they are no longer hard-coded.
+- Repository documentation translated to English (in-game text stays in Spanish).
 
-### Seguridad
-- Los dos bots ya no pasan al shell una carpeta de logs (`logDir`, `sharedDir`) que
-  contenga `"`, `%`, `$` o `` ` ``; en ese caso usan la carpeta del script.
+### Security
+- Both bots no longer pass a log folder (`logDir`, `sharedDir`) containing `"`, `%`, `$`
+  or `` ` `` to the shell; in that case they use the script's folder.
 
-### Quitado
-- Notas de una partida concreta (semillas calculadas, plan de equipo).
+### Removed
+- Notes from a specific save file (computed seeds, team plan).
 
 ## Shiny Bot 4.3 — Train Bot 1.10
-Primera versión publicada en este repositorio.
+First version published in this repository.
 
-- **Shiny Bot 4.3:** modos Salvaje, Estático, Regalo, Roamer, sus variantes RNG, Salvaje
-  RNG a un paso del encuentro, Partida nueva y Semilla inicial; Tele Pokémon; varias instancias.
-- **Train Bot 1.10:** EVs exactos y nivel, decisor de combate, aprender ataques, evolución,
-  rutas grabadas, curación con enfermera o casilla, avisos ntfy/Discord.
+- **Shiny Bot 4.3:** Wild, Static, Gift and Roamer modes, their RNG variants, Wild RNG one
+  step before the encounter, New game and Initial seed; Teachy TV; multiple instances.
+- **Train Bot 1.10:** exact EVs and levels, battle decisions, move learning, evolution,
+  recorded routes, healing with the nurse or a tile, ntfy/Discord notifications.

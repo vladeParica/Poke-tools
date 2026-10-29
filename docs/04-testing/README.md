@@ -1,9 +1,9 @@
-# 04 · Pruebas
+# 04 · Testing
 
-> **Fase AI-DLC:** `04-testing` — Poke-tools
+> **AI-DLC phase:** `04-testing` — Poke-tools
 
-Cómo se verifican los bots: simulador, build y juego real.
+How the bots are verified: simulator, build and real game.
 
-- [test-strategy.md](test-strategy.md) — niveles, cómo correrlas, escenarios esperados y huecos conocidos
+- [test-strategy.md](test-strategy.md) — levels, how to run them, expected scenarios and known gaps
 
-Plantilla: `.ai-dlc/templates/test-strategy.md`.
+Template: `.ai-dlc/templates/test-strategy.md`.

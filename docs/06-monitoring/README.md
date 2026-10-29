@@ -1,9 +1,9 @@
-# 06 · Monitoreo
+# 06 · Monitoring
 
-> **Fase AI-DLC:** `06-monitoring` — Poke-tools
+> **AI-DLC phase:** `06-monitoring` — Poke-tools
 
-Cómo saber qué hace el bot mientras nadie mira.
+How to know what the bot is doing while nobody is watching.
 
-- [monitoring.md](monitoring.md) — panel, métricas, avisos y logs
+- [monitoring.md](monitoring.md) — panel, metrics, notifications and logs
 
-Plantilla: `.ai-dlc/templates/monitoring.md`.
+Template: `.ai-dlc/templates/monitoring.md`.

@@ -1,11 +1,11 @@
-# 03 · Implementación
+# 03 · Implementation
 
-> **Fase AI-DLC:** `03-implementation` — Poke-tools
+> **AI-DLC phase:** `03-implementation` — Poke-tools
 
-Qué está construido, qué falta y las notas para mantener el código.
+What is built, what is missing and the notes needed to maintain the code.
 
-- [backlog.md](backlog.md) — hecho, pendiente, notas de implementación y desviaciones
-- Guía para desarrollar: [CONTRIBUTING.md](../../CONTRIBUTING.md)
-- Contexto técnico (direcciones, comportamientos del juego): [CLAUDE.md](../../CLAUDE.md)
+- [backlog.md](backlog.md) — done, pending, implementation notes and deviations
+- Development guide: [CONTRIBUTING.md](../../CONTRIBUTING.md)
+- Technical context (addresses, game behaviors): [CLAUDE.md](../../CLAUDE.md)
 
-Plantilla: `.ai-dlc/templates/backlog.md`.
+Template: `.ai-dlc/templates/backlog.md`.

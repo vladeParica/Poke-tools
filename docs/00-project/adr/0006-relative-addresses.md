@@ -1,29 +1,26 @@
-# ADR-0006 — Direcciones de combate relativas a `gEnemyParty`
+# ADR-0006 — Battle addresses relative to `gEnemyParty`
 
-> **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada
-> **Fecha:** 2026-10-29 (registro retroactivo)  ·  **Dueño:** vladeParica
+> **AI-DLC phase:** `02-design`  ·  **Status:** accepted
+> **Date:** 2026-10-29 (retroactive)  ·  **Owner:** vladeParica
 
-## Contexto
-Las direcciones de memoria cambian entre USA, Europa y Japón y entre revisiones (1.0/1.1).
-Solo la versión USA tiene mapa de símbolos verificado (pret/pokefirered). Devon Studios
-da, para cada versión, unas pocas direcciones base (semilla del RNG, equipos, SaveBlocks).
+## Context
+Memory addresses change between USA, Europe and Japan and between revisions (1.0/1.1).
+Only the USA version has a verified symbol map (pret/pokefirered). Devon Studios provides,
+for each version, a few base addresses (RNG seed, parties, SaveBlocks).
 
-## Decisión
-El bot detecta juego, idioma y revisión leyendo la cabecera de la ROM (`0x080000AE`,
-`0x080000AF`, `0x080000BC`), toma las direcciones base de Devon Studios para esa versión y
-calcula el resto (cursores de combate, `gBattleMons`, `gBattleOutcome`…) como
-**desplazamientos fijos desde `gEnemyParty`**, medidos en USA. `gMain` se estima desde la
-semilla del RNG cuando no está verificado, y el panel muestra un diagnóstico para
-comprobarlo.
+## Decision
+The bot detects the game, language and revision from the ROM header (`0x080000AE`,
+`0x080000AF`, `0x080000BC`), takes Devon Studios' base addresses for that version, and
+computes the rest (battle cursors, `gBattleMons`, `gBattleOutcome`…) as **fixed offsets from
+`gEnemyParty`**, measured on USA. `gMain` is estimated from the RNG seed address when not
+verified, and the panel shows diagnostics to check it.
 
-## Alternativas consideradas
-- **Tablas completas por versión** — exactas, pero sin mapa de símbolos para EUR/JPN no se
-  pueden verificar.
-- **Buscar patrones en memoria en tiempo real** — frágil y lento en Lua.
+## Alternatives considered
+- **Full tables per version** — exact, but without a symbol map for EUR/JPN they can't be verified.
+- **Pattern search in memory at runtime** — fragile and slow in Lua.
 
-## Consecuencias
-- **Positivas:** un solo código para todas las versiones; añadir una versión = 6–8
-  direcciones base.
-- **Costos:** en versiones distintas de USA las direcciones derivadas no están verificadas
-  en el juego real. El bot avisa en consola ("la bandera de combate no está verificada
-  para este idioma") y la línea de diagnóstico del panel permite comprobarlo.
+## Consequences
+- **Positive:** one codebase for every version; adding a version = 6–8 base addresses.
+- **Costs:** on non-USA versions the derived addresses are not verified in the real game.
+  The bot warns in the console ("la bandera de combate no está verificada para este
+  idioma") and the panel's diagnostics line lets the player check it.

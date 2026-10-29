@@ -1,51 +1,51 @@
-# Estrategia de pruebas — Poke-tools
+# Test strategy — Poke-tools
 
-> **Fase AI-DLC:** `04-testing`
-> Cómo se verifican los bots, incluidos los casos límite de los PRD.
+> **AI-DLC phase:** `04-testing`
+> How the bots are verified, including the PRDs' edge cases.
 
-## Niveles
-| Nivel | Alcance | Herramientas | Qué cubre |
+## Levels
+| Level | Scope | Tools | What it covers |
 |---|---|---|---|
-| Build | `src/` → `.lua` generado | `build.py`, CI | Que lo versionado coincide con las fuentes |
-| Simulador | Bot completo contra un juego imitado | Python + lupa (Lua 5.1), `tests/mock*.lua`, `tests/run_*.py` | Modos, filtros, RNG, combates, rutas, ataques, configuración inválida |
-| Juego real | Bot en VBA-rr con la ROM | Manual | Lo que el simulador no imita: tiempos reales, idiomas, rarezas del emulador |
+| Build | `src/` → generated `.lua` | `build.py`, CI | That what's committed matches the sources |
+| Simulator | Whole bot against an imitated game | Python + lupa (Lua 5.1), `tests/mock*.lua`, `tests/run_*.py` | Modes, filters, RNG, battles, routes, moves, invalid configuration |
+| Real game | Bot in VBA-rr with the ROM | Manual | What the simulator doesn't imitate: real timings, languages, emulator quirks |
 
-## Cómo correrlas
+## How to run them
 ```
 pip install -r requirements-dev.txt
-python shinybot/build.py && python trainbot/build.py   # no debe cambiar ningún archivo
+python shinybot/build.py && python trainbot/build.py   # must not change any file
 cd shinybot/tests && python run_test.py && python run_rng.py && python run_wild.py \
   && python run_cfg.py && python run_far.py && cd ../..
 python trainbot/tests/run_train.py && python trainbot/tests/run_learn.py && python trainbot/tests/run_want.py
 ```
-Duración aproximada: Shiny Bot ~40 s, Train Bot ~50 s.
+Approximate duration: Shiny Bot ~40 s, Train Bot ~50 s.
 
-## Escenarios y resultado esperado
+## Scenarios and expected results
 
-| Runner | Escenarios | Se espera |
+| Runner | Scenarios | Expected |
 |---|---|---|
-| `shinybot/tests/run_test.py` | wild, static, gift, roamer (con y sin limpiar RAM) | Todos terminan en `PAUSED` |
-| `run_rng.py` | Roamer RNG | Calibra y encuentra el objetivo (`PAUSED`) |
-| `run_wild.py`, `run_far.py` | Salvaje RNG, objetivo cercano y lejano (Tele) | Se acerca a un paso, calibra y encuentra (`PAUSED`) |
-| `run_cfg.py` | JSON correcto en varios modos; JSON con errores | `PAUSED` en los correctos; el inválido no arranca (`TIMEOUT` esperando a que se corrija) |
-| `trainbot/tests/run_train.py` | evs, record, pokerus, level, nolearn | EVs y nivel del objetivo; ruta grabada; sin pasarse con Pokérus |
-| `run_learn.py` | aprender ataques (`auto`, `never`, `ask` con y sin respuesta) | Aprende u olvida según la configuración |
-| `run_want.py` | `wantedMoves` | Solo aprende los ataques pedidos |
+| `shinybot/tests/run_test.py` | wild, static, gift, roamer (with and without clearing RAM) | All end in `PAUSED` |
+| `run_rng.py` | Roamer RNG | Calibrates and finds the target (`PAUSED`) |
+| `run_wild.py`, `run_far.py` | Wild RNG, near and far target (Teachy TV) | Gets one step away, calibrates and finds it (`PAUSED`) |
+| `run_cfg.py` | Valid JSON in several modes; invalid JSON | `PAUSED` for the valid ones; the invalid one doesn't start (`TIMEOUT` waiting for a fix) |
+| `trainbot/tests/run_train.py` | evs, record, pokerus, level, nolearn | Goal EVs and level; route recorded; no overshoot with Pokérus |
+| `run_learn.py` | Move learning (`auto`, `never`, `ask` with and without an answer) | Learns or forgets according to the configuration |
+| `run_want.py` | `wantedMoves` | Only learns the requested moves |
 
-## Caminos críticos (se prueban siempre)
-- Leer al Pokémon solo cuando está completo (3 frames estables).
-- No pasarse de EVs sin `allowOvershoot`, también con Pokérus.
-- Configuración inválida: no arrancar y explicar el error.
-- Volver al punto de entreno tras curarse; ruta con puertas.
+## Critical paths (always tested)
+- Read the Pokémon only when it's complete (3 stable frames).
+- No EV overshoot without `allowOvershoot`, also with Pokérus.
+- Invalid configuration: don't start and explain the error.
+- Go back to the training spot after healing; routes through doors.
 
-## Datos de prueba
-Los escenarios están definidos dentro de cada `mock*.lua` y `run_*.py`; usan
-partidas ficticias (la del Shiny Bot es TID 12345 / SID 54321) y no necesitan ROM.
+## Test data
+Scenarios are defined inside each `mock*.lua` and `run_*.py`; they use fictitious save
+files (the Shiny Bot's is TID 12345 / SID 54321) and need no ROM.
 
-## Huecos conocidos
-| Hueco | Riesgo | Decisión |
+## Known gaps
+| Gap | Risk | Decision |
 |---|---|---|
-| Los runners imprimen resultados y no fallan solos | Una regresión pasa el CI si no lanza excepción | Aceptado por ahora: el CI detecta errores de ejecución y build desactualizado; añadir comprobaciones está en el [backlog](../03-implementation/backlog.md) |
-| El simulador no imita tiempos ni gráficos reales | Algo que pasa en el simulador falla en el juego | Probar en el juego real antes de publicar; decirlo cuando no se pudo |
-| Idiomas EUR/JPN sin pruebas en el juego real | Direcciones derivadas incorrectas | Aviso en consola + diagnóstico en el panel; pendiente de verificar |
-| `tools/rng/` sin pruebas | Resultados incorrectos de búsqueda | Se validan al usar las semillas en el juego |
+| Runners print results and don't fail by themselves | A regression passes CI if it doesn't raise an exception | Accepted for now: CI catches runtime errors and stale builds (and checks the 8 `PAUSED` in `run_test.py`); adding checks is in the [backlog](../03-implementation/backlog.md) |
+| The simulator doesn't imitate real timings or graphics | Something that passes in the simulator fails in the game | Test in the real game before publishing; say so when it wasn't possible |
+| EUR/JPN languages untested in the real game | Wrong derived addresses | Console warning + panel diagnostics; pending verification |
+| `tools/rng/` has no tests | Wrong search results | Validated when the seeds are used in the game |

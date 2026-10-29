@@ -1,67 +1,66 @@
-# Carta del proyecto — Poke-tools
+# Project charter — Poke-tools
 
-> **Fase AI-DLC:** `00-project`  ·  **Estado:** borrador (documentación retroactiva)
-> **Dueño:** vladeParica  ·  **Fecha:** 2026-10-29
+> **AI-DLC phase:** `00-project`  ·  **Status:** approved (retroactive documentation)
+> **Owner:** vladeParica  ·  **Date:** 2026-10-29
 
-## Visión
-Que conseguir un Pokémon shiny y perfecto, y entrenarlo con EVs exactos, en Rojo Fuego /
-Verde Hoja sea cuestión de configurar un JSON y dejar el emulador trabajando, no de horas
-de reinicios y combates manuales.
+## Vision
+Getting a shiny, perfect Pokémon in FireRed / LeafGreen, and training it to exact EVs,
+should be a matter of filling in a JSON file and leaving the emulator running, not hours
+of manual resets and battles.
 
-## Contexto
-En la 3ª generación todo lo aleatorio sale de un único generador (LCRNG) cuyo estado se
-puede leer en memoria. Herramientas como las de
-[Devon Studios](https://github.com/DevonStudios/LuaScripts) muestran ese estado en
-pantalla, pero el jugador todavía tiene que pulsar el botón en el frame exacto, caminar
-hasta el encuentro o pelear cientos de combates para los EVs. VBA-rr permite que un
-script Lua lea la memoria y pulse botones, así que esa parte se puede automatizar.
+## Context
+In Gen 3, everything random comes from a single generator (LCRNG) whose state can be read
+from memory. Tools like [Devon Studios'](https://github.com/DevonStudios/LuaScripts) show
+that state on screen, but the player still has to press the button on the exact frame,
+walk to the encounter or fight hundreds of battles for EVs. VBA-rr lets a Lua script read
+memory and press buttons, so that part can be automated.
 
-## Problema
-Para el jugador de FRLG en emulador:
-- La manipulación del RNG exige precisión de un frame (1/60 s) y mucha repetición.
-- El soft reset a ciegas puede tardar miles de intentos.
-- El entrenamiento de EVs exactos es tedioso y fácil de arruinar (un combate de más contra
-  la especie equivocada).
+## Problem
+For a FRLG player on an emulator:
+- RNG manipulation needs one-frame precision (1/60 s) and a lot of repetition.
+- Blind soft resetting can take thousands of attempts.
+- Training exact EVs is tedious and easy to ruin (one extra battle against the wrong species).
 
-## Alcance
-**Dentro del alcance**
-- Shiny Bot: búsqueda de shinies / naturaleza / IVs, a ciegas y con RNG (estáticos,
-  regalos, roamers, salvajes), semilla inicial y SID de partida nueva.
-- Train Bot: EVs y nivel, elección de rival y de ataque, aprender ataques, evolución,
-  ida y vuelta al Centro Pokémon, avisos al celular.
-- Herramientas de cálculo de RNG fuera del emulador (`tools/rng/`).
-- Rojo Fuego y Verde Hoja, USA y Europa (ESP, FRA, ITA, GER); JPN con direcciones propias.
+## Scope
+**In scope**
+- Shiny Bot: searching for shinies / natures / IVs, blind and with RNG (statics, gifts,
+  roamers, wild), initial seed and new-game SID.
+- Train Bot: EVs and levels, choice of opponent and move, move learning, evolution, trips
+  to and from the Pokémon Center, phone notifications.
+- RNG calculation tools outside the emulator (`tools/rng/`).
+- FireRed and LeafGreen, USA and Europe (ESP, FRA, ITA, GER); JPN with its own addresses.
 
-**Fuera del alcance (explícito)**
-- Otros juegos (Rubí/Zafiro/Esmeralda, Gen 4–5) — los scripts de Devon Studios ya los
-  cubren; se podrían portar más adelante.
-- Otros emuladores (BizHawk, mGBA) — ver [ADR-0001](adr/0001-lua-51-en-vba-rr.md).
-- Distribuir ROMs, partidas o savestates.
-- Juego en línea, intercambios reales o cualquier uso en hardware original.
+**Out of scope (explicit)**
+- Other games (Ruby/Sapphire/Emerald, Gen 4–5) — Devon Studios' scripts already cover them;
+  they could be ported later.
+- Other emulators (BizHawk, mGBA) — see [ADR-0001](adr/0001-lua-51-on-vba-rr.md).
+- Distributing ROMs, save files or savestates.
+- Online play, real trades or anything on original hardware.
 
-## Métricas de éxito
-- Un objetivo RNG alcanzable (dentro de `farSearch`) se consigue sin intervención salvo
-  guardar el estado al final.
-- El Train Bot termina con los EVs **exactos** pedidos (sin pasarse si `allowOvershoot` es false).
-- Ningún cambio en un modo rompe otro: todas las pruebas de simulador siguen dando el
-  resultado esperado.
-- Los modos se validan en el juego real antes de darlos por terminados (no solo en el simulador).
+## Success metrics
+- A reachable RNG target (within `farSearch`) is obtained with no intervention other than
+  saving the state at the end.
+- The Train Bot finishes with **exactly** the requested EVs (no overshoot when
+  `allowOvershoot` is false).
+- No change in one mode breaks another: every simulator test keeps giving the expected result.
+- Modes are validated in the real game before they are considered done (not only in the simulator).
 
-## Principios (no negociables)
-- **No romper lo que ya funciona.** Cada cambio en un modo no debe tocar los demás.
-- **El Shiny Bot solo busca.** Lo nuevo va en scripts aparte ([ADR-0003](adr/0003-bots-separados.md)).
-- **Todo lo que ve el jugador va en español** (panel, consola, log, JSON).
-- **Honestidad sobre lo probado:** lo que solo se probó en el simulador se dice así.
-- **Nunca se suben ROMs, partidas ni savestates** al repositorio.
+## Principles (non-negotiable)
+- **Don't break what already works.** A change in one mode must not affect the others.
+- **The Shiny Bot only searches.** New things go in separate scripts ([ADR-0003](adr/0003-separate-bots.md)).
+- **Everything the player sees in the game is in Spanish** (panel, console, logs, JSON).
+- **Honesty about testing:** anything only tested in the simulator is reported as such.
+- **ROMs, save files and savestates are never committed** to the repository.
+- **The repository is generic:** nothing from a specific save file.
 
-## Riesgos principales
-| Riesgo | Impacto | Mitigación |
+## Key risks
+| Risk | Impact | Mitigation |
 |---|---|---|
-| Direcciones de memoria distintas por idioma/revisión | El bot lee basura o no detecta el combate | Direcciones relativas a `gEnemyParty` ([ADR-0006](adr/0006-direcciones-relativas.md)); aviso en consola cuando el idioma no está verificado; diagnóstico en el panel |
-| El simulador no reproduce el juego real | Un cambio pasa las pruebas y falla en el emulador | Probar en el juego antes de dar algo por terminado; documentar lo no probado |
-| Comportamientos de VBA-rr (diálogos de error, pausas) | El bot se queda trabado | Documentados en `CLAUDE.md`; se evitan `savestate.create` numerado y se pide apagar *Pause When Inactive* |
-| Dos instancias pulsando botones a la vez | Acciones erráticas | Archivos de bloqueo (`inst_N.lock`, `train_running.lock`) |
-| Licencia de la base (GPL-3.0) | Obligaciones al redistribuir | Repositorio bajo GPL-3.0 ([ADR-0008](adr/0008-licencia-gpl-3.md)) |
+| Memory addresses differ by language/revision | The bot reads garbage or misses battles | Addresses relative to `gEnemyParty` ([ADR-0006](adr/0006-relative-addresses.md)); console warning when the language isn't verified; diagnostics in the panel |
+| The simulator doesn't reproduce the real game | A change passes tests and fails in the emulator | Test in the game before calling something done; document what wasn't tested |
+| VBA-rr quirks (error dialogs, pauses) | The bot gets stuck | Documented in `CLAUDE.md`; numbered `savestate.create` is avoided and *Pause When Inactive* must be off |
+| Two instances pressing buttons at once | Erratic actions | Lock files (`inst_N.lock`, `train_running.lock`) |
+| License of the code base (GPL-3.0) | Obligations when redistributing | Repository under GPL-3.0 ([ADR-0008](adr/0008-gpl-3-license.md)) |
 
-## Decisiones abiertas
-- Ninguna. La licencia GPL-3.0 quedó aceptada en [ADR-0008](adr/0008-licencia-gpl-3.md).
+## Open decisions
+- None. The GPL-3.0 license was accepted in [ADR-0008](adr/0008-gpl-3-license.md).

@@ -1,18 +1,18 @@
-# Seguridad
+# Security
 
-## Qué cubre
-Los bots corren en tu PC con tus permisos: crean carpetas y, si configuras `notify`,
-lanzan `curl` para enviar avisos. El análisis completo está en el
-[modelo de amenazas](docs/02-design/threat-model.md).
+## Scope
+The bots run on your PC with your permissions: they create folders and, if you configure
+`notify`, run `curl` to send notifications. The full analysis is in the
+[threat model](docs/02-design/threat-model.md).
 
-## Recomendaciones para usuarios
-- Descarga los scripts solo de este repositorio y revisa cualquier `.lua` de terceros
-  antes de cargarlo en VBA-rr: un script Lua puede ejecutar comandos en tu PC.
-- Tu webhook de Discord y tu tema de ntfy son **secretos**: no los publiques ni subas tu
-  JSON con ellos. Si se filtra un webhook, bórralo en Discord y crea otro.
-- Usa un tema de ntfy largo y difícil de adivinar.
+## Recommendations for users
+- Only download the scripts from this repository, and review any third-party `.lua`
+  before loading it in VBA-rr: a Lua script can run commands on your PC.
+- Your Discord webhook and your ntfy topic are **secrets**: don't publish them or commit
+  your JSON with them. If a webhook leaks, delete it in Discord and create a new one.
+- Use a long, hard-to-guess ntfy topic.
 
-## Reportar una vulnerabilidad
-No abras un issue público. Usa
+## Reporting a vulnerability
+Don't open a public issue. Use
 [**Report a vulnerability**](https://github.com/vladeParica/Poke-tools/security/advisories/new)
-en la pestaña *Security* del repositorio, con los pasos para reproducirla.
+in the repository's *Security* tab, with steps to reproduce it.

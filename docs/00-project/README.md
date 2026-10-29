@@ -1,13 +1,13 @@
-# 00 · Proyecto
+# 00 · Project
 
-> **Fase AI-DLC:** `00-project` — Poke-tools
+> **AI-DLC phase:** `00-project` — Poke-tools
 
-Qué es el proyecto y las decisiones detrás de él.
+What the project is and the decisions behind it.
 
-- [charter.md](charter.md) — visión, problema, alcance, métricas y riesgos
-- [glossary.md](glossary.md) — el vocabulario común; el resto de documentos lo usa
-- [data-classification.md](data-classification.md) — datos según su sensibilidad
-- [adr/](adr/) — una decisión de arquitectura (ADR) por archivo
-- [creditos.md](creditos.md) — de dónde sale la base del código y qué más hay para reutilizar
+- [charter.md](charter.md) — vision, problem, scope, metrics and risks
+- [glossary.md](glossary.md) — the shared vocabulary; every other document uses it
+- [data-classification.md](data-classification.md) — data by sensitivity
+- [adr/](adr/) — one architecture decision record (ADR) per file
+- [credits.md](credits.md) — where the code base comes from and what else can be reused
 
-Plantillas en `.ai-dlc/templates/`: `charter.md`, `glossary.md`, `data-classification.md`, `adr.md`.
+Templates in `.ai-dlc/templates/`: `charter.md`, `glossary.md`, `data-classification.md`, `adr.md`.

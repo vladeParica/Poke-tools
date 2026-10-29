@@ -1,121 +1,120 @@
-# Contratos — Poke-tools
+# Contracts — Poke-tools
 
-> **Fase AI-DLC:** `02-design`
-> No hay API de red. Los contratos públicos son lo que el jugador escribe o guarda: el
-> **JSON de configuración**, el **archivo de ruta**, las **teclas** y los **archivos que
-> genera** cada bot. Cambiar cualquiera de ellos rompe la configuración o las rutas de
-> los usuarios: se anota en el `CHANGELOG.md`.
+> **AI-DLC phase:** `02-design`
+> There is no network API. The public contracts are what the player writes or keeps: the
+> **configuration JSON**, the **route file**, the **keys** and the **files each bot
+> generates**. Changing any of them breaks users' configuration or routes: record it in
+> `CHANGELOG.md`.
 >
-> **Fuente de verdad:** la tabla `CONFIG` al principio de `shinybot/src/bot_body.lua` y de
-> `trainbot/src/train_body.lua` (valores por defecto) y los JSON comentados de cada bot.
+> **Source of truth:** the `CONFIG` table at the top of `shinybot/src/bot_body.lua` and of
+> `trainbot/src/train_body.lua` (defaults), and each bot's commented JSON.
 
-## Convenciones del JSON
-- Archivo `FRLG_ShinyBot.json` / `FRLG_TrainBot.json` en la **misma carpeta** que el script.
-- JSON con comentarios `//` ([ADR-0004](../00-project/adr/0004-configuracion-json-comentado.md)).
-- `null` (u omitir la clave) = valor por defecto.
-- Estadísticas: `hp, atk, def, spa, spd, spe` o `ps, ata, def, ate, dfe, vel`.
-- Naturalezas en inglés o español; especies y ataques con el nombre en inglés del juego.
-- Errores: el bot no arranca, los lista en la consola y espera a que se pulse **0**.
+## JSON conventions
+- File `FRLG_ShinyBot.json` / `FRLG_TrainBot.json` in the **same folder** as the script.
+- JSON with `//` comments ([ADR-0004](../00-project/adr/0004-commented-json-config.md)).
+- `null` (or omitting the key) = default value.
+- Stats: `hp, atk, def, spa, spd, spe` or the Spanish `ps, ata, def, ate, dfe, vel`.
+- Natures in English or Spanish; species and moves by their English in-game name.
+- Errors: the bot doesn't start, lists them in the console and waits for **0** to be pressed.
 
 ## Shiny Bot — `FRLG_ShinyBot.json`
 
-| Clave | Tipo | Por defecto | Qué hace |
+| Key | Type | Default | What it does |
 |---|---|---|---|
-| `shiny` | bool | `true` | Exigir shiny |
-| `species` | lista de texto | `null` | Solo estas especies (modos salvajes) |
-| `natures` | lista de texto | `null` | Naturalezas aceptadas |
-| `minIVs` / `maxIVs` | objeto estadística → 0–31 | `null` | Rango de IVs |
-| `minIVTotal` | número 0–186 | `null` | Suma mínima de IVs |
-| `hiddenPower` | `{type, minPower}` | `null` | Poder Oculto |
-| `mode` | texto | `null` (el JSON incluido trae `"Salvaje RNG"`) | Modo al cargar |
-| `newGameTSV` | lista de texto hex | `null` = TSV que dan Ditto 6×31 shiny | Partida nueva |
-| `initialSeeds` | lista de texto hex | `null` | Semillas para el modo Semilla inicial |
-| `afterSeedMode` | texto | `null` | Modo a lanzar al caer en la semilla |
-| `walkAxis` | `"horizontal"` \| `"vertical"` | `"horizontal"` | Eje de la caminata |
-| `walkFrames` | número | `16` | Frames por paso |
-| `holdB` | bool | `false` | Correr (solo Salvaje) |
-| `wildOneStep` | bool | `true` | Salvaje RNG: acercarse a un paso del encuentro |
-| `pressGapMin` / `pressGapMax` | número | `2` / `24` | Espera al azar entre pulsaciones de A |
-| `resetTimeout` | número | `5400` | Frames sin resultado antes de reiniciar |
-| `farSearch` | número | `20000000` | Avances a revisar buscando objetivo |
-| `teachy` | bool | `true` | Usar la Tele Pokémon (registrada en SELECT) |
-| `teachyBeyond` | número | `5000` | Usarla si ahorra más de estos avances |
-| `teachyMargin` | número | `null` = retraso + 1500 | Cerrarla estos avances antes |
-| `triesPerTarget` | número | `10` | Intentos de corrección por objetivo |
-| `reseed` | bool | `true` | Soft reset para otra semilla si no hay objetivo |
-| `reseedAfterFailedTargets` | número | `3` | Objetivos fallidos antes de cambiar semilla |
-| `maxReseeds` | número | `10` | Máximo de cambios de semilla |
-| `savestateSlot` | 1–10 | `null` | Guardar estado solo (en VBA-rr v22 da error) |
-| `logFile` | texto | `"shiny_log.txt"` | Log de hallazgos |
-| `stopOthers` | bool | `true` | Detener las demás instancias al encontrar |
-| `sharedDir` | texto | `null` = carpeta del script | Carpeta compartida entre instancias (`logDir` va dentro) |
-| `logDir` | texto | `"logs"` | Subcarpeta de logs y archivos de trabajo |
-| `resetOnLoad` | bool | `true` | Reiniciar el juego al cargar el script |
+| `shiny` | bool | `true` | Require shiny |
+| `species` | list of text | `null` | Only these species (wild modes) |
+| `natures` | list of text | `null` | Accepted natures |
+| `minIVs` / `maxIVs` | object stat → 0–31 | `null` | IV range |
+| `minIVTotal` | number 0–186 | `null` | Minimum IV sum |
+| `hiddenPower` | `{type, minPower}` | `null` | Hidden Power |
+| `mode` | text | `null` (the bundled JSON uses `"Salvaje RNG"`) | Mode on load (Spanish name) |
+| `newGameTSV` | list of hex text | `null` = TSVs that give a shiny 6×31 Ditto | New game |
+| `initialSeeds` | list of hex text | `null` | Seeds for Initial seed mode |
+| `afterSeedMode` | text | `null` | Mode to launch after hitting the seed |
+| `walkAxis` | `"horizontal"` \| `"vertical"` | `"horizontal"` | Walking axis |
+| `walkFrames` | number | `16` | Frames per step |
+| `holdB` | bool | `false` | Run (Wild only) |
+| `wildOneStep` | bool | `true` | Wild RNG: get one step away from the encounter first |
+| `pressGapMin` / `pressGapMax` | number | `2` / `24` | Random wait between A presses |
+| `resetTimeout` | number | `5400` | Frames without a result before resetting |
+| `farSearch` | number | `20000000` | Advances to scan for a target |
+| `teachy` | bool | `true` | Use the Teachy TV (registered on SELECT) |
+| `teachyBeyond` | number | `5000` | Use it if it saves more than this many advances |
+| `teachyMargin` | number | `null` = delay + 1500 | Close it this many advances before |
+| `triesPerTarget` | number | `10` | Correction attempts per target |
+| `reseed` | bool | `true` | Soft reset for another seed if there is no target |
+| `reseedAfterFailedTargets` | number | `3` | Failed targets before changing seed |
+| `maxReseeds` | number | `10` | Maximum seed changes |
+| `savestateSlot` | 1–10 | `null` | Save a state automatically (errors on VBA-rr v22) |
+| `logFile` | text | `"shiny_log.txt"` | Match log |
+| `stopOthers` | bool | `true` | Stop other instances on a match |
+| `sharedDir` | text | `null` = script folder | Folder shared between instances (`logDir` goes inside) |
+| `logDir` | text | `"logs"` | Subfolder for logs and working files |
+| `resetOnLoad` | bool | `true` | Reset the game when the script loads |
 
-Obsoletas, se ignoran: `rngMaxSearch`, `wildMaxSearch`, `reseedBeyond`.
+Obsolete, ignored: `rngMaxSearch`, `wildMaxSearch`, `reseedBeyond`.
 
 ## Train Bot — `FRLG_TrainBot.json`
 
-| Clave | Tipo | Por defecto | Qué hace |
+| Key | Type | Default | What it does |
 |---|---|---|---|
-| `evs` | objeto estadística → 0–255 | `null` = solo nivel | EVs objetivo (máx. 510 en total) |
-| `targetLevel` | número | `null` | Nivel objetivo |
-| `maxLevel` | número | `null` | Detenerse a este nivel aunque falten EVs |
-| `species` | lista de texto | `null` = según los EVs | Pelear solo contra estas |
-| `avoidSpecies` | lista de texto | `null` (el JSON incluido trae las que se autodestruyen) | Nunca pelear contra estas |
-| `allowOvershoot` | bool | `false` | Permitir pasarse del objetivo |
-| `healBelow` | % | `40` | Curarse tras el combate bajo este % de PS |
-| `fleeBelow` | % | `20` | Huir en pleno combate bajo este % |
-| `minPP` | número | `3` | Curarse si quedan menos PP en ataques que hacen daño |
-| `learnMoves` | `"auto"` \| `"never"` \| `"ask"` | `"auto"` | Qué hacer con ataques nuevos |
-| `wantedMoves` | lista (máx. 4) | `null` | Solo aprender estos |
-| `keepMoves` | lista | `null` | Nunca olvidar estos |
-| `askTimeout` | segundos | `300` | Con `ask`: cuánto esperar antes de decidir solo |
-| `evolve` | bool | `false` | Dejar evolucionar |
-| `stopOnShiny` | bool | `true` | Pausar con un shiny salvaje |
-| `notify` | `{ntfy, discord}` | `null` | Avisos al celular |
-| `walkAxis` / `walkFrames` | como el Shiny Bot | | |
-| `routeFile` | texto | `"FRLG_TrainRoute.txt"` | Archivo de ruta |
-| `healMode` | `"nurse"` \| `"tile"` | `"nurse"` | Enfermera o casilla que cura |
-| `logFile` / `logDir` | texto | `"train_log.txt"` / `"logs"` | Log |
+| `evs` | object stat → 0–255 | `null` = level only | Target EVs (max 510 total) |
+| `targetLevel` | number | `null` | Target level |
+| `maxLevel` | number | `null` | Stop at this level even if EVs are missing |
+| `species` | list of text | `null` = based on EVs | Only fight these |
+| `avoidSpecies` | list of text | `null` (the bundled JSON lists the self-destructing ones) | Never fight these |
+| `allowOvershoot` | bool | `false` | Allow going past the goal |
+| `healBelow` | % | `40` | Heal after a battle below this HP % |
+| `fleeBelow` | % | `20` | Run mid-battle below this % |
+| `minPP` | number | `3` | Heal if fewer PP are left in damaging moves |
+| `learnMoves` | `"auto"` \| `"never"` \| `"ask"` | `"auto"` | What to do with new moves |
+| `wantedMoves` | list (max 4) | `null` | Only learn these |
+| `keepMoves` | list | `null` | Never forget these |
+| `askTimeout` | seconds | `300` | With `ask`: how long to wait before deciding alone |
+| `evolve` | bool | `false` | Allow evolution |
+| `stopOnShiny` | bool | `true` | Pause on a wild shiny |
+| `notify` | `{ntfy, discord}` | `null` | Phone notifications |
+| `walkAxis` / `walkFrames` | same as the Shiny Bot | | |
+| `routeFile` | text | `"FRLG_TrainRoute.txt"` | Route file |
+| `healMode` | `"nurse"` \| `"tile"` | `"nurse"` | Nurse or healing tile |
+| `logFile` / `logDir` | text | `"train_log.txt"` / `"logs"` | Log |
 
-`notify.ntfy` debe cumplir `[A-Za-z0-9_-]+`; `notify.discord` debe empezar por `https://`.
-Si no, el aviso no se envía.
+`notify.ntfy` must match `[A-Za-z0-9_-]+`; `notify.discord` must start with `https://`.
+Otherwise the notification isn't sent.
 
-## Archivo de ruta — `FRLG_TrainRoute*.txt`
+## Route file — `FRLG_TrainRoute*.txt`
 
 ```
-GO grupo mapa x y dir;grupo mapa x y dir;...
-BACK grupo mapa x y dir;...
+GO group map x y dir;group map x y dir;...
+BACK group map x y dir;...
 ```
-- `GO`: del punto de entreno al lugar de curación. `BACK`: de vuelta.
-- `x`, `y`: coordenadas de memoria (casilla del mapa + 7). `dir`: 0 ninguna, 1 abajo,
-  2 arriba, 3 izquierda, 4 derecha.
-- El último paso de `BACK` es el **punto de entreno**. Detalles y rutas listas en
+- `GO`: from the training spot to the healing place. `BACK`: the way back.
+- `x`, `y`: memory coordinates (map tile + 7). `dir`: 0 none, 1 down, 2 up, 3 left, 4 right.
+- The last step of `BACK` is the **training spot**. Details and ready-made routes in
   [`trainbot/examples/routes/`](../../trainbot/examples/routes/README.md).
 
-## Teclas
+## Keys
 
-| Tecla | Shiny Bot | Train Bot |
+| Key | Shiny Bot | Train Bot |
 |---|---|---|
-| 6 | — | Grabar ruta (ida, curación, vuelta) |
-| 7 | Iniciar / detener | Iniciar / detener |
-| 8 | Cambiar modo | Ficha completa del Pokémon |
-| 9 | Panel compacto / completo / oculto | Panel compacto / completo / oculto |
-| 0 | Recargar JSON | Recargar JSON (con el bot detenido) |
+| 6 | — | Record route (there, heal, back) |
+| 7 | Start / stop | Start / stop |
+| 8 | Change mode | Full Pokémon summary |
+| 9 | Panel compact / full / hidden | Panel compact / full / hidden |
+| 0 | Reload JSON | Reload JSON (with the bot stopped) |
 
-## Archivos que generan los bots
+## Files generated by the bots
 
-| Archivo | Bot | Dónde | Para qué |
+| File | Bot | Where | What for |
 |---|---|---|---|
-| `shiny_log.txt` | Shiny | `logDir` | Hallazgos con PID, naturaleza, IVs e intentos |
-| `inst_N.lock` | Shiny | `logDir` | Instancia N viva (varias ventanas) |
-| `shiny_stop.flag` | Shiny | `logDir` | Una instancia encontró el objetivo: las demás paran |
-| `train_log.txt` | Train | `logDir` | Combates, EVs, ataques aprendidos, curaciones |
-| `train_running.lock` | Train | `logDir` | Impide dos Train Bot a la vez |
-| `FRLG_TrainRoute.txt` | Train | carpeta del script | Ruta grabada con la tecla 6 |
+| `shiny_log.txt` | Shiny | `logDir` | Matches with PID, nature, IVs and attempts |
+| `inst_N.lock` | Shiny | `logDir` | Instance N is alive (multiple windows) |
+| `shiny_stop.flag` | Shiny | `logDir` | An instance found the target: the others stop |
+| `train_log.txt` | Train | `logDir` | Battles, EVs, learned moves, healing trips |
+| `train_running.lock` | Train | `logDir` | Prevents two Train Bots at once |
+| `FRLG_TrainRoute.txt` | Train | script folder | Route recorded with key 6 |
 
-## Memoria del juego
-Las direcciones y estructuras que leen los bots (equipo, combate, mapa, RNG) están en la
-sección **Direcciones** de [`CLAUDE.md`](../../CLAUDE.md), con la versión USA como
-referencia y la regla de desplazamientos de [ADR-0006](../00-project/adr/0006-direcciones-relativas.md).
+## Game memory
+The addresses and structures the bots read (party, battle, map, RNG) are in the
+**Addresses** section of [`CLAUDE.md`](../../CLAUDE.md), with the USA version as reference
+and the offset rule from [ADR-0006](../00-project/adr/0006-relative-addresses.md).

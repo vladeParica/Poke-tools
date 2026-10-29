@@ -1,28 +1,27 @@
-# ADR-0004 — Configuración en un JSON comentado junto al script
+# ADR-0004 — Configuration in a commented JSON next to the script
 
-> **Fase AI-DLC:** `02-design`  ·  **Estado:** aceptada
-> **Fecha:** 2026-10-29 (registro retroactivo)  ·  **Dueño:** vladeParica
+> **AI-DLC phase:** `02-design`  ·  **Status:** accepted
+> **Date:** 2026-10-29 (retroactive)  ·  **Owner:** vladeParica
 
-## Contexto
-El jugador tiene que poder cambiar qué busca o cómo entrena sin tocar el código, y
-entender cada opción sin abrir documentación aparte. VBA-rr no tiene interfaz para
-formularios.
+## Context
+Players must be able to change what the bot searches for or how it trains without touching
+the code, and understand each option without opening separate documentation. VBA-rr has
+no UI for forms.
 
-## Decisión
-Cada bot lee `FRLG_<Bot>.json` de **su misma carpeta**. Se admiten comentarios `//`
-(se quitan antes de leer) para que el archivo de ejemplo explique cada opción. Las
-opciones aceptan nombres en inglés o español (naturalezas, estadísticas). Un error de
-configuración no detiene el emulador: el bot lo muestra en consola y espera a que se
-corrija y se pulse **0**.
+## Decision
+Each bot reads `FRLG_<Bot>.json` from **its own folder**. `//` comments are allowed
+(stripped before parsing) so the example file explains every option (in Spanish, like
+everything the player sees). Options accept English or Spanish names (natures, stats). A
+configuration error doesn't stop the emulator: the bot shows it in the console and waits
+for it to be fixed and **0** to be pressed.
 
-## Alternativas consideradas
-- **Constantes al principio del `.lua`** — obliga a editar el script y se pierde al actualizar.
-- **Menú dentro del juego** — mucho código de interfaz y poco práctico para listas (especies, IVs).
-- **JSON estricto** — sin comentarios, el jugador no sabe qué hace cada opción.
+## Alternatives considered
+- **Constants at the top of the `.lua`** — forces editing the script and is lost on update.
+- **In-game menu** — a lot of UI code and impractical for lists (species, IVs).
+- **Strict JSON** — without comments, players don't know what each option does.
 
-## Consecuencias
-- **Positivas:** actualizar el bot no pisa la configuración; ejemplos reutilizables
-  (`trainbot/examples/`); validación con mensajes en español.
-- **Costos:** parser JSON propio en Lua 5.1, mantenido a mano. El formato es el contrato
-  público: renombrar una opción rompe los JSON de los usuarios (ver
-  [contratos](../../02-design/api-contracts.md)).
+## Consequences
+- **Positive:** updating the bot doesn't overwrite the configuration; reusable examples
+  (`trainbot/examples/`); validation with Spanish messages.
+- **Costs:** a hand-maintained JSON parser in Lua 5.1. The format is the public contract:
+  renaming an option breaks users' JSON files (see [contracts](../../02-design/api-contracts.md)).

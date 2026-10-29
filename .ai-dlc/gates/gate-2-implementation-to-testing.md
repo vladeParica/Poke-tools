@@ -1,23 +1,23 @@
-# Gate 2 — Implementación → Pruebas
+# Gate 2 — Implementation → Testing
 
-> **Fase AI-DLC:** salida de `03-implementation`.
-> **Objetivo:** confirmar que lo construido coincide con el diseño y está listo para probarse.
+> **AI-DLC phase:** exit of `03-implementation`.
+> **Goal:** confirm what was built matches the design and is ready to be tested.
 
-Marca cada punto solo cuando esté completo **y revisado por una persona**.
+Tick each item only when it is complete **and reviewed by a person**.
 
-## Código vs. diseño
-- [x] El comportamiento coincide con `docs/02-design/` (o la diferencia está en una ADR).
-- [x] [`backlog.md`](../../docs/03-implementation/backlog.md) refleja lo hecho y lo pendiente.
+## Code vs. design
+- [x] Behavior matches `docs/02-design/` (or the difference is captured in an ADR).
+- [x] [`backlog.md`](../../docs/03-implementation/backlog.md) reflects what is done and what is pending.
 
-## Calidad básica
-- [x] `build.py` regenera los `.lua` sin cambios (el CI lo comprueba).
-- [x] Las mitigaciones del modelo de amenazas están en el código (filtro de `notify`, archivos de bloqueo).
-- [x] Ningún secreto, ROM ni partida en el repo; la configuración está en el JSON del jugador.
+## Quality basics
+- [x] `build.py` regenerates the `.lua` files with no changes (CI checks it).
+- [x] The threat model's mitigations are in the code (`notify` filter, `logDir` check, lock files).
+- [x] No secrets, ROMs or save files in the repo; configuration lives in the player's JSON.
 
-## Documentación al día
-- [x] Contratos y `CHANGELOG.md` actualizados si cambió el JSON, la ruta o las teclas.
-- [x] Las notas de implementación cubren lo que no es obvio.
+## Docs in sync
+- [x] Contracts and `CHANGELOG.md` updated if the JSON, route format or keys changed.
+- [x] Implementation notes cover what isn't obvious.
 
-## Veredicto
-- [x] **Gate 2 passed** (aprobada) — se puede pasar a `04-testing`.
-- Aprobada por: vladeParica (revisión delegada a Claude)  ·  Fecha: 2026-10-29
+## Verdict
+- [x] **Gate 2 passed** — cleared to move to `04-testing`.
+- Approved by: vladeParica (review delegated to Claude)  ·  Date: 2026-10-29

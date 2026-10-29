@@ -1,44 +1,44 @@
-# Backlog y notas de implementación — Poke-tools
+# Backlog and implementation notes — Poke-tools
 
-> **Fase AI-DLC:** `03-implementation`
-> Qué está hecho, qué falta y lo que un mantenedor necesita saber.
+> **AI-DLC phase:** `03-implementation`
+> What is done, what is left and what a maintainer needs to know.
 
-## Estado
-Shiny Bot v4.3 y Train Bot v1.10 funcionan y se usaron en el juego real (Rojo Fuego USA).
-La documentación AI-DLC se escribió después del código.
+## Status
+Shiny Bot v4.3 and Train Bot v1.10 work and have been used in the real game (FireRed USA).
+The AI-DLC documentation was written after the code.
 
-## Hecho
-- [x] Shiny Bot: 10 modos, filtros de shiny / naturaleza / IVs / Poder Oculto, varias instancias.
-- [x] Shiny Bot: Salvaje RNG a un paso del encuentro, Tele Pokémon para objetivos lejanos.
-- [x] Shiny Bot: semilla inicial encadenada con otro modo; elegir TID/SID en partida nueva.
-- [x] Train Bot: EVs exactos y nivel, decisor de combate con fórmula de daño Gen 3.
-- [x] Train Bot: aprender ataques (`auto`, `never`, `ask`, `wantedMoves`, `keepMoves`), evolución.
-- [x] Train Bot: rutas grabadas, curación con enfermera o casilla, avisos ntfy/Discord.
-- [x] Herramientas de RNG fuera del emulador (`tools/rng/`).
-- [x] Simuladores y escenarios de prueba de los dos bots.
-- [x] Documentación AI-DLC, CI, licencia y plantillas de GitHub.
+## Done
+- [x] Shiny Bot: 10 modes, shiny / nature / IV / Hidden Power filters, multiple instances.
+- [x] Shiny Bot: Wild RNG one step before the encounter, Teachy TV for far targets.
+- [x] Shiny Bot: initial seed chained with another mode; pick TID/SID on a new game.
+- [x] Train Bot: exact EVs and levels, battle decisions with the Gen 3 damage formula.
+- [x] Train Bot: move learning (`auto`, `never`, `ask`, `wantedMoves`, `keepMoves`), evolution.
+- [x] Train Bot: recorded routes, healing with the nurse or a tile, ntfy/Discord notifications.
+- [x] RNG tools outside the emulator (`tools/rng/`).
+- [x] Simulators and test scenarios for both bots.
+- [x] AI-DLC documentation, CI, license, logo and GitHub templates.
 
-## Pendiente
-- [ ] Que los runners de prueba **fallen solos** cuando un escenario no da el resultado
-  esperado (hoy imprimen y una persona compara) — ver [estrategia de pruebas](../04-testing/test-strategy.md).
-- [ ] Verificar en el juego real las direcciones derivadas para EUR y JPN ([ADR-0006](../00-project/adr/0006-direcciones-relativas.md)).
-- [ ] Ideas a partir de los scripts de Devon Studios: RNG de Recogida, golpes críticos,
-  versión BizHawk ([créditos](../00-project/creditos.md)).
+## Pending
+- [ ] Make the test runners **fail by themselves** when a scenario doesn't give the
+  expected result (today they print and a person compares) — see the [test strategy](../04-testing/test-strategy.md).
+- [ ] Verify the derived addresses for EUR and JPN in the real game ([ADR-0006](../00-project/adr/0006-relative-addresses.md)).
+- [ ] Ideas from Devon Studios' scripts: Pickup RNG, critical hits, BizHawk version
+  ([credits](../00-project/credits.md)).
 
-## Notas de implementación
-- **Nunca editar los `.lua` generados**: editar `src/` y correr `build.py`
-  ([ADR-0002](../00-project/adr/0002-script-unico-generado.md)). El CI falla si no coinciden.
-- **Comportamientos del juego y del emulador ya descubiertos** (Pokémon a medio crear,
-  evolución con `inBattle` activo, puertas que mueven el SaveBlock, zona purificada,
-  Snorlax, `savestate.create`): sección correspondiente de [`CLAUDE.md`](../../CLAUDE.md).
-- **Direcciones de memoria**: tabla en `CLAUDE.md`; todo lo de combate es relativo a
+## Implementation notes
+- **Never edit the generated `.lua` files**: edit `src/` and run `build.py`
+  ([ADR-0002](../00-project/adr/0002-single-generated-script.md)). CI fails if they don't match.
+- **Game and emulator behaviors already discovered** (half-created Pokémon, evolution with
+  `inBattle` set, doors that move the SaveBlock, purified zone, Snorlax,
+  `savestate.create`): see the corresponding section of [`CLAUDE.md`](../../CLAUDE.md).
+- **Memory addresses**: table in `CLAUDE.md`; everything battle-related is relative to
   `gEnemyParty`.
-- `trainbot/src/train_tables.lua` se regenera con `python trainbot/tools/gen_tables.py`
-  (descarga pokefirered a `tools/pret_cache/`, ignorado por git).
-- El Train Bot incluye las tablas de nombres del Shiny Bot (`shinybot/src/tables2.lua`)
-  al generarse: cambiarlas afecta a los dos.
+- `trainbot/src/train_tables.lua` is regenerated with `python trainbot/tools/gen_tables.py`
+  (downloads pokefirered to `tools/pret_cache/`, ignored by git).
+- The Train Bot includes the Shiny Bot's name tables (`shinybot/src/tables2.lua`) when
+  built: changing them affects both.
 
-## Desviaciones del diseño
-| El diseño decía | Se hizo | Por qué | ADR |
+## Deviations from design
+| Design said | We did | Why | ADR |
 |---|---|---|---|
-| — | — | La documentación describe el código existente; no hay desviaciones registradas | — |
+| — | — | The documentation describes the existing code; no deviations recorded | — |

@@ -1,47 +1,46 @@
-# Instalación y publicación — Poke-tools
+# Installation and releases — Poke-tools
 
-> **Fase AI-DLC:** `05-deployment`
-> No hay servidores: "desplegar" es instalar el script en la PC del jugador y publicar
-> una versión en GitHub.
+> **AI-DLC phase:** `05-deployment`
+> There are no servers: "deploying" means installing the script on the player's PC and
+> publishing a release on GitHub.
 
-## 1. Requisitos del jugador
-| Qué | Para qué | Notas |
+## 1. Player requirements
+| What | What for | Notes |
 |---|---|---|
-| VBA-rr con Lua | Ejecutar los bots | Desactivar *Pause When Inactive* |
-| ROM de Rojo Fuego o Verde Hoja | El juego | No se incluye ni se distribuye |
-| `curl` | Avisos del Train Bot (opcional) | Viene con Windows 10/11 |
+| VBA-rr with Lua | Running the bots | Turn off *Pause When Inactive* |
+| FireRed or LeafGreen ROM | The game | Not included or distributed |
+| `curl` | Train Bot notifications (optional) | Ships with Windows 10/11 |
 
-## 2. Instalación
-1. Descarga el `.lua` y el `.json` del bot (desde la carpeta `shinybot/` o `trainbot/`,
-   o desde una versión publicada en *Releases*).
-2. Ponlos juntos en una carpeta. Para el Train Bot, añade la ruta (`FRLG_TrainRoute*.txt`)
-   si usas una ya grabada.
-3. Guarda la partida en el lugar donde va a trabajar el bot (los modos con soft reset
-   vuelven a esa partida).
-4. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → abre el `.lua` → *Run*.
-5. Comprueba en la consola la línea `Juego: FireRed USA…` (juego e idioma detectados).
-6. Pulsa **7**.
+## 2. Installation
+1. Download the bot's `.lua` and `.json` (from the `shinybot/` or `trainbot/` folder, or
+   from a published release under *Releases*).
+2. Put them together in a folder. For the Train Bot, add the route (`FRLG_TrainRoute*.txt`)
+   if you use a recorded one.
+3. Save the game where the bot is going to work (modes with soft resets go back to that save).
+4. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
+5. Check the `Juego: FireRed USA…` line in the console (detected game and language).
+6. Press **7**.
 
-**Configuración secreta:** el único dato sensible es `notify` (tema de ntfy o webhook de
-Discord). Va en tu JSON local; no lo subas a ningún repositorio.
+**Secret configuration:** the only sensitive value is `notify` (ntfy topic or Discord
+webhook). It goes in your local JSON; never commit it to any repository.
 
-## 3. Actualizar
-1. Detén el bot (**7**) y cierra la ventana de Lua.
-2. Reemplaza solo el `.lua`; **conserva tu JSON y tus rutas**.
-3. Revisa el [CHANGELOG](../../CHANGELOG.md) por si alguna opción cambió de nombre.
+## 3. Updating
+1. Stop the bot (**7**) and close the Lua window.
+2. Replace only the `.lua`; **keep your JSON and your routes**.
+3. Check the [CHANGELOG](../../CHANGELOG.md) in case an option was renamed.
 
-**Volver atrás:** usa el `.lua` de la versión anterior (en *Releases* o en el historial de git).
+**Rolling back:** use the previous version's `.lua` (from *Releases* or the git history).
 
-## 4. Publicar una versión (mantenedor)
-1. Actualiza la versión en el `print` de inicio del bot (`src/`), regenera con `build.py`.
-2. Corre todas las pruebas ([estrategia](../04-testing/test-strategy.md)) y prueba en el juego real.
-3. Pasa las entradas de `[Sin publicar]` del `CHANGELOG.md` a la nueva versión.
-4. Commit `chore: version shinybot vX.Y` (o `trainbot`), etiqueta `shinybot-vX.Y` /
-   `trainbot-vX.Y` y sube (con el OK del dueño).
-5. Crea el *Release* en GitHub adjuntando el `.lua` y el `.json` del bot.
+## 4. Publishing a release (maintainer)
+1. Update the version in the bot's startup `print` (`src/`) and rebuild with `build.py`.
+2. Run every test ([strategy](../04-testing/test-strategy.md)) and test in the real game.
+3. Move the `[Unreleased]` entries of `CHANGELOG.md` to the new version.
+4. Commit `chore: release shinybot vX.Y` (or `trainbot`), tag `shinybot-vX.Y` /
+   `trainbot-vX.Y` and push (with the owner's OK).
+5. Create the GitHub *Release* attaching the bot's `.lua` and `.json`.
 
-## 5. Lista antes de publicar
-- [ ] CI en verde (build al día + simulador sin errores)
-- [ ] Probado en el juego real (o anotado que no se pudo)
-- [ ] `CHANGELOG.md` y [contratos](../02-design/api-contracts.md) al día si cambió el JSON, la ruta o las teclas
-- [ ] Ningún JSON con `notify` real, ninguna ROM ni partida en el commit
+## 5. Pre-release checklist
+- [ ] CI green (up-to-date build + simulator with no errors)
+- [ ] Tested in the real game (or noted that it couldn't be)
+- [ ] `CHANGELOG.md` and [contracts](../02-design/api-contracts.md) updated if the JSON, route format or keys changed
+- [ ] No JSON with a real `notify`, no ROM or save file in the commit

@@ -1,18 +1,18 @@
 #!/bin/sh
-# Conventional Commits, maximo 3 lineas, sin co-autor.
-# Activar una vez:  git config core.hooksPath .githooks
+# Conventional Commits in English, at most 3 lines, no co-author.
+# Enable once:  git config core.hooksPath .githooks
 msg_file="$1"
 first=$(head -n1 "$msg_file")
 if ! printf '%s' "$first" | grep -Eq '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9._-]+\))?!?: .+'; then
-  echo "commit-msg: usa Conventional Commits, en ingles, ej. 'feat(trainbot): pause on evolution'" >&2
+  echo "commit-msg: use Conventional Commits in English, e.g. 'feat(trainbot): pause on evolution'" >&2
   exit 1
 fi
 lines=$(grep -v '^#' "$msg_file" | sed -e '/^[[:space:]]*$/d' | wc -l)
 if [ "$lines" -gt 3 ]; then
-  echo "commit-msg: maximo 3 lineas (tiene $lines)" >&2
+  echo "commit-msg: at most 3 lines (got $lines)" >&2
   exit 1
 fi
 if grep -qi '^co-authored-by:' "$msg_file"; then
-  echo "commit-msg: sin lineas Co-Authored-By" >&2
+  echo "commit-msg: no Co-Authored-By lines" >&2
   exit 1
 fi

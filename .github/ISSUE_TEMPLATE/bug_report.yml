@@ -1,12 +1,12 @@
-name: Reportar un error
-description: El bot hace algo que no debería o se detiene sin motivo
+name: Bug report
+description: The bot does something it shouldn't, or stops for no reason
 labels: [bug]
 body:
   - type: markdown
     attributes:
       value: |
-        Gracias por avisar. **No pegues tu webhook de Discord ni tu tema de ntfy**, ni
-        adjuntes ROMs o partidas.
+        Thanks for reporting. **Don't paste your Discord webhook or ntfy topic**, and don't
+        attach ROMs or save files.
   - type: dropdown
     id: bot
     attributes:
@@ -17,38 +17,38 @@ body:
   - type: input
     id: version
     attributes:
-      label: Versión del bot
-      description: La primera línea de la consola de Lua (ej. "FRLG Train Bot v1.10")
+      label: Bot version
+      description: The first line of the Lua console (e.g. "FRLG Train Bot v1.10")
     validations:
       required: true
   - type: input
     id: game
     attributes:
-      label: Juego e idioma
-      description: La línea "Juego:" de la consola (ej. "FireRed USA v1.0")
+      label: Game and language
+      description: The "Juego:" line of the console (e.g. "FireRed USA v1.0")
     validations:
       required: true
   - type: input
     id: mode
     attributes:
-      label: Modo (Shiny Bot) o estado (Train Bot)
+      label: Mode (Shiny Bot) or state (Train Bot)
   - type: textarea
     id: what
     attributes:
-      label: Qué pasó y qué esperabas
+      label: What happened and what you expected
     validations:
       required: true
   - type: textarea
     id: steps
     attributes:
-      label: Pasos para reproducirlo
+      label: Steps to reproduce
   - type: textarea
     id: config
     attributes:
-      label: Tu JSON (sin "notify")
+      label: Your JSON (without "notify")
       render: jsonc
   - type: textarea
     id: log
     attributes:
-      label: Últimas líneas del log y de la consola
+      label: Last lines of the log and the console
       render: text

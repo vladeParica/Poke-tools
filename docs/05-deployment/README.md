@@ -1,9 +1,9 @@
-# 05 · Despliegue
+# 05 · Deployment
 
-> **Fase AI-DLC:** `05-deployment` — Poke-tools
+> **AI-DLC phase:** `05-deployment` — Poke-tools
 
-Instalar los bots en VBA-rr, actualizarlos y publicar versiones.
+Installing the bots in VBA-rr, updating them and publishing releases.
 
-- [deploy-guide.md](deploy-guide.md) — requisitos, instalación, actualización y publicación
+- [deploy-guide.md](deploy-guide.md) — requirements, installation, updating and releases
 
-Plantilla: `.ai-dlc/templates/deploy-guide.md`.
+Template: `.ai-dlc/templates/deploy-guide.md`.

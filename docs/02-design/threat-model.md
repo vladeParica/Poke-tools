@@ -1,44 +1,44 @@
-# Modelo de amenazas — Poke-tools
+# Threat model — Poke-tools
 
-> **Fase AI-DLC:** `02-design`  ·  **Método:** STRIDE + priorización DREAD
-> **Autor:** vladeParica  ·  **Fecha:** 2026-10-29
+> **AI-DLC phase:** `02-design`  ·  **Method:** STRIDE + DREAD prioritization
+> **Author:** vladeParica  ·  **Date:** 2026-10-29
 
-## 1. Alcance y activos
-El sistema corre en la PC del jugador, sin servidor ni cuentas. Lo que hay que proteger:
-- **La PC del jugador**: los bots ejecutan comandos del sistema (`os.execute` para crear
-  carpetas y lanzar `curl`).
-- **El webhook de Discord y el tema de ntfy** del jugador ([clasificación](../00-project/data-classification.md)).
-- **La partida del jugador**: el bot pulsa botones y reinicia el juego; un fallo puede
-  hacer perder progreso no guardado.
-- **El repositorio**: no debe contener ROMs, partidas ni secretos.
+## 1. Scope and assets
+The system runs on the player's PC, with no server or accounts. What needs protecting:
+- **The player's PC**: the bots run system commands (`os.execute` to create folders and
+  launch `curl`).
+- **The player's Discord webhook and ntfy topic** ([classification](../00-project/data-classification.md)).
+- **The player's save**: the bot presses buttons and resets the game; a failure can lose
+  unsaved progress.
+- **The repository**: must not contain ROMs, save files or secrets.
 
-## 2. Flujo de datos
-Ver el [diagrama de contenedores](../architecture/c4-container.md). Entradas no
-confiables: el **JSON** y el **archivo de ruta** (los puede escribir o descargar
-cualquiera). Salida a la red: los **avisos** del Train Bot.
+## 2. Data flow
+See the [container diagram](../architecture/c4-container.md). Untrusted inputs: the
+**JSON** and the **route file** (anyone can write or share them). Network output: the
+Train Bot's **notifications**.
 
-## 3. Análisis STRIDE
-| Categoría | Amenaza | Componente | Mitigación |
+## 3. STRIDE analysis
+| Category | Threat | Component | Mitigation |
 |---|---|---|---|
-| **S**uplantación | Alguien adivina el tema de ntfy y envía avisos falsos o lee los reales | Avisos | Tema largo y difícil de adivinar (documentado en el JSON); los avisos no llevan datos sensibles |
-| **T**ampering | Un JSON o una ruta descargados con contenido malicioso para inyectar comandos en `os.execute` | Configuración, avisos | El tema de ntfy solo admite `[A-Za-z0-9_-]`; la URL de Discord solo `https://` + caracteres seguros; el texto del aviso se filtra a una lista blanca de caracteres antes de pasarlo a curl |
-| **T**ampering | `logDir` o `sharedDir` con comillas o variables para inyectar en el `mkdir` | Log | La ruta va entre comillas dobles y, si contiene `"`, `%`, `$` o `` ` ``, no se pasa al shell: el bot usa la carpeta del script |
-| **R**epudio | No saber qué hizo el bot mientras el jugador no miraba | Log | `shiny_log.txt` / `train_log.txt` con fecha, versión del juego y cada evento relevante |
-| **I**nformación expuesta | Subir al repo un JSON con el webhook o una ROM/partida | Repositorio | `.gitignore` bloquea ROMs, partidas, savestates, logs y bloqueos; los ejemplos usan `notify: null`; revisión en PR ([CONTRIBUTING](../../CONTRIBUTING.md)) |
-| **D**enegación de servicio | Dos instancias pulsando botones a la vez; aviso que bloquea el emulador | Bucle, avisos | Archivos de bloqueo; curl en segundo plano con `-m 15` |
-| **D**enegación de servicio | El bot reinicia el juego con progreso sin guardar | Modos | `resetOnLoad` documentado; el jugador guarda antes de iniciar (README) |
-| **E**levación de privilegios | El script corre con los permisos del usuario | Todos | No se piden permisos extra; solo `mkdir` y `curl`. Los scripts de terceros se deben revisar antes de cargarlos (consejo en [SECURITY](../../SECURITY.md)) |
+| **S**poofing | Someone guesses the ntfy topic and sends fake notifications or reads real ones | Notifications | Long, hard-to-guess topic (documented in the JSON); notifications carry no sensitive data |
+| **T**ampering | A downloaded JSON or route crafted to inject commands into `os.execute` | Configuration, notifications | The ntfy topic only allows `[A-Za-z0-9_-]`; the Discord URL only `https://` + safe characters; the notification text is filtered to an allow-list before reaching curl |
+| **T**ampering | `logDir` or `sharedDir` with quotes or variables to inject into `mkdir` | Log | The path is double-quoted and, if it contains `"`, `%`, `$` or `` ` ``, it isn't passed to the shell: the bot uses the script folder |
+| **R**epudiation | Not knowing what the bot did while the player wasn't watching | Log | `shiny_log.txt` / `train_log.txt` with date, game version and every relevant event |
+| **I**nformation disclosure | Committing a JSON with the webhook, or a ROM/save | Repository | `.gitignore` blocks ROMs, saves, savestates, logs and locks; examples use `notify: null`; PR review ([CONTRIBUTING](../../CONTRIBUTING.md)) |
+| **D**enial of service | Two instances pressing buttons at once; a notification blocking the emulator | Main loop, notifications | Lock files; curl in the background with `-m 15` |
+| **D**enial of service | The bot resets the game with unsaved progress | Modes | `resetOnLoad` documented; the player saves before starting (README) |
+| **E**levation of privilege | The script runs with the user's permissions | All | No extra permissions requested; only `mkdir` and `curl`. Third-party scripts should be reviewed before loading (advice in [SECURITY](../../SECURITY.md)) |
 
-## 4. Priorización DREAD
-| Amenaza | D | R | E | A | D | Total |
+## 4. DREAD prioritization
+| Threat | D | R | E | A | D | Total |
 |---|---|---|---|---|---|---|
-| Inyección de comandos vía `notify` en un JSON descargado | 8 | 2 | 2 | 2 | 3 | **17** (mitigada) |
-| Webhook de Discord publicado en el repo | 4 | 8 | 6 | 1 | 6 | **25** |
-| Tema de ntfy adivinado | 2 | 5 | 4 | 1 | 3 | **15** |
-| Inyección vía `logDir` / `sharedDir` | 8 | 2 | 2 | 1 | 2 | **15** (mitigada) |
-| Pérdida de progreso por reinicio | 4 | 6 | 1 | 3 | 8 | **22** |
+| Command injection via `notify` in a downloaded JSON | 8 | 2 | 2 | 2 | 3 | **17** (mitigated) |
+| Discord webhook published in the repo | 4 | 8 | 6 | 1 | 6 | **25** |
+| Guessed ntfy topic | 2 | 5 | 4 | 1 | 3 | **15** |
+| Injection via `logDir` / `sharedDir` | 8 | 2 | 2 | 1 | 2 | **15** (mitigated) |
+| Lost progress due to a reset | 4 | 6 | 1 | 3 | 8 | **22** |
 
-## 5. Riesgos aceptados
-- El jugador ejecuta scripts Lua con sus permisos: es como funciona VBA-rr; se acepta.
-- Los avisos de ntfy.sh viajan por un servicio público: se acepta porque solo llevan el
-  estado del bot.
+## 5. Accepted risks
+- The player runs Lua scripts with their own permissions: that's how VBA-rr works; accepted.
+- ntfy.sh notifications go through a public service: accepted because they only carry the
+  bot's status.

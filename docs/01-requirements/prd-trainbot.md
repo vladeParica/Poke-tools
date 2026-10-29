@@ -1,70 +1,69 @@
 # PRD — Train Bot
 
-> **Fase AI-DLC:** `01-requirements`  ·  **Estado:** borrador (documentación retroactiva de v1.10)
-> **Autor:** vladeParica  ·  **Fecha:** 2026-10-29
+> **AI-DLC phase:** `01-requirements`  ·  **Status:** approved (retroactive documentation of v1.10)
+> **Author:** vladeParica  ·  **Date:** 2026-10-29
 
-## 1. Problema
-Entrenar EVs exactos exige cientos de combates contra especies concretas, huir de las
-demás, curarse a tiempo y no pasarse del objetivo. Un error (un combate de más contra la
-especie equivocada) arruina el reparto. El jugador quiere fijar los EVs y el nivel y
-dejar que el bot lo haga.
+## 1. Problem
+Training exact EVs takes hundreds of battles against specific species, running from the
+rest, healing in time and not overshooting the target. One mistake (an extra battle
+against the wrong species) ruins the spread. The player wants to set the EVs and level and
+let the bot do it.
 
-## 2. Actores
-- **Jugador**: configura el JSON, graba (o elige) la **ruta**, coloca al personaje.
-- **Train Bot** (una sola instancia).
-- **Servicio de avisos** opcional: ntfy.sh o un webhook de Discord.
+## 2. Actors
+- **Player**: fills in the JSON, records (or picks) the **route**, positions the character.
+- **Train Bot** (a single instance).
+- Optional **notification service**: ntfy.sh or a Discord webhook.
 
-## 3. Flujo principal
-1. El jugador pone al Pokémon a entrenar primero en el equipo, configura `evs` /
-   `targetLevel` y la ruta, y pulsa **7** en el punto de entreno.
-2. El bot camina por la hierba (`walkAxis`, `walkFrames`) hasta que hay combate.
-3. En combate decide: **pelear** si la especie da EVs útiles (o está en `species`) y no
-   está en `avoidSpecies`; si no, **huir**.
-4. Elige el ataque de más daño (fórmula de daño de Gen 3, STAB, tipos, habilidades;
-   físico/especial según el tipo).
-5. Gestiona lo que pase en el combate: subir de nivel, aprender ataques
-   (`learnMoves`/`wantedMoves`/`keepMoves`), evolución (`evolve`), shiny salvaje
-   (`stopOnShiny`).
-6. Tras cada combate suma los EVs ganados; si quedan PS bajo `healBelow` o PP bajo
-   `minPP`, recorre la ruta `GO`, se cura (enfermera o casilla) y vuelve por `BACK`.
-7. Al llegar al objetivo se detiene, lo registra, avisa (`notify`) y pausa el juego.
+## 3. Main flow
+1. The player puts the Pokémon to train first in the party, sets `evs` / `targetLevel` and
+   the route, and presses **7** at the training spot.
+2. The bot walks in the grass (`walkAxis`, `walkFrames`) until a battle starts.
+3. In battle it decides: **fight** if the species gives useful EVs (or is in `species`)
+   and isn't in `avoidSpecies`; otherwise **run**.
+4. It picks the most damaging move (Gen 3 damage formula, STAB, types, abilities;
+   physical/special by type).
+5. It handles what happens in battle: level-ups, move learning
+   (`learnMoves`/`wantedMoves`/`keepMoves`), evolution (`evolve`), wild shinies (`stopOnShiny`).
+6. After each battle it adds up the EVs gained; if HP is below `healBelow` or PP below
+   `minPP`, it walks the `GO` route, heals (nurse or tile) and returns via `BACK`.
+7. When the goal is reached it stops, logs it, notifies (`notify`) and pauses the game.
 
-## 4. Reglas de negocio
-- EVs: máx. 255 por estadística y 510 en total. Pokérus ×2 y Brazal Firme ×2 por combate.
-- Sin `allowOvershoot`, no pelea si el combate lo pasaría del objetivo; si cada combate
-  da más EVs de los que faltan, se detiene y explica por qué.
-- Con `learnMoves: "auto"` aprende un ataque si hace más daño que el peor; nunca olvida
-  MOs ni `keepMoves`; con `wantedMoves` solo aprende esos.
-- `evolve: false` cancela la evolución manteniendo B.
-- Físico/especial por tipo (Normal, Lucha, Volador, Veneno, Tierra, Roca, Bicho,
-  Fantasma, Acero = físicos).
+## 4. Business rules
+- EVs: max 255 per stat and 510 total. Pokérus ×2 and Macho Brace ×2 per battle.
+- Without `allowOvershoot`, it doesn't fight if the battle would push it past the goal; if
+  every battle gives more EVs than are missing, it stops and explains why.
+- With `learnMoves: "auto"` it learns a move if it does more damage than the worst one; it
+  never forgets HMs or `keepMoves`; with `wantedMoves` it only learns those.
+- `evolve: false` cancels evolution by holding B.
+- Physical/special by type (Normal, Fighting, Flying, Poison, Ground, Rock, Bug, Ghost,
+  Steel = physical).
 
-## 5. Escenarios límite, de abuso y de riesgo
-| Escenario | Comportamiento esperado |
+## 5. Edge, abuse and risk scenarios
+| Scenario | Expected behavior |
 |---|---|
-| Rival con Autodestrucción / Explosión | `avoidSpecies` por defecto los evita (Geodude, Voltorb, Koffing…) |
-| El Pokémon pierde y aparece en el Centro | Si está sobre la ruta de vuelta, la sigue; si no, se detiene con mensaje |
-| El personaje no está en el punto de entreno ni en la ruta | No arranca: "El personaje no está en el punto de entreno" |
-| Ruta grabada con pasos falsos en las puertas | `cleanRoute()` los filtra al cargar y la guarda corregida |
-| Un NPC bloquea la ruta | Se detiene: "No pude volver al punto de entreno" |
-| Escena de evolución con `gMain.inBattle` todavía activo | Se distingue por `callback2`; mantiene B si `evolve: false` |
-| Prompt de aprender ataque (opcodes 0x5A/0x5B) | Responde según `learnMoves`; con `ask` avisa y espera `askTimeout` |
-| Aparece un shiny salvaje | Pausa (`stopOnShiny`) y avisa |
-| Dos ventanas con el Train Bot | La segunda no arranca (`train_running.lock` reciente) |
-| `notify` con un tema o una URL maliciosos | Solo acepta tema `[A-Za-z0-9_-]` y URL `https://` con caracteres seguros; el texto se filtra antes de pasarlo a curl |
-| Pokérus o Brazal Firme hacen imposible el número exacto | Se detiene y sugiere `allowOvershoot` u otro método |
+| Opponent with Selfdestruct / Explosion | The default `avoidSpecies` avoids them (Geodude, Voltorb, Koffing…) |
+| The Pokémon faints and wakes up in the Center | If it's on the way back, it follows it; otherwise it stops with a message |
+| The character isn't at the training spot or on the route | Doesn't start: "El personaje no está en el punto de entreno" |
+| Recorded route with bogus steps at doors | `cleanRoute()` filters them on load and saves the fixed route |
+| An NPC blocks the route | Stops: "No pude volver al punto de entreno" |
+| Evolution scene while `gMain.inBattle` is still set | Told apart by `callback2`; holds B if `evolve: false` |
+| Move-learning prompt (opcodes 0x5A/0x5B) | Answers according to `learnMoves`; with `ask` it notifies and waits `askTimeout` |
+| A wild shiny appears | Pauses (`stopOnShiny`) and notifies |
+| Two windows running the Train Bot | The second one doesn't start (recent `train_running.lock`) |
+| `notify` with a malicious topic or URL | Only accepts a `[A-Za-z0-9_-]` topic and an `https://` URL with safe characters; the text is filtered before reaching curl |
+| Pokérus or Macho Brace make the exact number impossible | Stops and suggests `allowOvershoot` or another method |
 
-## 6. Criterios de aceptación
-- [x] Escenarios `evs`, `record`, `pokerus`, `level` y `nolearn` terminan con los EVs y el
-  nivel pedidos en el simulador (`run_train.py`).
-- [x] Aprende y rechaza ataques según `learnMoves` y `wantedMoves` (`run_learn.py`, `run_want.py`).
-- [x] Graba, limpia y repite la ruta, incluida la casilla que cura (`tile`).
-- [ ] Cada cambio se confirma en el juego real antes de publicarlo.
+## 6. Acceptance criteria
+- [x] The `evs`, `record`, `pokerus`, `level` and `nolearn` scenarios end with the
+  requested EVs and level in the simulator (`run_train.py`).
+- [x] Learns and rejects moves according to `learnMoves` and `wantedMoves` (`run_learn.py`, `run_want.py`).
+- [x] Records, cleans and replays the route, including the healing tile (`tile`).
+- [ ] Every change is confirmed in the real game before it's published.
 
-## 7. Fuera del alcance
-- Entrenar a más de un Pokémon a la vez o al que no va primero (Repartir Experiencia).
-- Usar objetos en combate o vitaminas.
-- Calcular caminos solo ([ADR-0007](../00-project/adr/0007-rutas-grabadas.md)).
+## 7. Out of scope
+- Training more than one Pokémon at a time, or one that isn't first (Exp. Share).
+- Using items in battle or vitamins.
+- Computing paths on its own ([ADR-0007](../00-project/adr/0007-recorded-routes.md)).
 
-## 8. Decisiones abiertas
-- Ninguna para esta versión.
+## 8. Open decisions
+- None for this version.

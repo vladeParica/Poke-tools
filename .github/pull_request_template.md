@@ -1,17 +1,17 @@
-## Qué cambia
+## What changes
 
-<!-- Bot y modo afectados, y por qué. -->
+<!-- Affected bot and mode, and why. -->
 
-## Cómo se probó
+## How it was tested
 
-- [ ] Simulador: corrí los runners del bot afectado y los resultados son los esperados
-- [ ] Juego real: probado en ____ (juego / idioma) — o explico por qué no se pudo
+- [ ] Simulator: I ran the affected bot's runners and the results are the expected ones
+- [ ] Real game: tested on ____ (game / language), or I explain why it couldn't be tested
 
-## Lista
+## Checklist
 
-- [ ] Edité `src/` y regeneré con `build.py` (no toqué los `.lua` generados a mano)
-- [ ] No afecta a otros modos ni al otro bot
-- [ ] Todo lo que ve el jugador está en español
-- [ ] Si cambió el JSON, la ruta o las teclas: actualicé `docs/02-design/api-contracts.md` y `CHANGELOG.md`
-- [ ] Si cambió una decisión de diseño: actualicé o añadí una ADR
-- [ ] Sin ROMs, partidas, datos de una partida concreta ni `notify` real
+- [ ] I edited `src/` and rebuilt with `build.py` (I didn't edit the generated `.lua` by hand)
+- [ ] It doesn't affect other modes or the other bot
+- [ ] Everything the player sees in the game is in Spanish
+- [ ] If the JSON, route format or keys changed: I updated `docs/02-design/api-contracts.md` and `CHANGELOG.md`
+- [ ] If a design decision changed: I updated or added an ADR
+- [ ] No ROMs, save files, data from a specific save or real `notify` values
