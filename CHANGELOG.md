@@ -20,7 +20,7 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   official artwork), shiny, your own image or none, and its intensity.
 - Configurator: *Farm Bot* tab.
 - Configurator: *Game Boy Advance* skin (indigo shell, speaker grille, screen-like panels) and a
-  `--bg-size` skin variable. The *Noche* and *Shiny* skins were removed; saved choices fall back
+  `--bg-size`, `--on-bg` and `--on-bg-muted` skin variables. The *Noche* and *Shiny* skins were removed; saved choices fall back
   to *Poké Ball*.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live
   validation, sections as tabs (no page scrolling), examples, folder access in Edge/Chrome, four

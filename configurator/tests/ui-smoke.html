@@ -119,8 +119,8 @@ document.getElementById('f').onload = () => setTimeout(() => {
     const ss = d.getElementById('skin-select');
     ok('only the kept skins are listed', [...ss.options].map(o => o.value).join() === 'pokeball,hoja,gameboy,gba');
     ss.value = 'gba'; fire(ss, 'change');
-    ok('skin applied', d.documentElement.dataset.skin === 'gba' && w.getComputedStyle(d.body).backgroundColor === 'rgb(75, 61, 158)'
-      && w.getComputedStyle(d.body).backgroundSize.startsWith('14px 14px'));
+    ok('skin applied', d.documentElement.dataset.skin === 'gba' && w.getComputedStyle(d.body).backgroundColor === 'rgb(106, 98, 214)'
+      && /svg/.test(w.getComputedStyle(d.body).backgroundImage) && w.getComputedStyle(d.querySelector('.sections')).color === 'rgb(255, 255, 255)');
     const s2 = w.PT.skins.sanitize({ id: 'x', vars: { '--bg': 'red;}</style>', '--accent': 'url(https://evil/x.png)', '--text': '#fff' }, sprites: { mascot: 'javascript:alert(1)' } });
     ok('skin sanitizer drops unsafe values', !s2.vars['--bg'] && !s2.vars['--accent'] && s2.vars['--text'] === '#fff' && !s2.sprites.mascot);
   } catch (e) { R.push('ERROR ' + e.message + ' ' + e.stack); }

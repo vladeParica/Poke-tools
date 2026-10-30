@@ -48,6 +48,7 @@ To ship it with the configurator, turn it into a `skins/<id>.js` file that calls
 | Variable | Used for |
 |---|---|
 | `--bg`, `--bg-pattern`, `--bg-size` | Page background color, an optional pattern/gradient and its tile size (e.g. `14px 14px`) |
+| `--on-bg`, `--on-bg-muted` | Text placed straight on the page background (the section list); default `--text` / `--muted` |
 | `--surface`, `--surface-2` | Cards and inputs |
 | `--border` | Borders |
 | `--text`, `--muted` | Main and secondary text |

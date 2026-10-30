@@ -106,21 +106,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .card { border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); }
 
 /* section tabs */
-.sections { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; }
+/* The section list sits on the page background: --on-bg lets a skin with a dark or colored
+   background keep it readable while the cards keep --text. */
+.sections { min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 10px; color: var(--on-bg, var(--text)); }
 .nav-head { display: flex; gap: 10px; align-items: center; padding: 4px 4px 2px; }
 .nav-head .bot-icon { width: 38px; height: 38px; padding: 8px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); flex: none; }
 .nav-head b { display: block; font: 700 16px/1.2 var(--font-display); }
-.nav-head small { display: block; color: var(--muted); font-size: 12px; line-height: 1.3; }
+.nav-head small { display: block; color: var(--on-bg-muted, var(--muted)); font-size: 12px; line-height: 1.3; }
 .sections > select { min-height: 36px; }
 .nav-list { display: flex; flex-direction: column; gap: 4px; }
-.nav-sep { margin: 10px 8px 2px; font: 700 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+.nav-sep { margin: 10px 8px 2px; font: 700 11px/1 var(--font-body); text-transform: uppercase; letter-spacing: .6px; color: var(--on-bg-muted, var(--muted)); }
 .nav-item {
   display: flex; align-items: center; gap: 10px; width: 100%; text-align: left;
   padding: 9px 10px; border-radius: var(--radius-sm); border: 1px solid transparent;
-  background: transparent; cursor: pointer; font-weight: 600; color: var(--text);
+  background: transparent; cursor: pointer; font-weight: 600; color: inherit;
 }
-.nav-item:hover { background: var(--surface); border-color: var(--border); }
-.nav-item[aria-selected="true"] { background: var(--surface); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.nav-item:hover { background: var(--surface); border-color: var(--border); color: var(--text); }
+.nav-item[aria-selected="true"] { background: var(--surface); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); color: var(--text); }
 .nav-item .n-icon { width: 30px; height: 30px; padding: 6px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); flex: none; }
 .nav-item .n-title { flex: 1; min-width: 0; }
 .n-badge, .count {

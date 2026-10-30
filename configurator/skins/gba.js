@@ -1,33 +1,40 @@
-// Handheld-console skin: indigo shell with the speaker grille as the background, panels like
-// the dark screen bezel, light-purple buttons and the green power LED.
-PT.registerSkin({
-  id: 'gba',
-  name: 'Game Boy Advance',
-  author: 'Poke-tools',
-  dark: true,
-  vars: {
-    '--bg': '#4b3d9e',
-    '--bg-pattern': 'radial-gradient(circle, rgba(18, 10, 58, .32) 1.7px, transparent 2.3px), ' +
-      'linear-gradient(160deg, rgba(255, 255, 255, .16), rgba(255, 255, 255, 0) 45%)',
-    '--bg-size': '14px 14px, 100% 100%',
-    '--surface': '#25212f',
-    '--surface-2': '#2f2a3d',
-    '--border': '#4b4368',
-    '--text': '#efecf9',
-    '--muted': '#b9b2da',
-    '--accent': '#9c8cf5',
-    '--accent-ink': '#1b1830',
-    '--accent-2': '#3ad074',
-    '--accent-soft': 'rgba(156, 140, 245, .16)',
-    '--ok': '#3ad074',
-    '--warn': '#f0b54a',
-    '--error': '#ff6b6b',
-    '--header-bg': '#1c1926',
-    '--header-ink': '#e8e4f6',
-    '--radius': '18px',
-    '--radius-sm': '11px',
-    '--shadow': '0 4px 0 rgba(24, 14, 70, .55)',
-    '--font-display': '"Arial Black", "Segoe UI", system-ui, sans-serif',
-    '--backdrop-opacity': '.18'
-  }
-});
+// Handheld-console skin: glossy indigo plastic shell, near-black screen bezel as the top bar,
+// grey LCD-like panels, light-grey buttons and the speaker slots in the bottom-left corner.
+(function () {
+  // Six diagonal speaker slots, drawn in pixels from the bottom-left corner of the page.
+  var slots = '';
+  for (var i = 0; i < 6; i++) slots += "<line x1='" + i * 15 + "' y1='46' x2='" + (i * 15 + 24) + "' y2='0'/>";
+  var speaker = "<svg xmlns='http://www.w3.org/2000/svg' width='100%' height='100%'>" +
+    "<svg x='0' y='100%' overflow='visible'><g transform='translate(34 -84)' stroke='rgba(28, 20, 88, .45)' " +
+    "stroke-width='6' stroke-linecap='round'>" + slots + '</g></svg></svg>';
+
+  PT.registerSkin({
+    id: 'gba',
+    name: 'Game Boy Advance',
+    author: 'Poke-tools',
+    vars: {
+      '--bg': '#6a62d6',
+      '--bg-pattern': 'url("data:image/svg+xml,' + encodeURIComponent(speaker) + '"), ' +
+        'linear-gradient(150deg, #9b96ef 0%, #6d65d9 38%, #5047bd 100%)',
+      '--bg-size': '100% 100%, 100% 100%',
+      '--on-bg': '#ffffff',
+      '--on-bg-muted': '#e2dffc',
+      '--surface': '#cfd2ca',
+      '--surface-2': '#c1c5bb',
+      '--border': '#2a2a30',
+      '--text': '#1c1e1b',
+      '--muted': '#474b45',
+      '--accent': '#4f45c2',
+      '--accent-ink': '#ffffff',
+      '--accent-2': '#e4e4ec',
+      '--accent-soft': 'rgba(79, 69, 194, .16)',
+      '--header-bg': '#26262c',
+      '--header-ink': '#e6e6ee',
+      '--radius': '22px',
+      '--radius-sm': '12px',
+      '--shadow': '0 6px 0 rgba(36, 26, 110, .38)',
+      '--font-display': '"Arial Black", "Segoe UI", system-ui, sans-serif',
+      '--backdrop-opacity': '.2'
+    }
+  });
+})();
