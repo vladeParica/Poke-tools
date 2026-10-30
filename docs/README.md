@@ -8,7 +8,7 @@ are in [`.ai-dlc/gates/`](../.ai-dlc/gates/) and the templates in
 | Phase | Contents |
 |---|---|
 | [00 · Project](00-project/) | [Project charter](00-project/charter.md) · [Glossary](00-project/glossary.md) · [Data classification](00-project/data-classification.md) · [Decisions (ADRs)](00-project/adr/) · [Credits](00-project/credits.md) |
-| [01 · Requirements](01-requirements/) | [Shiny Bot PRD](01-requirements/prd-shinybot.md) · [Train Bot PRD](01-requirements/prd-trainbot.md) · [Configurator PRD](01-requirements/prd-configurator.md) |
+| [01 · Requirements](01-requirements/) | [Shiny Bot PRD](01-requirements/prd-shinybot.md) · [Train Bot PRD](01-requirements/prd-trainbot.md) · [Configurator PRD](01-requirements/prd-configurator.md) · [Farm Bot PRD](01-requirements/prd-farmbot.md) |
 | [02 · Design](02-design/) | [Architecture](02-design/architecture.md) · [Contracts: JSON, files, keys and memory](02-design/api-contracts.md) · [Threat model](02-design/threat-model.md) · [C4 diagrams](architecture/) |
 | [03 · Implementation](03-implementation/) | [Backlog and notes](03-implementation/backlog.md) |
 | [04 · Testing](04-testing/) | [Test strategy](04-testing/test-strategy.md) |

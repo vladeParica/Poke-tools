@@ -30,6 +30,10 @@
 | **Training spot** | Tile where the Train Bot walks looking for battles. |
 | **Route** | `FRLG_TrainRoute*.txt` file with the way to the healing place (`GO`) and back (`BACK`). |
 | **`healMode`** | How the Train Bot heals: `nurse` or `tile` (healing tile, Pokémon Tower 5F). |
+| **Pickup** | Ability (*Recogida*) that may give an item after a won battle; used by the Farm Bot's `objetos` mode. |
+| **Thief / Covet** | Moves (*Ladrón / Antojo*) that steal the target's held item; used by `robar`. |
+| **VS Seeker** | Key item (*Buscapelea*) that makes trainers ready for a rematch; recharges in 100 steps. |
+| **Trainer route** | Route recorded with key 5 that passes through the trainers' lines of sight (`dinero`). |
 | **Panel** | Text the bot draws over the game (key 9). |
 | **Simulator / mock** | Lua code that imitates the game's memory and buttons to test the bots without an emulator. |
 | **pret** | The `pret/pokefirered` decompilation project: source of game symbols and data. |

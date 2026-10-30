@@ -14,8 +14,8 @@
 ## 2. Installation
 1. Download the bot's `.lua` and `.json` (from the `shinybot/` or `trainbot/` folder, or
    from a published release under *Releases*).
-2. Put them together in a folder. For the Train Bot, add the route (`FRLG_TrainRoute*.txt`)
-   if you use a recorded one.
+2. Put them together in a folder. For the Train Bot or the Farm Bot, add the route
+   (`FRLG_TrainRoute*.txt`) if you use a recorded one.
 3. Save the game where the bot is going to work (modes with soft resets go back to that save).
 4. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
 5. Optional: open `configurator/index.html` to create or edit the JSON visually; in Edge or

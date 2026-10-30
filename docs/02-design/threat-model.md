@@ -25,6 +25,7 @@ Train Bot's **notifications**.
 | **T**ampering | `logDir` or `sharedDir` with quotes or variables to inject into `mkdir` | Log | The path is double-quoted and, if it contains `"`, `%`, `$` or `` ` ``, it isn't passed to the shell: the bot uses the script folder |
 | **T**ampering | A shared configurator skin with CSS injection, remote `url()` (tracking) or script in an SVG sprite | Configurator skins | `PT.skins.sanitize()`: allow-listed variables, no `;{}<>`, only `data:` images and fonts, sprites rendered as `img` elements ([ADR-0010](../00-project/adr/0010-skins-as-sanitized-data.md)) |
 | **T**ampering | A crafted JSON loaded into the configurator to inject HTML | Configurator | Every value is rendered with `textContent`; only our own SVG strings use `innerHTML` |
+| **T**ampering | The Farm Bot's menu automation picks the wrong option (e.g. SAVE) or gets lost | Farm Bot | Reads the START menu order and cursor, the party slot, the action list and the menu cursor from memory before each press; confirms TAKE by the held item disappearing; stops with a message on anything unexpected |
 | **R**epudiation | Not knowing what the bot did while the player wasn't watching | Log | `shiny_log.txt` / `train_log.txt` with date, game version and every relevant event |
 | **I**nformation disclosure | Committing a JSON with the webhook, or a ROM/save | Repository | `.gitignore` blocks ROMs, saves, savestates, logs and locks; examples use `notify: null`; PR review ([CONTRIBUTING](../../CONTRIBUTING.md)) |
 | **I**nformation disclosure | The configurator keeps the draft (which may hold `notify` secrets) in the browser's local storage | Configurator | Stays on the player's machine, per browser profile; nothing is sent anywhere |
@@ -40,6 +41,7 @@ Train Bot's **notifications**.
 | Guessed ntfy topic | 2 | 5 | 4 | 1 | 3 | **15** |
 | Injection via `logDir` / `sharedDir` | 8 | 2 | 2 | 1 | 2 | **15** (mitigated) |
 | Malicious configurator skin | 5 | 3 | 3 | 2 | 4 | **17** (mitigated) |
+| Farm Bot menu automation going wrong | 5 | 2 | 1 | 2 | 3 | **13** (mitigated) |
 | Lost progress due to a reset | 4 | 6 | 1 | 3 | 8 | **22** |
 
 ## 5. Accepted risks

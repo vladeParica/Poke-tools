@@ -16,6 +16,7 @@ Template: [`.ai-dlc/templates/adr.md`](../../../.ai-dlc/templates/adr.md).
 | [ADR-0008](0008-gpl-3-license.md) | GPL-3.0 license | accepted | 2026-10-29 |
 | [ADR-0009](0009-local-web-configurator.md) | The configurator is a local web page | accepted | 2026-10-29 |
 | [ADR-0010](0010-skins-as-sanitized-data.md) | Skins are sanitized data, and all art is original | accepted | 2026-10-29 |
+| [ADR-0011](0011-farm-bot-forked-from-train-bot.md) | Farm Bot is a separate script forked from the Train Bot | accepted | 2026-10-29 |
 
 ADRs 0001–0007 were recorded after the decision was made (retroactive documentation):
 they describe how the code is built today.

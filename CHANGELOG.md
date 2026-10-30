@@ -7,6 +7,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 ## [Unreleased]
 
 ### Added
+- **Farm Bot 1.0** (`farmbot/`): farms levels, items with Pickup, items stolen with Thief/Covet,
+  and money from trainer rematches with the VS Seeker; takes held items through the party menu
+  on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.
+- Configurator: *Farm Bot* tab.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live
   validation, sections as tabs (no page scrolling), examples, folder access in Edge/Chrome, five
   skins and custom skin import.

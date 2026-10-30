@@ -11,6 +11,7 @@ How the bots are built.
   [containers](../architecture/c4-container.md),
   [Shiny Bot](../architecture/c4-component-shinybot.md),
   [Train Bot](../architecture/c4-component-trainbot.md),
+  [Farm Bot](../architecture/c4-component-farmbot.md),
   [Configurator](../architecture/c4-component-configurator.md)
 
 Templates: `.ai-dlc/templates/` (`architecture.md`, `api-contracts.md`, `threat-model.md`, `c4-*.md`).

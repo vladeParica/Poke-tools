@@ -9,7 +9,8 @@
 > [0006](../00-project/adr/0006-relative-addresses.md) ·
 > [0007](../00-project/adr/0007-recorded-routes.md) ·
 > [0009](../00-project/adr/0009-local-web-configurator.md) ·
-> [0010](../00-project/adr/0010-skins-as-sanitized-data.md)
+> [0010](../00-project/adr/0010-skins-as-sanitized-data.md) ·
+> [0011](../00-project/adr/0011-farm-bot-forked-from-train-bot.md)
 
 ## 1. Style
 Each bot is a **monolithic Lua script** that runs inside the emulator and works as a
@@ -55,6 +56,13 @@ Train Bot (`trainbot/src/train_body.lua`):
 - **Navigation** — records, cleans (`cleanRoute`, `fixRoute`) and replays routes; heals with the nurse or a tile.
 - **Notifications** — `notify()` via curl.
 
+Farm Bot (`farmbot/src/farm_body.lua`, a copy of the Train Bot's body plus):
+- **Farm modes** — `nivel`, `objetos` (Pickup), `robar` (Thief/Covet), `dinero` (trainer rematches).
+- **Save data reader** — money and bag quantities (XOR the save key), VS Seeker charge, registered item.
+- **Take-items routine** — START → POKéMON → ITEM → TAKE, every step checked in memory with
+  addresses from pret's symbol maps (four USA builds); other versions pause instead.
+- **Trainer loop** — charge the VS Seeker, use it, walk the trainer route (key 5), come back.
+
 Configurator (`configurator/`, outside the emulator):
 - **Schema** — every bot option with type, default and Spanish label; checked against the bots' `CONFIG`.
 - **Core** — parses commented JSON, normalizes names like the bots, validates and serializes.
@@ -65,6 +73,7 @@ Diagrams: [context](../architecture/c4-context.md) ·
 [containers](../architecture/c4-container.md) ·
 [Shiny Bot components](../architecture/c4-component-shinybot.md) ·
 [Train Bot components](../architecture/c4-component-trainbot.md) ·
+[Farm Bot components](../architecture/c4-component-farmbot.md) ·
 [Configurator components](../architecture/c4-component-configurator.md).
 
 ## 3. Data model

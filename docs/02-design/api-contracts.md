@@ -82,6 +82,24 @@ Obsolete, ignored: `rngMaxSearch`, `wildMaxSearch`, `reseedBeyond`.
 `notify.ntfy` must match `[A-Za-z0-9_-]+`; `notify.discord` must start with `https://`.
 Otherwise the notification isn't sent.
 
+## Farm Bot — `FRLG_FarmBot.json`
+
+| Key | Type | Default | What it does |
+|---|---|---|---|
+| `mode` | `"nivel"` \| `"objetos"` \| `"robar"` \| `"dinero"` | `"nivel"` | What to farm |
+| `targetLevel` | number 1–100 | `null` | `nivel`: stop at this level (required unless `maxBattles`) |
+| `itemTarget` | number | `null` | `objetos`/`robar`: stop after storing this many items |
+| `takeItems` | `"auto"` \| `"pause"` | `"auto"` | Take held items through the menu, or pause and notify |
+| `wantedItems` | list of English item names | `null` = any | `robar`: only steal these |
+| `moneyTarget` | number 1–999999 | `null` | `dinero`: stop at this amount |
+| `trainerRouteFile` | text | `"FRLG_FarmTrainers.txt"` | `dinero`: route recorded with key 5 |
+| `maxBattles` | number | `null` | Stop after this many battles (any mode) |
+| `species`, `avoidSpecies`, `healBelow`, `fleeBelow`, `minPP`, `learnMoves`, `wantedMoves`, `keepMoves`, `askTimeout`, `evolve`, `stopOnShiny`, `notify`, `walkAxis`, `walkFrames`, `routeFile`, `healMode` | | as in the Train Bot | `fleeBelow` doesn't apply to trainer battles |
+| `logFile` / `logDir` | text | `"farm_log.txt"` / `"logs"` | Log |
+
+The trainer route file has the same format as the Center route; its `GO` and `BACK` start and
+end at the spot where the VS Seeker is used.
+
 ## Route file — `FRLG_TrainRoute*.txt`
 
 ```
@@ -97,7 +115,8 @@ BACK group map x y dir;...
 
 | Key | Shiny Bot | Train Bot |
 |---|---|---|
-| 6 | — | Record route (there, heal, back) |
+| 5 | — | — (Farm Bot: record the trainer route) |
+| 6 | — | Record route (there, heal, back) (Farm Bot: same) |
 | 7 | Start / stop | Start / stop |
 | 8 | Change mode | Full Pokémon summary |
 | 9 | Panel compact / full / hidden | Panel compact / full / hidden |
@@ -112,7 +131,10 @@ BACK group map x y dir;...
 | `shiny_stop.flag` | Shiny | `logDir` | An instance found the target: the others stop |
 | `train_log.txt` | Train | `logDir` | Battles, EVs, learned moves, healing trips |
 | `train_running.lock` | Train | `logDir` | Prevents two Train Bots at once |
-| `FRLG_TrainRoute.txt` | Train | script folder | Route recorded with key 6 |
+| `FRLG_TrainRoute.txt` | Train, Farm | script folder | Route recorded with key 6 |
+| `farm_log.txt` | Farm | `logDir` | Items found and stored, money, laps, level-ups |
+| `farm_running.lock` | Farm | `logDir` | Prevents two Farm Bots, and refuses to start while a Train Bot runs |
+| `FRLG_FarmTrainers.txt` | Farm | script folder | Trainer route recorded with key 5 |
 
 ## Configurator output
 
