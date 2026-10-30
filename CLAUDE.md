@@ -34,7 +34,7 @@ losing what was learned.
 - **Configurator:** when a bot option is added/renamed, update `configurator/js/schema.js`;
   when tables or examples change, run `python configurator/tools/build_data.py`. Its UI text is
   Spanish. No third-party Pokémon art in the repo: sprites are our own (ADR-0010); the form
-  backgrounds load official artwork from PokeAPI at runtime and are never stored (ADR-0013).
+  backgrounds load Pokémon Database sprites at runtime and are never stored (ADR-0013).
 
 ## Structure
 

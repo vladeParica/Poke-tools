@@ -77,9 +77,17 @@
         <div class="bg-edit">
           <div class="bg-preview" id="bg-preview" aria-hidden="true"></div>
           <div class="bg-controls">
-            <label class="help" for="bg-species">Pokémon (Gen 1–3), o sube tu imagen</label>
+            <label class="help" for="bg-species">Pokémon (Gen 1–3), o sube tu imagen. Sprites de <a href="https://pokemondb.net/sprites" target="_blank" rel="noopener">Pokémon Database</a></label>
             <input type="text" id="bg-species" list="bg-species-list" autocomplete="off" spellcheck="false">
             <datalist id="bg-species-list"></datalist>
+            <div class="row">
+              <select id="bg-style" aria-label="Estilo del fondo">
+                <option value="frlg">Sprite de Rojo Fuego / Verde Hoja</option>
+                <option value="home">Pokémon HOME (3D)</option>
+                <option value="artwork">Ilustración oficial</option>
+              </select>
+              <label class="check"><input type="checkbox" id="bg-shiny"> Shiny</label>
+            </div>
             <div class="row">
               <button class="btn small" type="button" id="btn-bg-upload"><span data-icon="upload"></span>Subir imagen</button>
               <button class="btn small" type="button" id="btn-bg-none"><span data-icon="x"></span>Sin fondo</button>

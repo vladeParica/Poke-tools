@@ -39,31 +39,35 @@
   function icon(name) { return skins.art(name, S.skin); }
   // Background behind each bot's form. The player's choice (Apariencia dialog, stored in
   // this browser per bot) wins over the skin's image, which wins over the official artwork.
-  // Prefs: { opacity: 0..0.4, <bot>: { species } | { image: dataURL } | { none: true } }
+  // Prefs: { opacity: 0..0.4, style: 'frlg'|'home'|'artwork', shiny: bool,
+  //          <bot>: { species } | { image: dataURL } | { none: true } }
   function bgPrefs() { try { return JSON.parse(store(BG) || '{}') || {}; } catch (e) { return {}; } }
   function bgSave(p) {
     try { localStorage.setItem(BG, JSON.stringify(p)); return true; } catch (e) { return false; }
   }
-  function speciesArt(name) {
-    var i = data.species.indexOf(name);
-    return i < 0 ? null : PT.art.artwork(i + 1);
+  function speciesSprite(name) {
+    var p = bgPrefs(), i = data.species.indexOf(name);
+    if (i < 0) return null;
+    var style = p.style || 'frlg';
+    return { srcs: PT.art.spriteUrls(i + 1, name, style, !!p.shiny), pixel: style === 'frlg' };
   }
   function bgSource(bot) {
     var mine = bgPrefs()[bot], sk = skins.get(S.skin) || {}, over = (sk.sprites || {})['backdrop-' + bot];
     if (mine && mine.none) return null;
-    if (mine && mine.image) return { src: mine.image };
-    if (mine && mine.species && speciesArt(mine.species)) return { src: speciesArt(mine.species) };
+    if (mine && mine.image) return { srcs: [mine.image] };
+    if (mine && mine.species && speciesSprite(mine.species)) return speciesSprite(mine.species);
     if (over) return { skin: true };
-    return { src: PT.art.artwork(PT.art.backdrops[bot]) };
+    return speciesSprite(data.species[PT.art.backdrops[bot] - 1]);
   }
-  function backdrop() {
-    var src = bgSource(S.bot);
-    if (!src) return null;
+  // An <img> that tries each source in turn and disappears if none loads.
+  function bgImage(src) {
     if (src.skin) return icon('backdrop-' + S.bot);
-    var img = h('img', { src: src.src, alt: '', decoding: 'async', referrerpolicy: 'no-referrer' });
-    img.addEventListener('error', function () { img.remove(); });
+    var i = 0, img = h('img', { src: src.srcs[0], alt: '', decoding: 'async', referrerpolicy: 'no-referrer',
+      class: src.pixel ? 'pixel' : null });
+    img.addEventListener('error', function () { if (++i < src.srcs.length) img.src = src.srcs[i]; else img.remove(); });
     return img;
   }
+  function backdrop() { var src = bgSource(S.bot); return src ? bgImage(src) : null; }
   function bgOpacity() { var o = bgPrefs().opacity; return typeof o === 'number' ? o : null; }
   function store(key, val) { try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) { return null; } }
   function cfg() { return S.cfg[S.bot]; }
@@ -754,8 +758,9 @@
     $('bg-species').value = mine.species || '';
     $('bg-species').placeholder = mine.image ? 'Imagen propia' : mine.none ? 'Sin fondo' : data.species[PT.art.backdrops[S.bot] - 1];
     pv.innerHTML = '';
-    if (src && src.skin) pv.appendChild(icon('backdrop-' + S.bot));
-    else if (src) pv.appendChild(h('img', { src: src.src, alt: '', referrerpolicy: 'no-referrer' }));
+    if (src) pv.appendChild(bgImage(src));
+    $('bg-style').value = bgPrefs().style || 'frlg';
+    $('bg-shiny').checked = !!bgPrefs().shiny;
     var o = bgOpacity(), cur = o === null ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--backdrop-opacity')) || 0.14 : o;
     $('bg-opacity').value = Math.round(cur * 100);
     $('bg-opacity-val').textContent = Math.round(cur * 100) + '%';
@@ -774,6 +779,14 @@
     if (!hit) { toast('No conozco ese Pokémon: elige uno de la lista (Gen 1–3)', 'warn'); this.value = ''; return; }
     setBg({ species: hit });
   });
+  function setBgOption(key, value) {
+    var p = bgPrefs();
+    p[key] = value;
+    bgSave(p);
+    renderBg(); renderSection();
+  }
+  $('bg-style').addEventListener('change', function () { setBgOption('style', this.value); });
+  $('bg-shiny').addEventListener('change', function () { setBgOption('shiny', this.checked); });
   $('btn-bg-none').addEventListener('click', function () { setBg({ none: true }); });
   $('btn-bg-reset').addEventListener('click', function () { setBg(null); });
   $('btn-bg-upload').addEventListener('click', function () { $('bg-file').value = ''; $('bg-file').click(); });

@@ -97,16 +97,28 @@
     }, true)
   };
 
-  // Official artwork shown faintly behind each bot's form. Loaded at runtime from the
-  // PokeAPI sprites repository and never stored here (ADR-0013); offline it just doesn't show.
-  var ARTWORK = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
+  // Pokemon shown faintly behind each bot's form. Loaded at runtime and never stored here
+  // (ADR-0013): game sprites and HOME renders from Pokemon Database, official artwork from
+  // PokeAPI. Offline it just doesn't show.
+  var PDB = 'https://img.pokemondb.net/sprites/';
+  var POKEAPI = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
   var backdrops = { shinybot: 25, trainbot: 66, farmbot: 52 };   // national dex numbers
-  function artwork(dex) { return ARTWORK + dex + '.png'; }
+  // "Mr. Mime" -> "mr-mime", "Farfetch'd" -> "farfetchd", "Nidoran F" -> "nidoran-f"
+  function slug(name) { return name.toLowerCase().replace(/['.]/g, '').replace(/\s+/g, '-'); }
+  // URLs to try in order. style: "frlg" (game sprite; the FireRed/LeafGreen set only has
+  // some species, so Emerald fills the rest), "home" (3D render) or "artwork".
+  function spriteUrls(dex, name, style, shiny) {
+    var v = shiny ? 'shiny' : 'normal', s = slug(name);
+    var art = POKEAPI + (shiny ? 'shiny/' : '') + dex + '.png';
+    if (style === 'artwork') return [art];
+    if (style === 'home') return [PDB + 'home/' + v + '/' + s + '.png', art];
+    return [PDB + 'firered-leafgreen/' + v + '/' + s + '.png', PDB + 'emerald/' + v + '/' + s + '.png', art];
+  }
 
   // Lets built-in skins add their own pixel sprites (see skins/aventura.js).
   function addPixel(name, rows, colors) { sprites[name] = pixelArt(rows, colors, false); }
 
-  var api = { icons: icons, sprites: sprites, MASCOT: MASCOT, addPixel: addPixel, backdrops: backdrops, artwork: artwork };
+  var api = { icons: icons, sprites: sprites, MASCOT: MASCOT, addPixel: addPixel, backdrops: backdrops, spriteUrls: spriteUrls };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { root.PT = root.PT || {}; root.PT.art = api; }
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -15,8 +15,8 @@ The system runs on the player's PC, with no server or accounts. What needs prote
 ## 2. Data flow
 See the [container diagram](../architecture/c4-container.md). Untrusted inputs: the
 **JSON** and the **route file** (anyone can write or share them). Network output: the
-Train Bot's **notifications**, and the configurator's three image requests to GitHub for the
-background artwork (no data sent, `no-referrer`; [ADR-0013](../00-project/adr/0013-official-artwork-behind-the-configurator-forms.md)).
+Train Bot's **notifications**, and the configurator's background image requests to
+`img.pokemondb.net` (or GitHub for the artwork style; no data sent, `no-referrer`; [ADR-0013](../00-project/adr/0013-official-artwork-behind-the-configurator-forms.md)).
 
 ## 3. STRIDE analysis
 | Category | Threat | Component | Mitigation |

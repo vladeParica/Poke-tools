@@ -2,11 +2,12 @@
 
 A visual editor for the bots' JSON files. Open `index.html` with a double click: it runs
 locally in the browser, with no install and no internet connection. The interface is in
-Spanish, like everything the player sees. When online, it also shows the official artwork
-of a Pokémon behind each form, loaded from PokeAPI
+Spanish, like everything the player sees. When online, it also shows a Pokémon behind each
+form (FireRed/LeafGreen sprites from Pokémon Database, loaded at runtime)
 ([ADR-0013](../docs/00-project/adr/0013-official-artwork-behind-the-configurator-forms.md)).
 Change it in *Apariencia* (gear button, or *Fondo* when the pointer is over the form): another
-Pokémon, your own image, none, and how strong it looks.
+Pokémon, the style (game sprite, HOME, official artwork), shiny, your own image, none, and how
+strong it looks.
 
 ![Configurator](../assets/configurator.png)
 

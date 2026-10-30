@@ -102,14 +102,18 @@ document.getElementById('f').onload = () => setTimeout(() => {
     // background picker: another Pokemon, none, back to the default
     const bgImg = () => (d.querySelector('.panel > .backdrop img') || {}).src || '';
     const bgIn = d.getElementById('bg-species'); bgIn.value = 'gengar'; fire(bgIn, 'change');
-    ok('background: pick a Pokemon by name', /\/94\.png$/.test(bgImg()) && d.getElementById('bg-species').value === 'Gengar');
+    ok('background: pick a Pokemon by name', /firered-leafgreen\/normal\/gengar\.png$/.test(bgImg()) && d.getElementById('bg-species').value === 'Gengar');
     d.getElementById('btn-bg-none').click();
     ok('background: none', !d.querySelector('.panel > .backdrop img'));
     d.getElementById('btn-bg-reset').click();
-    ok('background: restore the default', /\/25\.png$/.test(bgImg()) && d.querySelector('.panel > .bg-btn'));
+    ok('background: restore the default', /firered-leafgreen\/normal\/pikachu\.png$/.test(bgImg()) && d.querySelector('.panel > .bg-btn'));
+    const bgStyle = d.getElementById('bg-style'); bgStyle.value = 'home'; fire(bgStyle, 'change');
+    const bgShiny = d.getElementById('bg-shiny'); bgShiny.checked = true; fire(bgShiny, 'change');
+    ok('background: HOME style and shiny', /home\/shiny\/pikachu\.png$/.test(bgImg()));
+    bgStyle.value = 'frlg'; fire(bgStyle, 'change'); bgShiny.checked = false; fire(bgShiny, 'change');
     // 8. skins
     const bd = d.querySelector('.panel > .backdrop');
-    ok('artwork behind the form', bd && /PokeAPI\/sprites\/.*\/25\.png$/.test((bd.querySelector('img') || {}).src || '') &&
+    ok('artwork behind the form', bd && /firered-leafgreen\/normal\/pikachu\.png$/.test((bd.querySelector('img') || {}).src || '') &&
       w.getComputedStyle(bd).pointerEvents === 'none' &&
       w.PT.skins.sanitize({ id: 'y', sprites: { 'backdrop-farmbot': 'data:image/png;base64,AA' } }).sprites['backdrop-farmbot']);
     const ss = d.getElementById('skin-select'); ss.value = 'noche'; fire(ss, 'change');

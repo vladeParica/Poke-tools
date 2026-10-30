@@ -23,9 +23,10 @@ That repository has more scripts that could be useful for future features:
 
 ## Pokémon artwork
 
-Pokémon and their artwork are © Nintendo / Creatures Inc. / GAME FREAK inc. The configurator
-shows the official artwork of Pikachu, Machop and Meowth behind the forms, loaded at runtime
-from the [PokeAPI sprites](https://github.com/PokeAPI/sprites) repository. These images are not
+Pokémon, their sprites and artwork are © Nintendo / Creatures Inc. / GAME FREAK inc. The
+configurator shows a Pokémon behind each form, loaded at runtime: game sprites and HOME renders
+from [Pokémon Database](https://pokemondb.net/sprites), and official artwork from the
+[PokeAPI sprites](https://github.com/PokeAPI/sprites) repository. These images are not
 part of this repository or its releases ([ADR-0013](adr/0013-official-artwork-behind-the-configurator-forms.md)).
 Poke-tools is a fan project, not affiliated with or endorsed by those companies.
 

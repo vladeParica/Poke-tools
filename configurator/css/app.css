@@ -137,6 +137,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .panel > .backdrop { position: absolute; right: 16px; bottom: 68px; width: min(300px, 42%); aspect-ratio: 1;
   opacity: var(--backdrop-opacity, .14); pointer-events: none; z-index: 0; }
 .panel > .backdrop > img, .panel > .backdrop > .art { width: 100%; height: 100%; object-fit: contain; }
+img.pixel { image-rendering: pixelated; }
 /* "Fondo" button: shows up when the pointer is over the form. */
 .panel > .bg-btn { position: absolute; right: 16px; bottom: 70px; z-index: 2; opacity: 0; transition: opacity .15s; }
 .panel:hover > .bg-btn, .panel > .bg-btn:focus-visible { opacity: .9; }
@@ -286,6 +287,8 @@ dialog.card .body { max-height: calc(100vh - 120px); overflow: auto; }
 .bg-preview > img, .bg-preview > .art { width: 100%; height: 100%; object-fit: contain; }
 .bg-controls { display: grid; gap: 8px; min-width: 0; }
 .bg-range { display: flex; align-items: center; gap: 10px; }
+.bg-controls select { flex: 1; min-width: 0; }
+label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
 .row.end { justify-content: flex-end; }
 .help { color: var(--muted); font-size: 13px; margin: 0; }
 

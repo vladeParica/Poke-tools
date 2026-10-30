@@ -11,7 +11,7 @@
 | Farm Bot simulator | Whole Farm Bot against `farmbot/tests/mock_farm.lua` | Python + lupa (`farmbot/tests/run_farm.py`, fails on its own) | Every mode to its goal, take-items menus (also with a field move), full bag, pause mode, refusals to start, shipped configs load |
 | Configurator unit | `configurator/js/core.js` | Node `node:test` (`configurator/tests/core.test.js`) | Parsing, name normalization, validation rules, serialization format |
 | Configurator integration | Exported JSON → real bots | Python + lupa (`configurator/tests/test_bots_accept.py`) | Option parity with the bots' `CONFIG`; every exported example prints "Config cargada" in both bots |
-| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 40 interaction checks: no page scroll at 1366×768, section tabs and badges, modes, chips, IVs, EVs, routes, ntfy, skins, pixel-sprite skin, background artwork and picker, skin sanitizer |
+| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 41 interaction checks: no page scroll at 1366×768, section tabs and badges, modes, chips, IVs, EVs, routes, ntfy, skins, pixel-sprite skin, background artwork and picker, skin sanitizer |
 | Real game | Bot in VBA-rr with the ROM | Manual | What the simulator doesn't imitate: real timings, languages, emulator quirks |
 
 ## How to run them
