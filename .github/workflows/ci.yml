@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:   # the release workflow runs the full CI before publishing
 
 permissions:
   contents: read
@@ -28,6 +29,9 @@ jobs:
             echo "::error::The generated .lua files do not match src/. Run build.py and commit."
             exit 1
           fi
+      - name: Release zips build (dry run)
+        run: |
+          for b in shinybot trainbot farmbot; do python tools/package.py "$b" --out dist; done
 
   shinybot:
     name: Shiny Bot simulator

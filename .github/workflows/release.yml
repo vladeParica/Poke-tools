@@ -1,0 +1,37 @@
+name: Release
+
+# Push a tag like "farmbot-v1.0" to publish that bot. The tag must match the version the
+# bot prints on start (tools/package.py checks it), and the full CI must pass first.
+on:
+  push:
+    tags: ["shinybot-v*", "trainbot-v*", "farmbot-v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish release
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Build the zip
+        run: python tools/package.py "$GITHUB_REF_NAME" --out dist
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          source dist/release.env
+          args=(--title "$TITLE")
+          if [ -n "$NOTES" ]; then args+=(--notes-file "$NOTES"); else args+=(--generate-notes); fi
+          if [ "$PRERELEASE" = "true" ]; then args+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" dist/*.zip "${args[@]}"

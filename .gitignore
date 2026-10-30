@@ -13,3 +13,5 @@ FRLG_TrainRoute*.txt
 __pycache__/
 trainbot/tools/pret_cache/
 *.o
+# Release zips (tools/package.py)
+dist/

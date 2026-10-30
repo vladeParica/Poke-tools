@@ -12,6 +12,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.
 - Farm Bot: key **4**, a read-only diagnostic that shows the menu state the bot reads and logs
   each change, to check a game before letting the bot press buttons.
+- Releases: pushing a tag `<bot>-vX.Y` runs the CI and publishes a zip with the bot, its
+  examples and the configurator (`tools/package.py`, ADR-0012).
 - Configurator: *Farm Bot* tab.
 - Configurator: *Aventura* skin with its own 16x16 pixel sprites for the mascot, bots, stats and modes.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live

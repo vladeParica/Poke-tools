@@ -12,10 +12,11 @@
 | `curl` | Train Bot notifications (optional) | Ships with Windows 10/11 |
 
 ## 2. Installation
-1. Download the bot's `.lua` and `.json` (from the `shinybot/` or `trainbot/` folder, or
-   from a published release under *Releases*).
-2. Put them together in a folder. For the Train Bot or the Farm Bot, add the route
-   (`FRLG_TrainRoute*.txt`) if you use a recorded one.
+1. Download the bot's zip from *Releases* (`poke-tools-<bot>-vX.Y.zip`) and unpack it into
+   a folder. It has the `.lua`, the `.json`, the README, the examples and the configurator.
+   Without a release, take the `.lua` and `.json` from the bot's folder in the repository.
+2. For the Train Bot or the Farm Bot, add the route (`FRLG_TrainRoute*.txt`) if you use a
+   recorded one.
 3. Save the game where the bot is going to work (modes with soft resets go back to that save).
 4. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
 5. Optional: open `configurator/index.html` to create or edit the JSON visually; in Edge or
@@ -38,9 +39,14 @@ webhook). It goes in your local JSON; never commit it to any repository.
    if the tables or examples changed, also run `configurator/tools/build_data.py`.
 2. Run every test ([strategy](../04-testing/test-strategy.md)) and test in the real game.
 3. Move the `[Unreleased]` entries of `CHANGELOG.md` to the new version.
-4. Commit `chore: release shinybot vX.Y` (or `trainbot`), tag `shinybot-vX.Y` /
-   `trainbot-vX.Y` and push (with the owner's OK).
-5. Create the GitHub *Release* attaching the bot's `.lua` and `.json`.
+   Head the section `## [<bot> vX.Y] - YYYY-MM-DD`: it becomes the release notes.
+4. Check the zip locally: `python tools/package.py <bot>-vX.Y` (it fails if the tag and the
+   script's version differ) and open `dist/`.
+5. Commit `chore: release <bot> vX.Y`, tag `<bot>-vX.Y` (`shinybot`, `trainbot`, `farmbot`)
+   and push the commit and the tag (with the owner's OK).
+6. The *Release* workflow runs the whole CI and, if it passes, publishes the release with the
+   zip ([ADR-0012](../00-project/adr/0012-release-zips-per-bot.md)). A bot whose README says
+   **Experimental.** goes out as a *pre-release*.
 
 ## 5. Pre-release checklist
 - [ ] CI green (up-to-date build + simulator with no errors)

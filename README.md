@@ -30,8 +30,9 @@ EVs and levels automatically in **Pokémon FireRed and LeafGreen** (GBA).
 ## Quick start
 
 1. Install VBA-rr and turn off *Pause When Inactive*. The ROM is not included.
-2. Copy the bot's `.lua` and `.json` into a folder. Set it up visually with the
-   [configurator](configurator/README.md), or edit the JSON by hand.
+2. Download the bot's zip from [Releases](https://github.com/vladeParica/Poke-tools/releases)
+   and unpack it into a folder (or copy the bot's `.lua` and `.json` from this repository).
+   Set it up visually with the configurator included in the zip, or edit the JSON by hand.
 3. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
 4. Press **7** to start.
 
