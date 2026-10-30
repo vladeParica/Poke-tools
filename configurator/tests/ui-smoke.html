@@ -6,9 +6,17 @@
      CI fails if any line says FAIL or ERROR, or if the result is still "pending". -->
 <meta charset="utf-8"><title>Configurator UI smoke test</title>
 <html><body><pre id="r">pending</pre>
-<iframe id="f" src="../index.html#shinybot" style="width:1366px;height:768px"></iframe>
+<iframe id="f" style="width:1366px;height:768px"></iframe>
 <script>
 const R = [];
+// Start from a clean page: put aside the saved draft and skin (file:// pages share storage),
+// and give them back when the test ends so running it in a normal browser loses nothing.
+const KEYS = ['pt-configurator-draft-v1', 'pt-configurator-skin', 'pt-configurator-custom-skins'];
+const saved = {};
+try { KEYS.forEach(k => { saved[k] = localStorage.getItem(k); localStorage.removeItem(k); }); } catch (e) { /* no storage */ }
+function restore() {
+  try { KEYS.forEach(k => saved[k] === null ? localStorage.removeItem(k) : localStorage.setItem(k, saved[k])); } catch (e) { /* no storage */ }
+}
 function ok(name, cond) { R.push((cond ? 'PASS ' : 'FAIL ') + name); }
 document.getElementById('f').onload = () => setTimeout(() => {
   try {
@@ -96,11 +104,13 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('skin applied', d.documentElement.dataset.skin === 'noche' && w.getComputedStyle(d.body).backgroundColor === 'rgb(15, 17, 24)');
     ss.value = 'aventura'; fire(ss, 'change');
     const sp = w.PT.skins.get('aventura').sprites;
-    ok('pixel skin replaces sprites', d.documentElement.dataset.skin === 'aventura' && Object.keys(sp).length === 15 &&
+    ok('pixel skin replaces sprites', d.documentElement.dataset.skin === 'aventura' && Object.keys(sp).length === 17 &&
       Object.keys(sp).every(k => w.PT.art.sprites[sp[k]]) && /crispEdges/.test(d.getElementById('mascot').innerHTML));
     const s2 = w.PT.skins.sanitize({ id: 'x', vars: { '--bg': 'red;}</style>', '--accent': 'url(https://evil/x.png)', '--text': '#fff' }, sprites: { mascot: 'javascript:alert(1)' } });
     ok('skin sanitizer drops unsafe values', !s2.vars['--bg'] && !s2.vars['--accent'] && s2.vars['--text'] === '#fff' && !s2.sprites.mascot);
   } catch (e) { R.push('ERROR ' + e.message + ' ' + e.stack); }
+  restore();
   document.getElementById('r').textContent = R.join('\n');
 }, 800);
+document.getElementById('f').src = '../index.html#shinybot';
 </script></body></html>
