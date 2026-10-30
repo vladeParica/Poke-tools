@@ -292,6 +292,31 @@ dialog.card .body { max-height: calc(100vh - 120px); overflow: auto; }
 .bg-controls select { flex: 1; min-width: 0; }
 label.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; }
 .row.end { justify-content: flex-end; }
+/* route viewer */
+.control-wrap > .route-view { margin-top: 8px; }
+dialog.card.wide { width: min(980px, calc(100% - 32px)); }
+.route-issues { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.route-issues li { display: flex; gap: 8px; align-items: center; font-size: 13.5px; }
+.route-issues li > .art { width: 18px; height: 18px; }
+.route-issues .ok { color: var(--ok); } .route-issues .warn { color: var(--warn); } .route-issues .error { color: var(--error); }
+.route-issues .info { color: var(--muted); }
+.route-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; }
+.route-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.route-legend .sw { width: 22px; height: 0; border-top: 3px solid var(--accent); }
+.route-legend .sw.back { border-top: 3px dashed var(--accent-2); }
+.route-legend .dot { width: 11px; height: 11px; border-radius: 50%; }
+.route-legend .dot.spot { background: var(--ok); } .route-legend .dot.heal { background: var(--error); }
+.route-maps { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.route-map { margin: 0; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); padding: 10px; min-width: 0; }
+.route-map figcaption { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.route-svg { overflow: auto; max-height: 320px; }
+.route-svg svg { display: block; max-width: 100%; height: auto; }
+.route-svg .grid { stroke: var(--border); stroke-width: .04; fill: none; }
+.route-svg polyline { fill: none; stroke-width: .3; stroke-linejoin: round; stroke-linecap: round; }
+.route-svg .go { stroke: var(--accent); fill: none; } .route-svg .pt.go { fill: var(--accent); }
+.route-svg .back { stroke: var(--accent-2); stroke-dasharray: .5 .35; fill: none; } .route-svg .pt.back { fill: var(--accent-2); }
+.route-svg .mark { stroke: var(--surface); stroke-width: .12; }
+.route-svg .mark.spot { fill: var(--ok); } .route-svg .mark.heal { fill: var(--error); }
 .help { color: var(--muted); font-size: 13px; margin: 0; }
 
 .toast {

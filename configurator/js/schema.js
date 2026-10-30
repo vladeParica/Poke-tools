@@ -179,7 +179,7 @@
         { key: 'healMode', type: 'enum', segmented: true, def: 'nurse', label: 'Cómo se cura',
           options: [{ value: 'nurse', label: 'Enfermera' }, { value: 'tile', label: 'Casilla que cura' }],
           help: 'La casilla que cura es la zona purificada de la Torre Pokémon 5F.', comment: '"nurse" o "tile"' },
-        { key: 'routeFile', type: 'route', def: 'FRLG_TrainRoute.txt', label: 'Archivo de ruta',
+        { key: 'routeFile', type: 'route', viewer: true, def: 'FRLG_TrainRoute.txt', label: 'Archivo de ruta',
           help: 'Grábala con la tecla 6 o usa una de trainbot/examples/routes.', comment: 'ruta al Centro (tecla 6)' }
       ] },
       { id: 'notify', title: 'Avisos', icon: 'bell', desc: 'Te avisa al celular cuando termina, encuentra un shiny o se detiene.', fields: [
@@ -254,8 +254,8 @@
       { id: 'route', title: 'Rutas', icon: 'route', desc: 'Tecla 6: ruta al Centro (sirve la del Train Bot). Tecla 5: ruta por la vista de los entrenadores.', fields: [
         { key: 'healMode', type: 'enum', segmented: true, def: 'nurse', label: 'Cómo se cura',
           options: [{ value: 'nurse', label: 'Enfermera' }, { value: 'tile', label: 'Casilla que cura' }], comment: '"nurse" o "tile"' },
-        { key: 'routeFile', type: 'route', def: 'FRLG_TrainRoute.txt', label: 'Ruta al Centro', comment: 'ruta al Centro (tecla 6)' },
-        { key: 'trainerRouteFile', type: 'text', def: 'FRLG_FarmTrainers.txt', label: 'Ruta de entrenadores',
+        { key: 'routeFile', type: 'route', viewer: true, def: 'FRLG_TrainRoute.txt', label: 'Ruta al Centro', comment: 'ruta al Centro (tecla 6)' },
+        { key: 'trainerRouteFile', type: 'text', viewer: true, def: 'FRLG_FarmTrainers.txt', label: 'Ruta de entrenadores',
           help: 'Grábala con la tecla 5: empieza y termina donde usas el Buscapelea.', showIf: farmIn(['dinero']),
           comment: 'dinero: ruta grabada con la tecla 5' }
       ] },

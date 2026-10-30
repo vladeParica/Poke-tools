@@ -53,11 +53,12 @@ and a look they can customize.
 - [x] Validation catches the same errors the bots report (unit tests).
 - [x] Desktop (1366×768) fits in one screen without page scrolling; usable at 390 px wide.
 - [x] Built-in skins: Rojo Fuego, Verde Hoja, Gengar, Mewtwo, Charizard, Game Boy Advance; custom skins import/export.
-- [x] UI smoke test (29 checks) passes in headless Chromium.
+- [x] UI smoke test (43 checks) passes in headless Chromium.
+- [x] Route viewer: draws a route file map by map and flags what the bot would trip on.
 - [ ] Tried by the owner in their own browser with their bot folder.
 
 ## 7. Out of scope
-- Editing the route files (they are recorded in the game with key 6).
+- Editing the route files (they are recorded in the game with key 6); the configurator only shows them.
 - Controlling the running bot from the page.
 - A packaged `.exe` ([ADR-0009](../00-project/adr/0009-local-web-configurator.md)).
 - Species pictures ([ADR-0010](../00-project/adr/0010-skins-as-sanitized-data.md)).

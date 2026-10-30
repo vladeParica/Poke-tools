@@ -16,6 +16,9 @@ file (FRLG USA or EUR), as long as you start **from the same training spot**.
    (for example `["Diglett", "Dugtrio"]`).
 3. Go to one of the starting points (see below) and press **7**.
 
+To see a route drawn map by map, or to check one you recorded, use *Ver ruta* in the
+[configurator](../../../configurator/README.md).
+
 ## Where to start
 
 You don't need to know the exact tile of the training spot. When you press **7**, the bot:

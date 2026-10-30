@@ -425,9 +425,11 @@
     if (f.type === 'hidden') return null;
     var ctl = BUILDERS[f.type](f);
     var isBool = f.type === 'bool';
+    var view = f.viewer ? h('button', { type: 'button', class: 'btn small route-view', onclick: function () { viewRoute(f); } },
+      icon('route'), h('span', { text: 'Ver ruta' })) : null;
     return h('div', { class: 'field' + (f.half ? ' half' : ''), 'data-key': f.key },
       isBool ? null : h('label', { class: 'label', for: 'f-' + f.key }, h('span', { text: f.label }), h('code', { text: f.key })),
-      h('div', { class: 'control-wrap' }, ctl),
+      h('div', { class: 'control-wrap' }, ctl, view),
       f.help ? h('p', { class: 'help', text: f.help }) : null);
   }
 
@@ -746,6 +748,89 @@
 
   $('skin-select').addEventListener('change', function () { applySkin(this.value); });
   $('btn-skins').addEventListener('click', function () { openAppearance(false); });
+
+  // ---------------------------------------------------------------- route viewer
+  // Shows a route file: one grid per map, the way there and back, and what to fix.
+  // Ready-made routes come from data.js; the player's own file is read from the opened
+  // folder, or picked by hand.
+  function viewRoute(f) {
+    var name = cfg()[f.key] || f.def;
+    if (data.routeText && data.routeText[name]) return showRoute(name, data.routeText[name]);
+    if (S.dir) {
+      S.dir.getFileHandle(name).then(function (fh) { return fh.getFile(); }).then(function (file) { return file.text(); })
+        .then(function (t) { showRoute(name, t); }, function () {
+          toast('No encuentro ' + name + ' en la carpeta "' + S.dir.name + '": elígelo a mano', 'warn');
+          $('route-file').value = ''; $('route-file').click();
+        });
+      return;
+    }
+    $('route-file').value = ''; $('route-file').click();
+  }
+  $('route-file').addEventListener('change', function () {
+    var f = this.files[0];
+    if (!f) return;
+    if (f.size > 500000) { toast('Ese archivo es demasiado grande para ser una ruta', 'warn'); return; }
+    f.text().then(function (t) { showRoute(f.name, t); });
+  });
+  $('btn-route-file').addEventListener('click', function () { $('route-file').value = ''; $('route-file').click(); });
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS(SVGNS, tag);
+    Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+    return el;
+  }
+  function routeMap(m, rep) {
+    var all = [].concat.apply([], m.go.concat(m.back));
+    var xs = all.map(function (p) { return p.x; }), ys = all.map(function (p) { return p.y; });
+    var x0 = Math.min.apply(null, xs) - 1, y0 = Math.min.apply(null, ys) - 1;
+    var w = Math.max.apply(null, xs) - x0 + 2, hh = Math.max.apply(null, ys) - y0 + 2;
+    var svg = svgEl('svg', { viewBox: (x0 - 0.5) + ' ' + (y0 - 0.5) + ' ' + w + ' ' + hh, width: w * 14, height: hh * 14,
+      role: 'img', 'aria-label': 'Mapa ' + m.g + '.' + m.n });
+    var grid = '';
+    for (var x = x0; x <= x0 + w; x++) grid += 'M' + (x - 0.5) + ' ' + (y0 - 0.5) + 'v' + hh;
+    for (var y = y0; y <= y0 + hh; y++) grid += 'M' + (x0 - 0.5) + ' ' + (y - 0.5) + 'h' + w;
+    svg.appendChild(svgEl('path', { d: grid, class: 'grid' }));
+    function line(points, cls) {
+      if (points.length === 1) { svg.appendChild(svgEl('circle', { cx: points[0].x, cy: points[0].y, r: 0.22, class: 'pt ' + cls })); return; }
+      svg.appendChild(svgEl('polyline', { points: points.map(function (p) { return p.x + ',' + p.y; }).join(' '), class: cls }));
+    }
+    m.back.forEach(function (r) { line(r, 'back'); });
+    m.go.forEach(function (r) { line(r, 'go'); });
+    [[rep.heal, 'heal', 'Fin de la ida'], [rep.spot, 'spot', 'Punto de entreno']].forEach(function (k) {
+      var p = k[0];
+      if (p && p.g === m.g && p.n === m.n) {
+        var c = svgEl('circle', { cx: p.x, cy: p.y, r: 0.42, class: 'mark ' + k[1] });
+        c.appendChild(svgEl('title', {})).textContent = k[2] + ' (' + (p.x - 7) + ', ' + (p.y - 7) + ')';
+        svg.appendChild(c);
+      }
+    });
+    var steps = function (runs) { return runs.reduce(function (n, r) { return n + r.length; }, 0); };
+    return h('figure', { class: 'route-map' },
+      h('figcaption', null, h('b', { text: 'Mapa ' + m.g + '.' + m.n }),
+        h('span', { class: 'help', text: (m.go.length ? 'ida ' + steps(m.go) : '') + (m.go.length && m.back.length ? ' · ' : '') +
+          (m.back.length ? 'vuelta ' + steps(m.back) : '') })),
+      h('div', { class: 'route-svg' }, svg));
+  }
+  function showRoute(name, text) {
+    var rep = core.routeReport(text);
+    $('route-title').textContent = 'Ruta: ' + name;
+    $('route-summary').textContent = rep.go.length || rep.back.length
+      ? 'Ida ' + rep.go.length + ' pasos, vuelta ' + rep.back.length + ', ' + rep.maps.length + (rep.maps.length === 1 ? ' mapa' : ' mapas') +
+        '. Coordenadas de memoria (casilla + 7); pasa el cursor por los puntos para ver la casilla.'
+      : '';
+    var ul = $('route-issues');
+    ul.innerHTML = '';
+    if (!rep.issues.length) ul.appendChild(h('li', { class: 'ok' }, icon('check'), h('span', { text: 'Sin problemas: el bot puede seguir esta ruta.' })));
+    rep.issues.forEach(function (i) {
+      ul.appendChild(h('li', { class: i.level }, icon(i.level === 'error' ? 'error' : i.level === 'warn' ? 'warn' : 'info'), h('span', { text: i.msg })));
+    });
+    var box = $('route-maps');
+    box.innerHTML = '';
+    rep.maps.forEach(function (m) { box.appendChild(routeMap(m, rep)); });
+    hydrateIcons($('route-dialog'));
+    if (!$('route-dialog').open) $('route-dialog').showModal();
+  }
 
   // ---------------------------------------------------------------- background
   function openAppearance(toBackground) {

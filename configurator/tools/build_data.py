@@ -121,7 +121,10 @@ for bot, pattern in (('trainbot', ('trainbot', 'examples', 'configs', '*.json'))
                              'file': os.path.basename(f),
                              'config': json.loads(strip_comments(text))})
 
-routes = [os.path.basename(f) for f in sorted(glob.glob(os.path.join(ROOT, 'trainbot', 'examples', 'routes', '*.txt')))]
+route_files = sorted(glob.glob(os.path.join(ROOT, 'trainbot', 'examples', 'routes', '*.txt')))
+routes = [os.path.basename(f) for f in route_files]
+# Contents too, so the configurator's route viewer can show the ready-made routes.
+route_text = {os.path.basename(f): open(f, encoding='utf-8').read() for f in route_files}
 
 data = {
     'natures': natures,
@@ -135,6 +138,7 @@ data = {
     'evYield': ev_yield,
     'presets': presets,
     'routes': routes,
+    'routeText': route_text,
 }
 
 body = json.dumps(data, ensure_ascii=False, indent=None, separators=(',', ':'))

@@ -344,10 +344,85 @@
     return s;
   }
 
+  // ---------------------------------------------------------------- routes
+  // FRLG_TrainRoute*.txt / FRLG_FarmTrainers.txt: a "GO" and a "BACK" line of
+  // "group map x y dir" points. Parsed like the bots' routeFromText() and cleaned like
+  // their cleanRoute(), so the viewer shows what the bot will actually walk.
+  function routePoints(line) {
+    var r = [], re = /(-?\d+) (-?\d+) (-?\d+) (-?\d+) (-?\d+)/g, m;
+    while ((m = re.exec(line))) r.push({ g: +m[1], n: +m[2], x: +m[3], y: +m[4], d: +m[5] });
+    return r;
+  }
+  function samePos(a, b) { return a && b && a.g === b.g && a.n === b.n && a.x === b.x && a.y === b.y; }
+  function cleanRoute(r) {
+    var out = [], dropped = 0;
+    r.forEach(function (q) {
+      var last = out[out.length - 1], junk = q.g > 42 || q.n > 120;
+      if (last && !junk) {
+        if (samePos(q, last)) junk = true;
+        else if ((q.g !== last.g || q.n !== last.n) && q.x === last.x && q.y === last.y) junk = true;
+      }
+      if (junk) dropped++; else out.push(q);
+    });
+    return { points: out, dropped: dropped };
+  }
+  // Splits a path into runs that stay on one map.
+  function mapRuns(points) {
+    var runs = [];
+    points.forEach(function (q) {
+      var cur = runs[runs.length - 1];
+      if (!cur || cur.g !== q.g || cur.n !== q.n) runs.push(cur = { g: q.g, n: q.n, points: [] });
+      cur.points.push(q);
+    });
+    return runs;
+  }
+  function jumps(points) {
+    var n = 0;
+    for (var i = 1; i < points.length; i++) {
+      var a = points[i - 1], b = points[i];
+      if (a.g === b.g && a.n === b.n && Math.abs(a.x - b.x) + Math.abs(a.y - b.y) > 1) n++;
+    }
+    return n;
+  }
+  // Returns { go, back, maps: [{ g, n, go: [runs], back: [runs] }], spot, heal, issues }.
+  function routeReport(text) {
+    var lines = String(text || '').split(/\r?\n/), goLine = null, backLine = null;
+    lines.forEach(function (l) {
+      var m = /^\s*(GO|BACK) (.*)$/.exec(l);
+      if (m && m[1] === 'GO' && goLine === null) goLine = m[2];
+      if (m && m[1] === 'BACK' && backLine === null) backLine = m[2];
+    });
+    var go = cleanRoute(routePoints(goLine || '')), back = cleanRoute(routePoints(backLine || ''));
+    var issues = [];
+    if (goLine === null && backLine === null) {
+      issues.push({ level: 'error', msg: 'No parece un archivo de ruta: faltan las líneas GO y BACK' });
+    } else {
+      if (!go.points.length) issues.push({ level: 'error', msg: 'La ida (GO) está vacía: graba la ruta otra vez' });
+      if (!back.points.length) issues.push({ level: 'error', msg: 'La vuelta (BACK) está vacía: graba la ruta otra vez' });
+    }
+    var spot = back.points[back.points.length - 1] || null, start = go.points[0] || null;
+    if (spot && start && !samePos(spot, start)) {
+      issues.push({ level: 'warn', msg: 'La vuelta no termina donde empieza la ida: el bot entrena donde acaba la vuelta' });
+    }
+    var j = jumps(go.points) + jumps(back.points);
+    if (j) issues.push({ level: 'warn', msg: j + (j === 1 ? ' salto' : ' saltos') + ' de más de una casilla en el mismo mapa: el bot puede atascarse ahí' });
+    var dropped = go.dropped + back.dropped;
+    if (dropped) issues.push({ level: 'info', msg: dropped + (dropped === 1 ? ' punto repetido o' : ' puntos repetidos o') + ' de cruzar una puerta: el bot los ignora' });
+    var maps = [], byKey = {};
+    [['go', go.points], ['back', back.points]].forEach(function (pair) {
+      mapRuns(pair[1]).forEach(function (run) {
+        var key = run.g + '.' + run.n;
+        if (!byKey[key]) maps.push(byKey[key] = { g: run.g, n: run.n, go: [], back: [] });
+        byKey[key][pair[0]].push(run.points);
+      });
+    });
+    return { go: go.points, back: back.points, maps: maps, spot: spot, heal: go.points[go.points.length - 1] || null, issues: issues };
+  }
+
   var api = {
     simplify: simplify, stripComments: stripComments, parseConfig: parseConfig, normalize: normalize,
     validate: validate, serialize: serialize, unknownKeys: unknownKeys, detectBot: detectBot,
-    randomTopic: randomTopic, STAT_ALIASES: STAT_ALIASES, STAT_ORDER: STAT_ORDER
+    randomTopic: randomTopic, routeReport: routeReport, STAT_ALIASES: STAT_ALIASES, STAT_ORDER: STAT_ORDER
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { root.PT = root.PT || {}; root.PT.core = api; }

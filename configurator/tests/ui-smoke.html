@@ -111,6 +111,13 @@ document.getElementById('f').onload = () => setTimeout(() => {
     const bgShiny = d.getElementById('bg-shiny'); bgShiny.checked = true; fire(bgShiny, 'change');
     ok('background: HOME style and shiny', /home\/shiny\/pikachu\.png$/.test(bgImg()));
     bgStyle.value = 'frlg'; fire(bgStyle, 'change'); bgShiny.checked = false; fire(bgShiny, 'change');
+    // route viewer: a ready-made route opens drawn, map by map, with no problems
+    d.getElementById('tab-trainbot').click(); go('route');
+    const rsel = d.getElementById('f-routeFile'); rsel.value = 'FRLG_TrainRoute_Diglett.txt'; fire(rsel, 'change');
+    d.querySelector('.field[data-key="routeFile"] .route-view').click();
+    ok('route viewer draws every map', d.getElementById('route-dialog').open && d.querySelectorAll('#route-maps svg polyline').length >= 5
+      && d.querySelectorAll('#route-maps figure').length === 5 && d.querySelector('#route-issues li.ok'));
+    d.getElementById('route-dialog').close(); d.getElementById('tab-shinybot').click();
     // 8. skins
     const bd = d.querySelector('.panel > .backdrop');
     ok('artwork behind the form', bd && /firered-leafgreen\/normal\/pikachu\.png$/.test((bd.querySelector('img') || {}).src || '') &&

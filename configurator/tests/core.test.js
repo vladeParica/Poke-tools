@@ -10,6 +10,30 @@ function errorKeys(bot, cfg) {
   return issues(bot, cfg).filter((i) => i.level === 'error').map((i) => i.key);
 }
 
+test('routeReport parses, cleans and checks a route like the bots do', () => {
+  const r = core.routeReport('GO 3 20 8 10 0;3 20 9 10 4;3 20 9 10 4;4 1 9 10 2;4 1 5 8 2\nBACK 4 1 5 8 0;3 20 10 3 1;3 20 8 10 3\n');
+  assert.equal(r.go.length, 3);                       // duplicate and door ghost dropped
+  assert.deepEqual(r.maps.map((m) => m.g + '.' + m.n), ['3.20', '4.1']);
+  assert.deepEqual(r.spot, { g: 3, n: 20, x: 8, y: 10, d: 3 });
+  assert.ok(r.issues.some((i) => i.level === 'info' && /2 puntos/.test(i.msg)));
+  assert.ok(r.issues.some((i) => i.level === 'warn' && /salto/.test(i.msg)));
+  assert.equal(r.issues.filter((i) => i.level === 'error').length, 0);
+});
+
+test('routeReport flags files that are not routes and a way back that ends elsewhere', () => {
+  assert.equal(core.routeReport('hola').issues[0].level, 'error');
+  const r = core.routeReport('GO 3 20 8 10 0;3 20 9 10 4\nBACK 3 20 9 10 0;3 20 9 11 1\n');
+  assert.ok(r.issues.some((i) => /no termina donde empieza/.test(i.msg)));
+});
+
+test('the bundled example routes have no errors', () => {
+  for (const [name, text] of Object.entries(data.routeText)) {
+    const r = core.routeReport(text);
+    assert.equal(r.issues.filter((i) => i.level === 'error').length, 0, name);
+    assert.ok(r.go.length > 5 && r.back.length > 5, name);
+  }
+});
+
 test('stripComments keeps // inside strings', () => {
   const p = core.parseConfig('{\n  // comment\n  "notify": {"discord": "https://x.y/z"}, // tail\n  "a": 1\n}');
   assert.ok(p.ok);

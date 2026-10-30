@@ -26,6 +26,10 @@ strong it looks.
   each species, a ready-made route picker that also sets the healing mode, and a random
   ntfy topic generator.
 - **Examples:** load the default config or the ready-made training examples.
+- **Route viewer:** *Ver ruta* next to each route file draws it map by map (way there, way
+  back, training spot) and lists what the bot would trip on: empty halves, jumps, a way back
+  that ends somewhere else, door glitches. It reads the ready-made routes directly, your own
+  from the opened folder, or a `.txt` you pick.
 - **Side panel** with two tabs: *Estado* (issues) and *JSON* (live preview of the exact
   commented file that will be saved).
 - **Saving:** in Edge or Chrome, *Abrir carpeta* opens the bot's folder and *Guardar*

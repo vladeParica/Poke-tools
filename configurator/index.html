@@ -102,6 +102,26 @@
     </form>
   </dialog>
 
+  <dialog id="route-dialog" class="card wide">
+    <form method="dialog">
+      <header><span data-icon="route" class="sec-icon"></span><span id="route-title">Ruta</span></header>
+      <div class="body">
+        <p class="help" id="route-summary"></p>
+        <ul class="route-issues" id="route-issues"></ul>
+        <div class="route-legend help">
+          <span><i class="sw go"></i>Ida (GO)</span><span><i class="sw back"></i>Vuelta (BACK)</span>
+          <span><i class="dot spot"></i>Punto de entreno</span><span><i class="dot heal"></i>Fin de la ida (curación)</span>
+        </div>
+        <div class="route-maps" id="route-maps"></div>
+        <div class="row end">
+          <button class="btn" type="button" id="btn-route-file"><span data-icon="folder"></span>Abrir otro archivo</button>
+          <button class="btn primary" value="close">Cerrar</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+  <input type="file" id="route-file" accept=".txt,text/plain" hidden>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/data.js"></script>

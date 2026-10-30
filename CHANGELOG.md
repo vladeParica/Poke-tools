@@ -18,6 +18,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   sprites from Pokémon Database loaded when online and never stored in the repo (ADR-0013).
   The *Apariencia* dialog changes it: any Gen 1–3 Pokémon per bot, style (game sprite, HOME,
   official artwork), shiny, your own image or none, and its intensity.
+- Configurator: route viewer (*Ver ruta*): draws a route file map by map and flags empty halves,
+  jumps, a way back that ends elsewhere and door glitches, with the bots' own cleanup rules.
 - Configurator: *Farm Bot* tab.
 - Configurator: *Game Boy Advance* skin (indigo shell, speaker grille, screen-like panels) and a
   `--bg-size`, `--on-bg` and `--on-bg-muted` skin variables. The *Noche* and *Shiny* skins were removed; saved choices fall back
