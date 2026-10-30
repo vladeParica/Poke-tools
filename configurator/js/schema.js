@@ -34,7 +34,7 @@
     { value: 'nivel', label: 'Nivel', icon: 'stat-hp', desc: 'Pelea contra todo hasta que el primero llegue al nivel que pidas.' },
     { value: 'objetos', label: 'Objetos (Recogida)', icon: 'mode-gift', desc: 'Gana combates con Meowth (Recogida) en el equipo y guarda lo que recogen.' },
     { value: 'robar', label: 'Robar objetos', icon: 'bot-shiny', desc: 'Usa Ladrón/Antojo cuando el salvaje lleva un objeto que quieres, y huye.' },
-    { value: 'dinero', label: 'Dinero', icon: 'dice', desc: 'Revanchas con entrenadores usando el Buscapelea en una ruta grabada.' }
+    { value: 'dinero', label: 'Dinero', icon: 'mode-coin', desc: 'Revanchas con entrenadores usando el Buscapelea en una ruta grabada.' }
   ];
   function farmIn(list) { return function (c) { return list.indexOf(c.mode) !== -1; }; }
 
@@ -202,7 +202,7 @@
     name: 'Farm Bot',
     file: 'FRLG_FarmBot.json',
     script: 'FRLG_FarmBot.lua',
-    icon: 'mode-gift',
+    icon: 'bot-farm',
     tagline: 'Farmea objetos, nivel o dinero sin tocar los otros bots.',
     header: [
       'Configuracion de FRLG_FarmBot.lua (generada con el configurador de Poke-tools)',
