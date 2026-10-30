@@ -16,6 +16,7 @@ C4Container
         ContainerDb(files, "Working files", "Text", "Logs, inst_N.lock, shiny_stop.flag, train_running.lock")
         ContainerDb(route, "Route", "Text", "FRLG_TrainRoute*.txt")
         Container(rng, "tools/rng", "C + Python", "Finds targets and seeds outside the emulator")
+        Container(cfgui, "configurator/index.html", "HTML + JS in the browser", "Visual editor for the configuration JSON, with skins")
     }
 
     System_Ext(notif, "ntfy.sh / Discord", "Notifications")
@@ -30,6 +31,8 @@ C4Container
     Rel(train, route, "Records / reads")
     Rel(train, notif, "Background curl", "HTTPS")
     Rel(player, rng, "Computes seeds for initialSeeds")
+    Rel(player, cfgui, "Edits the configuration")
+    Rel(cfgui, cfg, "Reads / writes", "File System Access API or download")
 ```
 
 **Notes**

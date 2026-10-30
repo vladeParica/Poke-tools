@@ -27,7 +27,7 @@ to the Pokémon Center to heal on its own.
 
 ## Configuration
 
-`FRLG_TrainBot.json`, commented line by line (in Spanish):
+Use the [configurator](../configurator/README.md) or edit `FRLG_TrainBot.json`, commented line by line (in Spanish):
 
 - **Goal:** `evs`, `targetLevel`, `maxLevel`, `allowOvershoot`.
 - **Opponents:** `species` (only these), `avoidSpecies` (never these).

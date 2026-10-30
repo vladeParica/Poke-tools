@@ -18,8 +18,10 @@
    if you use a recorded one.
 3. Save the game where the bot is going to work (modes with soft resets go back to that save).
 4. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
-5. Check the `Juego: FireRed USA…` line in the console (detected game and language).
-6. Press **7**.
+5. Optional: open `configurator/index.html` to create or edit the JSON visually; in Edge or
+   Chrome, *Abrir carpeta* + *Guardar* writes it straight into the bot's folder.
+6. Check the `Juego: FireRed USA…` line in the console (detected game and language).
+7. Press **7**.
 
 **Secret configuration:** the only sensitive value is `notify` (ntfy topic or Discord
 webhook). It goes in your local JSON; never commit it to any repository.
@@ -32,7 +34,8 @@ webhook). It goes in your local JSON; never commit it to any repository.
 **Rolling back:** use the previous version's `.lua` (from *Releases* or the git history).
 
 ## 4. Publishing a release (maintainer)
-1. Update the version in the bot's startup `print` (`src/`) and rebuild with `build.py`.
+1. Update the version in the bot's startup `print` (`src/`) and rebuild with `build.py`;
+   if the tables or examples changed, also run `configurator/tools/build_data.py`.
 2. Run every test ([strategy](../04-testing/test-strategy.md)) and test in the real game.
 3. Move the `[Unreleased]` entries of `CHANGELOG.md` to the new version.
 4. Commit `chore: release shinybot vX.Y` (or `trainbot`), tag `shinybot-vX.Y` /

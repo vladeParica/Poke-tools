@@ -36,7 +36,7 @@ about 313 times per frame.
 
 ## Configuration
 
-Everything lives in `FRLG_ShinyBot.json`, commented line by line (in Spanish): `shiny`,
+The easiest way is the [configurator](../configurator/README.md). Everything lives in `FRLG_ShinyBot.json`, commented line by line (in Spanish): `shiny`,
 `species`, `natures`, `minIVs`/`maxIVs`, `hiddenPower`, `mode`, `initialSeeds`,
 `afterSeedMode`… Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
 

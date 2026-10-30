@@ -8,6 +8,9 @@
 |---|---|---|---|
 | Build | `src/` → generated `.lua` | `build.py`, CI | That what's committed matches the sources |
 | Simulator | Whole bot against an imitated game | Python + lupa (Lua 5.1), `tests/mock*.lua`, `tests/run_*.py` | Modes, filters, RNG, battles, routes, moves, invalid configuration |
+| Configurator unit | `configurator/js/core.js` | Node `node:test` (`configurator/tests/core.test.js`) | Parsing, name normalization, validation rules, serialization format |
+| Configurator integration | Exported JSON → real bots | Python + lupa (`configurator/tests/test_bots_accept.py`) | Option parity with the bots' `CONFIG`; every exported example prints "Config cargada" in both bots |
+| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 18 interaction checks: modes, chips, IVs, EVs, routes, ntfy, skins, skin sanitizer |
 | Real game | Bot in VBA-rr with the ROM | Manual | What the simulator doesn't imitate: real timings, languages, emulator quirks |
 
 ## How to run them
@@ -18,7 +21,13 @@ cd shinybot/tests && python run_test.py && python run_rng.py && python run_wild.
   && python run_cfg.py && python run_far.py && cd ../..
 python trainbot/tests/run_train.py && python trainbot/tests/run_learn.py && python trainbot/tests/run_want.py
 ```
-Approximate duration: Shiny Bot ~40 s, Train Bot ~50 s.
+Configurator:
+```
+python configurator/tools/build_data.py     # must not change configurator/js/data.js
+node --test configurator/tests/core.test.js
+python configurator/tests/test_bots_accept.py
+```
+Approximate duration: Shiny Bot ~40 s, Train Bot ~50 s, configurator ~10 s.
 
 ## Scenarios and expected results
 

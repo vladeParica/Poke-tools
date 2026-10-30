@@ -7,7 +7,9 @@
 > [0004](../00-project/adr/0004-commented-json-config.md) ·
 > [0005](../00-project/adr/0005-simulator-testing.md) ·
 > [0006](../00-project/adr/0006-relative-addresses.md) ·
-> [0007](../00-project/adr/0007-recorded-routes.md)
+> [0007](../00-project/adr/0007-recorded-routes.md) ·
+> [0009](../00-project/adr/0009-local-web-configurator.md) ·
+> [0010](../00-project/adr/0010-skins-as-sanitized-data.md)
 
 ## 1. Style
 Each bot is a **monolithic Lua script** that runs inside the emulator and works as a
@@ -25,6 +27,8 @@ the script's memory and in text files next to it.
 | Game data | Tables generated from pret/pokefirered | — |
 | Testing | Python + lupa (Lua 5.1) + Lua simulators | [ADR-0005](../00-project/adr/0005-simulator-testing.md) |
 | RNG calculation outside the emulator | C (2^32 brute force) and Python | — |
+| Configurator | Static HTML/CSS/JS page on `file://`, no dependencies | [ADR-0009](../00-project/adr/0009-local-web-configurator.md) |
+| Configurator skins | Sanitized data (CSS variables, data-URL images and fonts) | [ADR-0010](../00-project/adr/0010-skins-as-sanitized-data.md) |
 
 ## 2. Components
 
@@ -51,10 +55,17 @@ Train Bot (`trainbot/src/train_body.lua`):
 - **Navigation** — records, cleans (`cleanRoute`, `fixRoute`) and replays routes; heals with the nurse or a tile.
 - **Notifications** — `notify()` via curl.
 
+Configurator (`configurator/`, outside the emulator):
+- **Schema** — every bot option with type, default and Spanish label; checked against the bots' `CONFIG`.
+- **Core** — parses commented JSON, normalizes names like the bots, validates and serializes.
+- **Generated data** — natures, species, moves, EV yields and presets from the bots' Lua tables.
+- **UI and skins** — forms per field type, live validation and preview, file access, sanitized themes.
+
 Diagrams: [context](../architecture/c4-context.md) ·
 [containers](../architecture/c4-container.md) ·
 [Shiny Bot components](../architecture/c4-component-shinybot.md) ·
-[Train Bot components](../architecture/c4-component-trainbot.md).
+[Train Bot components](../architecture/c4-component-trainbot.md) ·
+[Configurator components](../architecture/c4-component-configurator.md).
 
 ## 3. Data model
 - **Party / opponent Pokémon** (100 bytes): PID, OTID, checksum, encrypted substructures

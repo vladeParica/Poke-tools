@@ -12,6 +12,7 @@
 | ntfy topic (`notify.ntfy`) | Local JSON | **Confidential** (ntfy.sh topics are public: whoever guesses the name reads the notifications) | Use a hard-to-guess name; don't commit it |
 | Notification text | ntfy.sh / Discord | **Internal** | Only bot status (species, level, EVs); characters are filtered before sending |
 | TID / SID and seeds of a specific save | Player's PC | **Internal** | Not committed: examples use neutral values (TID 12345 / SID 54321) |
+| Configurator draft and imported skins | Browser local storage (player's PC) | **Confidential** (the draft may contain `notify`) | Never sent anywhere; cleared with the browser's site data |
 | Logs (`logs/*.txt`), locks (`*.lock`, `*.flag`) | Script folder | **Internal** | Generated; ignored by git |
 | Recorded routes (`FRLG_TrainRoute*.txt`) | Script folder | **Public** | Map coordinates only; the ones in `trainbot/examples/routes/` are shared on purpose |
 | Configuration (`*.json`) | Script folder | **Internal** | Examples are public; personal ones may contain `notify` |

@@ -7,6 +7,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 ## [Unreleased]
 
 ### Added
+- **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live
+  validation, examples, folder access in Edge/Chrome, five skins and custom skin import.
 - AI-DLC documentation in `docs/` (project charter, PRDs, architecture, C4 diagrams,
   threat model, ADRs, testing, installation, monitoring) and gates in `.ai-dlc/gates/`.
 - Usage guides for each bot (`shinybot/README.md`, `trainbot/README.md`).

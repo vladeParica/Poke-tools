@@ -14,6 +14,8 @@ Template: [`.ai-dlc/templates/adr.md`](../../../.ai-dlc/templates/adr.md).
 | [ADR-0006](0006-relative-addresses.md) | Battle addresses relative to `gEnemyParty` | accepted | 2026-10-29 |
 | [ADR-0007](0007-recorded-routes.md) | Routes to the Center recorded by the player | accepted | 2026-10-29 |
 | [ADR-0008](0008-gpl-3-license.md) | GPL-3.0 license | accepted | 2026-10-29 |
+| [ADR-0009](0009-local-web-configurator.md) | The configurator is a local web page | accepted | 2026-10-29 |
+| [ADR-0010](0010-skins-as-sanitized-data.md) | Skins are sanitized data, and all art is original | accepted | 2026-10-29 |
 
 ADRs 0001–0007 were recorded after the decision was made (retroactive documentation):
 they describe how the code is built today.

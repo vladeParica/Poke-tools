@@ -22,13 +22,15 @@ EVs and levels automatically in **Pokémon FireRed and LeafGreen** (GBA).
 |---|---|
 | [**Shiny Bot**](shinybot/) | Shiny and perfect-IV Pokémon: blind or frame-exact RNG (statics, gifts, roamers, wild), initial seed and SID on a new game |
 | [**Train Bot**](trainbot/) | Exact EVs and levels: picks opponents and moves, learns moves, walks back to the Pokémon Center on its own |
+| [**Configurator**](configurator/) | Visual editor for the bots' settings, with live validation and skins. Open `configurator/index.html` |
 
 > The bots' in-game text (panel, console, logs, JSON comments) is in **Spanish**.
 
 ## Quick start
 
 1. Install VBA-rr and turn off *Pause When Inactive*. The ROM is not included.
-2. Copy the bot's `.lua` and `.json` into a folder.
+2. Copy the bot's `.lua` and `.json` into a folder. Set it up visually with the
+   [configurator](configurator/README.md), or edit the JSON by hand.
 3. VBA-rr → *Tools → Lua Scripting → New Lua Script Window* → open the `.lua` → *Run*.
 4. Press **7** to start.
 

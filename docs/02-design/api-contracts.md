@@ -114,6 +114,27 @@ BACK group map x y dir;...
 | `train_running.lock` | Train | `logDir` | Prevents two Train Bots at once |
 | `FRLG_TrainRoute.txt` | Train | script folder | Route recorded with key 6 |
 
+## Configurator output
+
+The configurator (`configurator/`) writes the same JSON files, with a header comment, one
+section comment per group and a short comment per key, all in Spanish. It only uses syntax
+both bots' parsers accept: `//` comments between tokens, integer numbers and no `\u`
+escapes. `configurator/tests/test_bots_accept.py` feeds its output to the real bots.
+
+## Configurator skin file
+
+A `.json` imported from the configurator's *Skins* button. Full reference in
+[`configurator/skins/README.md`](../../configurator/skins/README.md).
+
+| Key | Type | Notes |
+|---|---|---|
+| `id` | text | `[a-z0-9-]`, max 40 |
+| `name`, `author` | text | Max 60 |
+| `dark`, `pixelated` | bool | |
+| `vars` | object | Only the documented CSS variables; values without `;{}<>`; `url()` only `data:image/...` |
+| `sprites` | object | Icon/mascot name → a `data:image/...` (png, gif, webp, svg+xml) or a built-in sprite name |
+| `fonts` | list (max 4) | `{family, src}` with `src` = `data:font/...` |
+
 ## Game memory
 The addresses and structures the bots read (party, battle, map, RNG) are in the
 **Addresses** section of [`CLAUDE.md`](../../CLAUDE.md), with the USA version as reference

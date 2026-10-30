@@ -28,6 +28,9 @@ git config core.hooksPath .githooks
 4. If you change the JSON, the route format or the keys, update the
    [contracts](docs/02-design/api-contracts.md) and the [CHANGELOG](CHANGELOG.md).
 5. If you change a design decision, update its ADR or add a new one.
+6. If you change the bots' tables, example configs or options, run
+   `python configurator/tools/build_data.py` and update `configurator/js/schema.js`; then run
+   the configurator tests (see [configurator/README.md](configurator/README.md)).
 
 ## Commits
 [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) **in English**,
