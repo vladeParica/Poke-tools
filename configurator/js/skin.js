@@ -4,7 +4,7 @@
 (function (root) {
   'use strict';
 
-  var VARS = ['--bg', '--bg-pattern', '--surface', '--surface-2', '--border', '--text', '--muted',
+  var VARS = ['--bg', '--bg-pattern', '--bg-size', '--surface', '--surface-2', '--border', '--text', '--muted',
     '--accent', '--accent-ink', '--accent-2', '--accent-soft', '--ok', '--warn', '--error',
     '--header-bg', '--header-ink', '--radius', '--radius-sm', '--shadow',
     '--font-body', '--font-display', '--font-mono', '--backdrop-opacity'];

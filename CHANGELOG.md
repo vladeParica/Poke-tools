@@ -19,9 +19,11 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   The *Apariencia* dialog changes it: any Gen 1–3 Pokémon per bot, style (game sprite, HOME,
   official artwork), shiny, your own image or none, and its intensity.
 - Configurator: *Farm Bot* tab.
-- Configurator: *Aventura* skin with its own 16x16 pixel sprites for the mascot, bots, stats and modes.
+- Configurator: *Game Boy Advance* skin (indigo shell, speaker grille, screen-like panels) and a
+  `--bg-size` skin variable. The *Noche* and *Shiny* skins were removed; saved choices fall back
+  to *Poké Ball*.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live
-  validation, sections as tabs (no page scrolling), examples, folder access in Edge/Chrome, five
+  validation, sections as tabs (no page scrolling), examples, folder access in Edge/Chrome, four
   skins and custom skin import.
 - AI-DLC documentation in `docs/` (project charter, PRDs, architecture, C4 diagrams,
   threat model, ADRs, testing, installation, monitoring) and gates in `.ai-dlc/gates/`.

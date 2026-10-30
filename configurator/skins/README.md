@@ -2,8 +2,8 @@
 
 A skin changes the configurator's colors, fonts, background and sprites. There are two kinds:
 
-- **Built-in skins** (`*.js` in this folder): `pokeball` (default), `noche`, `hoja`,
-  `shiny`, `gameboy` and `aventura` (with its own pixel sprites). Each one calls `PT.registerSkin({...})` and is loaded by a
+- **Built-in skins** (`*.js` in this folder): `pokeball` (default), `hoja`, `gameboy`
+  and `gba`. Each one calls `PT.registerSkin({...})` and is loaded by a
   `<script>` tag in `index.html`.
 - **Your own skins**: a `.json` file you import from the *Skins* button. It is stored in
   your browser, so it survives updates of the configurator.
@@ -47,7 +47,7 @@ To ship it with the configurator, turn it into a `skins/<id>.js` file that calls
 
 | Variable | Used for |
 |---|---|
-| `--bg`, `--bg-pattern` | Page background color and an optional pattern/gradient |
+| `--bg`, `--bg-pattern`, `--bg-size` | Page background color, an optional pattern/gradient and its tile size (e.g. `14px 14px`) |
 | `--surface`, `--surface-2` | Cards and inputs |
 | `--border` | Borders |
 | `--text`, `--muted` | Main and secondary text |

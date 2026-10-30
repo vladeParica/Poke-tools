@@ -33,7 +33,7 @@ html { -webkit-text-size-adjust: 100%; height: 100%; }
 body {
   margin: 0; height: 100%;
   display: flex; flex-direction: column; overflow: hidden;
-  background: var(--bg); background-image: var(--bg-pattern);
+  background: var(--bg); background-image: var(--bg-pattern); background-size: var(--bg-size, auto);
   color: var(--text); font: 15px/1.5 var(--font-body);
 }
 svg { display: block; }
