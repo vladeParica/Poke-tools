@@ -69,3 +69,39 @@ jobs:
           python trainbot/tests/run_train.py
           python trainbot/tests/run_learn.py
           python trainbot/tests/run_want.py
+
+  configurator:
+    name: Configurator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Data generated from the bots is up to date
+        run: |
+          python configurator/tools/build_data.py
+          if ! git diff --exit-code -- configurator/js/data.js; then
+            echo "::error::configurator/js/data.js is stale. Run configurator/tools/build_data.py and commit."
+            exit 1
+          fi
+      - name: Unit tests
+        run: node --test configurator/tests/core.test.js
+      - name: The real bots accept the exported configs
+        run: python configurator/tests/test_bots_accept.py
+      - name: UI smoke test (headless Chrome)
+        run: |
+          google-chrome --headless=new --no-sandbox --disable-gpu --allow-file-access-from-files \
+            --disable-web-security --user-data-dir="$RUNNER_TEMP/chrome" --virtual-time-budget=8000 \
+            --dump-dom "file://$PWD/configurator/tests/ui-smoke.html" > ui.html
+          sed -n '/<pre id="r">/,/<\/pre>/p' ui.html > result.txt
+          cat result.txt
+          if ! grep -q "PASS" result.txt || grep -qE "FAIL|ERROR|pending" result.txt; then
+            echo "::error::Configurator UI smoke test failed"; exit 1
+          fi
