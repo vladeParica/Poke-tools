@@ -18,7 +18,8 @@ and a look they can customize.
 1. The player opens `configurator/index.html` (double click).
 2. Picks the bot (Shiny Bot / Train Bot); optionally opens the bot's folder (Edge/Chrome),
    loads an existing JSON, or loads an example.
-3. Fills in the forms; options that don't apply to the chosen mode are hidden.
+3. Goes through the sections as tabs (one at a time, no page scrolling); options that
+   don't apply to the chosen mode are hidden and tabs with problems show a badge.
 4. Sees validation and a live preview of the JSON as they type.
 5. Saves: the JSON is written into the bot's folder (or downloaded).
 6. In the game, presses **0** to reload the configuration.
@@ -50,9 +51,9 @@ and a look they can customize.
 - [x] Every option of both bots is editable, and the option list matches the bots' `CONFIG` (parity test).
 - [x] Every exported example is accepted by the real bots in the simulator ("Config cargada").
 - [x] Validation catches the same errors the bots report (unit tests).
-- [x] Page renders and is usable at 390 px wide and on desktop.
+- [x] Desktop (1366×768) fits in one screen without page scrolling; usable at 390 px wide.
 - [x] Built-in skins: Poké Ball, Noche, Verde Hoja, Shiny, Retro portátil; custom skins import/export.
-- [x] UI smoke test (18 checks) passes in headless Chromium.
+- [x] UI smoke test (29 checks) passes in headless Chromium.
 - [ ] Tried by the owner in their own browser with their bot folder.
 
 ## 7. Out of scope

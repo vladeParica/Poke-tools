@@ -8,8 +8,10 @@ Spanish, like everything the player sees.
 
 ## What it does
 
-- **Forms for every option** of the Shiny Bot and the Train Bot, grouped by topic, with
-  short help. Options that don't apply to the chosen mode are hidden.
+- **One screen, no scrolling:** each bot's options are split into short sections shown as
+  tabs (Modo, Qué buscar, IVs… / Objetivo, Rivales, Combate…), with *Anterior / Siguiente*
+  buttons. Sections and options that don't apply to the chosen mode are hidden, and each
+  tab shows a badge when it has errors or warnings.
 - **Validation as you type**, with the same rules the bots apply when they load the JSON,
   plus warnings for configs that load but won't do what you expect (e.g. a species that
   gives EVs outside your goal). Click an issue to jump to its field.
@@ -18,7 +20,8 @@ Spanish, like everything the player sees.
   each species, a ready-made route picker that also sets the healing mode, and a random
   ntfy topic generator.
 - **Examples:** load the default config or the ready-made training examples.
-- **Live preview** of the exact commented JSON that will be saved.
+- **Side panel** with two tabs: *Estado* (issues) and *JSON* (live preview of the exact
+  commented file that will be saved).
 - **Saving:** in Edge or Chrome, *Abrir carpeta* opens the bot's folder and *Guardar*
   writes `FRLG_ShinyBot.json` / `FRLG_TrainBot.json` straight into it. Other browsers
   download the file. *Abrir JSON* (or drag and drop) loads an existing file.

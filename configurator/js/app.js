@@ -13,6 +13,7 @@
     cfg: { shinybot: null, trainbot: null },
     origin: { shinybot: '', trainbot: '' },
     dir: null,
+    section: { shinybot: 'mode', trainbot: 'goal' },
     skin: 'pokeball'
   };
 
@@ -389,13 +390,31 @@
     if (f.type === 'hidden') return null;
     var ctl = BUILDERS[f.type](f);
     var isBool = f.type === 'bool';
-    return h('div', { class: 'field', 'data-key': f.key },
+    return h('div', { class: 'field' + (f.half ? ' half' : ''), 'data-key': f.key },
       isBool ? null : h('label', { class: 'label', for: 'f-' + f.key }, h('span', { text: f.label }), h('code', { text: f.key })),
       h('div', { class: 'control-wrap' }, ctl),
       f.help ? h('p', { class: 'help', text: f.help }) : null);
   }
 
   // ---------------------------------------------------------------- render
+  // One section is shown at a time; the left rail lists them like tabs.
+  var SECTION_OF = {};
+  function sectionOf(key) {
+    if (!SECTION_OF[S.bot]) {
+      var m = {};
+      def().sections.forEach(function (s) { s.fields.forEach(function (f) { m[f.key] = s.id; }); });
+      SECTION_OF[S.bot] = m;
+    }
+    return SECTION_OF[S.bot][key];
+  }
+  function visibleSections() {
+    return def().sections.filter(function (s) { return !(s.showIf && !s.showIf(cfg())); });
+  }
+  function currentSection() {
+    var vis = visibleSections(), id = S.section[S.bot];
+    return vis.filter(function (s) { return s.id === id; })[0] || vis[0];
+  }
+
   function renderTabs() {
     ['shinybot', 'trainbot'].forEach(function (b) {
       var t = $('tab-' + b);
@@ -406,38 +425,82 @@
     });
   }
 
-  function renderForm() {
-    var main = $('form'), d = def();
-    main.innerHTML = '';
-    var presetSel = h('select', { 'aria-label': 'Ejemplos' });
+  function renderNav() {
+    var nav = $('sections'), d = def(), cur = currentSection();
+    nav.innerHTML = '';
+    var presetSel = h('select', { 'aria-label': 'Ejemplos', title: 'Cargar un ejemplo' });
+    presetSel.appendChild(h('option', { value: '', text: 'Cargar ejemplo…' }));
     data.presets[S.bot].forEach(function (p, i) { presetSel.appendChild(h('option', { value: i, text: p.name.replace(/\.$/, '') })); });
-    var load = h('button', { type: 'button', class: 'btn' }, icon('refresh'), 'Cargar ejemplo');
-    load.addEventListener('click', function () {
-      if (!confirm('Esto reemplaza la configuración actual de ' + d.name + '. ¿Seguir?')) return;
+    presetSel.addEventListener('change', function () {
+      if (presetSel.value === '') return;
       var p = data.presets[S.bot][Number(presetSel.value)];
+      if (!confirm('Esto reemplaza la configuración actual de ' + d.name + ' por "' + p.name.replace(/\.$/, '') + '". ¿Seguir?')) { presetSel.value = ''; return; }
       S.cfg[S.bot] = presetConfig(S.bot, Number(presetSel.value));
       S.origin[S.bot] = p.name;
-      renderForm(); refresh();
+      renderForm();
       toast('Ejemplo cargado: ' + p.name.replace(/\.$/, ''));
     });
-    main.appendChild(h('section', { class: 'intro' },
+    nav.appendChild(h('div', { class: 'nav-head' },
       h('span', { class: 'bot-icon' }, icon(d.icon)),
-      h('div', { class: 'grow' }, h('h2', { text: d.name }), h('p', { text: d.tagline })),
-      h('div', { class: 'preset' }, presetSel, load)));
+      h('div', null, h('b', { text: d.name }), h('small', { text: d.tagline }))));
+    nav.appendChild(presetSel);
 
-    d.sections.forEach(function (s) {
-      var body = h('div', { class: 'body' });
-      s.fields.forEach(function (f) { var el = fieldEl(f); if (el) body.appendChild(el); });
-      var head = [h('span', { class: 'sec-icon' }, icon(s.icon)), h('span', { text: s.title })];
-      var card;
-      if (s.advanced) {
-        card = h('details', { class: 'card', 'data-section': s.id },
-          h('summary', null, head, h('span', { class: 'tag', text: 'Avanzado' }), h('span', { class: 'chev' }, icon('chevron'))), body);
-      } else {
-        card = h('section', { class: 'card', 'data-section': s.id }, h('header', null, head), body);
-      }
-      main.appendChild(card);
+    var list = h('div', { class: 'nav-list', role: 'tablist', 'aria-orientation': 'vertical', 'aria-label': 'Secciones' });
+    var shownAdvanced = false;
+    def().sections.forEach(function (s) {
+      if (s.advanced && !shownAdvanced) { list.appendChild(h('div', { class: 'nav-sep', text: 'Avanzado' })); shownAdvanced = true; }
+      var b = h('button', { type: 'button', role: 'tab', class: 'nav-item', 'data-nav': s.id, 'aria-selected': String(cur && cur.id === s.id) },
+        h('span', { class: 'n-icon' }, icon(s.icon)), h('span', { class: 'n-title', text: s.title }), h('span', { class: 'n-badge', hidden: true }));
+      b.addEventListener('click', function () { goSection(s.id); });
+      list.appendChild(b);
     });
+    list.addEventListener('keydown', function (e) {
+      if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight'].indexOf(e.key) === -1) return;
+      e.preventDefault();
+      var vis = visibleSections(), i = vis.indexOf(currentSection());
+      var n = vis[(i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + vis.length) % vis.length];
+      goSection(n.id);
+      var btn = nav.querySelector('[data-nav="' + n.id + '"]');
+      if (btn) btn.focus();
+    });
+    nav.appendChild(list);
+  }
+
+  function renderSection() {
+    var main = $('form'), s = currentSection(), vis = visibleSections(), i = vis.indexOf(s);
+    main.innerHTML = '';
+    if (!s) return;
+    S.section[S.bot] = s.id;
+    var body = h('div', { class: 'body' });
+    s.fields.forEach(function (f) { var el = fieldEl(f); if (el) body.appendChild(el); });
+    var prev = vis[i - 1], next = vis[i + 1];
+    function stepBtn(target, dir) {
+      if (!target) return h('span');
+      var b = h('button', { type: 'button', class: 'btn' + (dir > 0 ? ' primary' : '') },
+        dir < 0 ? h('span', { class: 'flip' }, icon('chevron')) : null,
+        h('span', { text: (dir < 0 ? 'Anterior: ' : 'Siguiente: ') + target.title }),
+        dir > 0 ? h('span', { class: 'turn' }, icon('chevron')) : null);
+      b.addEventListener('click', function () { goSection(target.id); });
+      return b;
+    }
+    main.appendChild(h('section', { class: 'card panel', 'data-section': s.id, role: 'tabpanel' },
+      h('header', null, h('span', { class: 'sec-icon' }, icon(s.icon)),
+        h('div', null, h('h2', { text: s.title }), s.desc ? h('p', { text: s.desc }) : null),
+        h('span', { class: 'step', text: (i + 1) + ' / ' + vis.length })),
+      h('div', { class: 'scroll' }, body),
+      h('footer', null, stepBtn(prev, -1), stepBtn(next, 1))));
+  }
+
+  function goSection(id) {
+    S.section[S.bot] = id;
+    document.querySelectorAll('.nav-item').forEach(function (b) { b.setAttribute('aria-selected', String(b.getAttribute('data-nav') === id)); });
+    renderSection();
+    refresh();
+  }
+
+  function renderForm() {
+    renderNav();
+    renderSection();
     refresh();
   }
 
@@ -452,15 +515,19 @@
 
   function refresh() {
     var c = cfg();
-    // visibility
+    // The mode can hide the section on screen: jump to a visible one.
+    var cur = currentSection();
+    if (cur && cur.id !== S.section[S.bot]) { goSection(cur.id); return; }
     def().sections.forEach(function (s) {
-      var card = document.querySelector('[data-section="' + s.id + '"]');
-      if (card) card.hidden = !!(s.showIf && !s.showIf(c));
+      var item = document.querySelector('[data-nav="' + s.id + '"]');
+      if (item) item.hidden = !!(s.showIf && !s.showIf(c));
       s.fields.forEach(function (f) {
         var el = document.querySelector('.field[data-key="' + f.key + '"]');
         if (el) el.hidden = !!(f.showIf && !f.showIf(c));
       });
     });
+    var vis = visibleSections(), step = document.querySelector('.panel .step');
+    if (step && cur) step.textContent = (vis.indexOf(cur) + 1) + ' / ' + vis.length;
     // validation
     var issues = core.validate(S.bot, c, data, schema);
     var errs = issues.filter(function (i) { return i.level === 'error'; });
@@ -471,11 +538,35 @@
     sum.appendChild(icon(errs.length ? 'error' : warns.length ? 'warn' : 'check'));
     sum.appendChild(h('span', { text: errs.length ? errs.length + (errs.length === 1 ? ' error: el bot no arrancaría' : ' errores: el bot no arrancaría')
       : warns.length ? 'Lista, con ' + warns.length + (warns.length === 1 ? ' aviso' : ' avisos') : 'Lista para usar' }));
+    var cnt = $('issue-count');
+    cnt.hidden = !(errs.length || warns.length);
+    cnt.textContent = errs.length || warns.length;
+    cnt.className = 'count ' + (errs.length ? 'error' : 'warn');
+    // per-section badges
+    var per = {};
+    issues.forEach(function (i) {
+      var sid = sectionOf(i.key) || null;
+      if (!sid || i.level === 'info') return;
+      per[sid] = per[sid] || { error: 0, warn: 0 };
+      per[sid][i.level]++;
+    });
+    document.querySelectorAll('.nav-item').forEach(function (b) {
+      var p = per[b.getAttribute('data-nav')], badge = b.querySelector('.n-badge');
+      badge.hidden = !p;
+      if (p) {
+        badge.className = 'n-badge ' + (p.error ? 'error' : 'warn');
+        badge.textContent = p.error || p.warn;
+        badge.title = p.error ? p.error + ' error(es)' : p.warn + ' aviso(s)';
+      }
+    });
     var ul = $('issues');
     ul.innerHTML = '';
     document.querySelectorAll('.field.has-error').forEach(function (el) { el.classList.remove('has-error'); });
+    if (!issues.length) ul.appendChild(h('li', { class: 'empty', text: 'Sin problemas. Guarda y, en el juego, pulsa 0 para recargar.' }));
     issues.forEach(function (i) {
-      var b = h('button', { type: 'button' }, icon(i.level === 'error' ? 'error' : i.level === 'warn' ? 'warn' : 'info'), h('span', { text: i.msg }));
+      var s = def().sections.filter(function (x) { return x.id === sectionOf(i.key); })[0];
+      var b = h('button', { type: 'button' }, icon(i.level === 'error' ? 'error' : i.level === 'warn' ? 'warn' : 'info'),
+        h('span', null, h('span', { text: i.msg }), s ? h('small', { text: s.title }) : null));
       b.addEventListener('click', function () { focusField(i.key); });
       ul.appendChild(h('li', { class: i.level }, b));
       if (i.level === 'error') {
@@ -496,14 +587,22 @@
 
   function focusField(key) {
     if (key === 'maxIVs') key = 'minIVs';
+    var sid = sectionOf(key);
+    if (sid && sid !== S.section[S.bot]) goSection(sid);
     var el = document.querySelector('.field[data-key="' + key + '"]');
     if (!el) return;
-    var det = el.closest('details');
-    if (det) det.open = true;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
     var input = el.querySelector('input:not([type=hidden]):not([disabled]), select, button');
-    if (input) setTimeout(function () { input.focus({ preventScroll: true }); }, 350);
+    if (input) setTimeout(function () { input.focus({ preventScroll: true }); }, 200);
+  }
+
+  function showSide(which) {
+    var json = which === 'json';
+    $('side-status').setAttribute('aria-selected', String(!json));
+    $('side-json').setAttribute('aria-selected', String(json));
+    $('panel-status').hidden = json;
+    $('panel-json').hidden = !json;
   }
 
   // ---------------------------------------------------------------- files
@@ -603,7 +702,6 @@
     S.skin = s.id;
     store(SKIN, s.id);
     var m = $('mascot'); m.innerHTML = ''; m.appendChild(icon('mascot'));
-    $('skin-icon').innerHTML = ''; $('skin-icon').appendChild(icon('palette'));
     hydrateIcons(document);
     renderSkins(); renderTabs(); renderForm();
   }
@@ -636,6 +734,8 @@
       try { history.replaceState(null, '', '#' + b); } catch (e) { /* file:// may refuse */ }
     });
   });
+  $('side-status').addEventListener('click', function () { showSide('status'); });
+  $('side-json').addEventListener('click', function () { showSide('json'); });
   $('btn-open').addEventListener('click', openFile);
   $('btn-save').addEventListener('click', save);
   if (window.showDirectoryPicker) { $('btn-folder').hidden = false; $('btn-folder').addEventListener('click', openFolder); }

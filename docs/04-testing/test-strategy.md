@@ -10,7 +10,7 @@
 | Simulator | Whole bot against an imitated game | Python + lupa (Lua 5.1), `tests/mock*.lua`, `tests/run_*.py` | Modes, filters, RNG, battles, routes, moves, invalid configuration |
 | Configurator unit | `configurator/js/core.js` | Node `node:test` (`configurator/tests/core.test.js`) | Parsing, name normalization, validation rules, serialization format |
 | Configurator integration | Exported JSON → real bots | Python + lupa (`configurator/tests/test_bots_accept.py`) | Option parity with the bots' `CONFIG`; every exported example prints "Config cargada" in both bots |
-| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 18 interaction checks: modes, chips, IVs, EVs, routes, ntfy, skins, skin sanitizer |
+| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 29 interaction checks: no page scroll at 1366×768, section tabs and badges, modes, chips, IVs, EVs, routes, ntfy, skins, skin sanitizer |
 | Real game | Bot in VBA-rr with the ROM | Manual | What the simulator doesn't imitate: real timings, languages, emulator quirks |
 
 ## How to run them
