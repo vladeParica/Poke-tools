@@ -87,6 +87,11 @@ for name in re.findall(r'\[\d+\]=\{[^}]*?"([^"]*)"\}', lua_block(train_tables, '
     if name and name != '?':
         moves.append(name.title().replace("'S", "'s"))
 
+items = []
+for name in re.findall(r'\[\d+\]="([^"]*)"', lua_block(train_tables, 'TT_ITEMNAME')):
+    if name and '{' not in name and '?' not in name:
+        items.append(name.title().replace("'S", "'s"))
+
 # EV yields: TT_SPEC[internal] = {type1, type2, hp, atk, def, spe, spa, spd}
 ev_yield = {}
 for idx, vals in re.findall(r'\[(\d+)\]=\{([^}]*)\}', lua_block(train_tables, 'TT_SPEC')):
@@ -102,16 +107,19 @@ for idx, vals in re.findall(r'\[(\d+)\]=\{([^}]*)\}', lua_block(train_tables, 'T
     if gains:
         ev_yield[species[national - 1]] = gains
 
-presets = {'shinybot': [], 'trainbot': []}
+presets = {'shinybot': [], 'trainbot': [], 'farmbot': []}
 for bot, path, label in (('shinybot', ('shinybot', 'FRLG_ShinyBot.json'), 'Por defecto'),
-                         ('trainbot', ('trainbot', 'FRLG_TrainBot.json'), 'Por defecto')):
+                         ('trainbot', ('trainbot', 'FRLG_TrainBot.json'), 'Por defecto'),
+                         ('farmbot', ('farmbot', 'FRLG_FarmBot.json'), 'Por defecto')):
     presets[bot].append({'name': label, 'config': json.loads(strip_comments(read(*path)))})
-for f in sorted(glob.glob(os.path.join(ROOT, 'trainbot', 'examples', 'configs', '*.json'))):
-    text = open(f, encoding='utf-8').read()
-    first = re.search(r'//\s*EJEMPLO:\s*([^\n]*)', text)
-    presets['trainbot'].append({'name': first.group(1).strip() if first else os.path.basename(f),
-                                'file': os.path.basename(f),
-                                'config': json.loads(strip_comments(text))})
+for bot, pattern in (('trainbot', ('trainbot', 'examples', 'configs', '*.json')),
+                     ('farmbot', ('farmbot', 'examples', '*.json'))):
+    for f in sorted(glob.glob(os.path.join(ROOT, *pattern))):
+        text = open(f, encoding='utf-8').read()
+        first = re.search(r'//\s*EJEMPLO:\s*([^\n]*)', text)
+        presets[bot].append({'name': first.group(1).strip() if first else os.path.basename(f),
+                             'file': os.path.basename(f),
+                             'config': json.loads(strip_comments(text))})
 
 routes = [os.path.basename(f) for f in sorted(glob.glob(os.path.join(ROOT, 'trainbot', 'examples', 'routes', '*.txt')))]
 
@@ -120,6 +128,7 @@ data = {
     'naturesEs': {v: k for k, v in natures_es.items()},
     'species': species,
     'moves': sorted(set(moves)),
+    'items': sorted(set(items)),
     'hpTypes': hp_types,
     'hpTypesEs': {hp_types[i - 1]: k for k, i in hp_types_es.items()},
     'modes': modes,

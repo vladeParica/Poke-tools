@@ -78,7 +78,20 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('ntfy topic generated', /"notify": \{"ntfy": "frlg-[a-z0-9]{14}"\}/.test(pv()));
     ok('section remembered per bot', (d.getElementById('tab-shinybot').click(), nav('ivs').getAttribute('aria-selected') === 'true'));
 
-    // 7. skins
+    // 7. Farm Bot: mode cards decide which tabs exist
+    d.getElementById('tab-farmbot').click();
+    ok('farm tab renders', d.getElementById('preview-name').textContent === 'FRLG_FarmBot.json');
+    ok('farm: 4 mode cards', d.querySelectorAll('.mode').length === 4);
+    [...d.querySelectorAll('.mode')].find(b => b.textContent.includes('Robar')).click();
+    ok('farm: robar mode saved', /"mode": "robar"/.test(pv()));
+    ok('farm: no foes tab in robar', nav('foes').hidden);
+    go('goal');
+    enter(d.getElementById('f-wantedItems'), 'big mushroom');
+    ok('farm: wanted item added', /"wantedItems": \["Big Mushroom"\]/.test(pv()));
+    ok('farm: money target hidden in robar', d.querySelector('.field[data-key="moneyTarget"]').hidden);
+    d.getElementById('tab-shinybot').click();
+
+    // 8. skins
     const ss = d.getElementById('skin-select'); ss.value = 'noche'; fire(ss, 'change');
     ok('skin applied', d.documentElement.dataset.skin === 'noche' && w.getComputedStyle(d.body).backgroundColor === 'rgb(15, 17, 24)');
     const s2 = w.PT.skins.sanitize({ id: 'x', vars: { '--bg': 'red;}</style>', '--accent': 'url(https://evil/x.png)', '--text': '#fff' }, sprites: { mascot: 'javascript:alert(1)' } });

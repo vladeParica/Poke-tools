@@ -8,6 +8,7 @@ Spanish, like everything the player sees.
 
 ## What it does
 
+- **Three bots:** Shiny Bot, Train Bot and Farm Bot, one tab each.
 - **One screen, no scrolling:** each bot's options are split into short sections shown as
   tabs (Modo, Qué buscar, IVs… / Objetivo, Rivales, Combate…), with *Anterior / Siguiente*
   buttons. Sections and options that don't apply to the chosen mode are hidden, and each

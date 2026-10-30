@@ -10,10 +10,10 @@
 
   var S = {
     bot: 'shinybot',
-    cfg: { shinybot: null, trainbot: null },
-    origin: { shinybot: '', trainbot: '' },
+    cfg: { shinybot: null, trainbot: null, farmbot: null },
+    origin: { shinybot: '', trainbot: '', farmbot: '' },
     dir: null,
-    section: { shinybot: 'mode', trainbot: 'goal' },
+    section: { shinybot: 'mode', trainbot: 'goal', farmbot: 'mode' },
     skin: 'pokeball'
   };
 
@@ -77,13 +77,13 @@
     if (raw) {
       try {
         var d = JSON.parse(raw);
-        ['shinybot', 'trainbot'].forEach(function (b) {
+        ['shinybot', 'trainbot', 'farmbot'].forEach(function (b) {
           if (d.cfg && d.cfg[b]) { S.cfg[b] = d.cfg[b]; S.origin[b] = (d.origin && d.origin[b]) || ''; }
         });
-        if (d.bot === 'shinybot' || d.bot === 'trainbot') S.bot = d.bot;
+        if (d.bot === 'shinybot' || d.bot === 'trainbot' || d.bot === 'farmbot') S.bot = d.bot;
       } catch (e) { /* ignore broken draft */ }
     }
-    ['shinybot', 'trainbot'].forEach(function (b) {
+    ['shinybot', 'trainbot', 'farmbot'].forEach(function (b) {
       if (!S.cfg[b]) { S.cfg[b] = presetConfig(b, 0); S.origin[b] = 'Por defecto'; }
     });
   }
@@ -156,8 +156,9 @@
 
   function modeCtl(f) {
     var grid = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': f.label });
-    schema.MODES.forEach(function (m) {
-      var b = h('button', { type: 'button', class: 'mode', role: 'radio', 'aria-checked': String(cfg().mode === m.value) },
+    var cur = cfg().mode === undefined || cfg().mode === null ? f.def : cfg().mode;
+    (f.cards || schema.MODES).forEach(function (m) {
+      var b = h('button', { type: 'button', class: 'mode', role: 'radio', 'aria-checked': String(cur === m.value) },
         h('span', { class: 'm-head' }, icon(m.icon), h('span', { text: m.label })),
         h('span', { class: 'm-desc', text: m.desc }),
         m.rng ? h('span', { class: 'rng', text: 'RNG' }) : null);
@@ -201,9 +202,10 @@
     if (kind === 'natures') { table = lk.natures; options = data.natures.map(function (n) { return { value: n, label: schema.NATURES_ES_DISPLAY[n] }; }); }
     if (kind === 'species') { table = lk.species; options = data.species.map(function (n) { return { value: n }; }); }
     if (kind === 'moves') { table = lk.moves; options = data.moves.map(function (n) { return { value: n }; }); }
+    if (kind === 'items') { table = lk.items; options = data.items.map(function (n) { return { value: n }; }); }
     var box = h('div', { class: 'chips' });
     var dl = options ? datalist(options) : null;
-    var basePh = kind === 'hexlist' ? 'Ej. BC75 (Enter para añadir)' : kind === 'natures' ? 'Escribe una naturaleza…' : kind === 'moves' ? 'Escribe un ataque en inglés…' : 'Escribe una especie…';
+    var basePh = kind === 'hexlist' ? 'Ej. BC75 (Enter para añadir)' : kind === 'natures' ? 'Escribe una naturaleza…' : kind === 'moves' ? 'Escribe un ataque en inglés…' : kind === 'items' ? 'Escribe un objeto en inglés…' : 'Escribe una especie…';
     var input = h('input', { type: 'text', id: 'f-' + f.key, list: dl ? dl.id : null, spellcheck: 'false', autocomplete: 'off', placeholder: basePh });
     var addBtn = h('button', { type: 'button', class: 'btn icon', title: 'Añadir', 'aria-label': 'Añadir' }, icon('plus'));
     var msg = h('p', { class: 'help', hidden: true });
@@ -382,7 +384,7 @@
 
   var BUILDERS = {
     bool: switchCtl, int: intCtl, text: textCtl, enum: enumCtl, mode: modeCtl,
-    natures: chipsCtl, species: chipsCtl, moves: chipsCtl, hexlist: chipsCtl,
+    natures: chipsCtl, species: chipsCtl, moves: chipsCtl, items: chipsCtl, hexlist: chipsCtl,
     ivRange: ivCtl, evs: evCtl, hiddenPower: hpCtl, notify: notifyCtl, route: routeCtl
   };
 
@@ -416,7 +418,7 @@
   }
 
   function renderTabs() {
-    ['shinybot', 'trainbot'].forEach(function (b) {
+    ['shinybot', 'trainbot', 'farmbot'].forEach(function (b) {
       var t = $('tab-' + b);
       t.innerHTML = '';
       t.appendChild(icon(schema.bots[b].icon));
@@ -728,7 +730,7 @@
   });
 
   // ---------------------------------------------------------------- wiring
-  ['shinybot', 'trainbot'].forEach(function (b) {
+  ['shinybot', 'trainbot', 'farmbot'].forEach(function (b) {
     $('tab-' + b).addEventListener('click', function () {
       S.bot = b; renderTabs(); renderForm();
       try { history.replaceState(null, '', '#' + b); } catch (e) { /* file:// may refuse */ }
@@ -759,16 +761,17 @@
   });
 
   // ---------------------------------------------------------------- boot
-  lk = { natures: {}, species: {}, moves: {} };
+  lk = { natures: {}, species: {}, moves: {}, items: {} };
   data.natures.forEach(function (n) { lk.natures[core.simplify(n)] = n; });
   Object.keys(data.naturesEs).forEach(function (en) { lk.natures[core.simplify(data.naturesEs[en])] = en; });
   data.species.forEach(function (n) { lk.species[core.simplify(n)] = n; });
   data.moves.forEach(function (n) { lk.moves[core.simplify(n)] = n; });
+  data.items.forEach(function (n) { lk.items[core.simplify(n)] = n; });
 
   skins.loadCustom();
   loadDraft();
   // Deep links: #shinybot / #trainbot pick the bot, ?skin=<id> picks the skin.
-  if (location.hash === '#shinybot' || location.hash === '#trainbot') S.bot = location.hash.slice(1);
+  if (/^#(shinybot|trainbot|farmbot)$/.test(location.hash)) S.bot = location.hash.slice(1);
   var qs = /[?&]skin=([a-z0-9-]+)/.exec(location.search);
   var saved = qs ? qs[1] : store(SKIN);
   applySkin(saved && skins.get(saved) ? saved : 'pokeball');

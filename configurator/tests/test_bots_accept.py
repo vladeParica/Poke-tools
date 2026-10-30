@@ -68,14 +68,34 @@ def run_train(text):
         shutil.rmtree(d, ignore_errors=True)
 
 
+def run_farm(text):
+    d = tempfile.mkdtemp()
+    old = os.getcwd()
+    try:
+        os.chdir(d)
+        open('FRLG_FarmBot.json', 'w', encoding='utf-8', newline='').write(text)
+        src = open(os.path.join(ROOT, 'farmbot', 'FRLG_FarmBot.lua'), encoding='utf-8').read()
+        mock = open(os.path.join(ROOT, 'farmbot', 'tests', 'mock_farm.lua'), encoding='utf-8').read()
+        mock = mock.replace('local MAXF = 400000', 'local MAXF = 120')
+        lua = L.LuaRuntime()
+        ls = lua.eval('function(s,n) return assert(loadstring(s,n)) end')
+        r = tuple(ls(mock, 'mock')('nivel')(ls(src, 'bot')))
+        return str(r[17])
+    finally:
+        os.chdir(old)
+        shutil.rmtree(d, ignore_errors=True)
+
+
 def main():
     failures = 0
 
     # 1. Option parity with the Lua CONFIG tables.
     schema_keys = json.loads(node(
         "const s=require('./configurator/js/schema.js');"
-        "process.stdout.write(JSON.stringify({shinybot:s.fields('shinybot').map(f=>f.key),trainbot:s.fields('trainbot').map(f=>f.key)}))"))
-    for bot, path in (('shinybot', 'shinybot/src/bot_body.lua'), ('trainbot', 'trainbot/src/train_body.lua')):
+        "process.stdout.write(JSON.stringify({shinybot:s.fields('shinybot').map(f=>f.key),trainbot:s.fields('trainbot').map(f=>f.key),"
+        "farmbot:s.fields('farmbot').map(f=>f.key)}))"))
+    for bot, path in (('shinybot', 'shinybot/src/bot_body.lua'), ('trainbot', 'trainbot/src/train_body.lua'),
+                      ('farmbot', 'farmbot/src/farm_body.lua')):
         lua_keys = lua_config_keys(os.path.join(ROOT, path)) - OBSOLETE
         ui_keys = set(schema_keys[bot])
         missing, extra = sorted(lua_keys - ui_keys), sorted(ui_keys - lua_keys)
@@ -88,7 +108,7 @@ def main():
     # 2. Every exported config loads cleanly in the real bot.
     fixtures = json.loads(subprocess.run(['node', os.path.join(ROOT, 'configurator', 'tests', 'fixtures.js')],
                                          capture_output=True, text=True, check=True).stdout)
-    for bot, runner in (('shinybot', run_shiny), ('trainbot', run_train)):
+    for bot, runner in (('shinybot', run_shiny), ('trainbot', run_train), ('farmbot', run_farm)):
         for i, text in enumerate(fixtures[bot]):
             out = runner(text)
             bad = [l for l in out.splitlines() if l.startswith('Config: ') or l.startswith('Error en ')]

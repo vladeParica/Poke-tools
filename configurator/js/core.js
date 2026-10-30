@@ -58,7 +58,8 @@
     Object.keys(data.naturesEs).forEach(function (en) { nat[simplify(data.naturesEs[en])] = en; });
     var hp = makeLookup(data.hpTypes);
     Object.keys(data.hpTypesEs).forEach(function (en) { hp[simplify(data.hpTypesEs[en])] = en; });
-    data._lk = { natures: nat, species: makeLookup(data.species), moves: makeLookup(data.moves), hpTypes: hp, modes: makeLookup(data.modes) };
+    data._lk = { natures: nat, species: makeLookup(data.species), moves: makeLookup(data.moves), hpTypes: hp,
+      modes: makeLookup(data.modes), items: makeLookup(data.items || []) };
     return data._lk;
   }
 
@@ -97,6 +98,11 @@
         if (l) c[k] = l.map(function (s) { return String(s).toUpperCase(); });
       });
     } else {
+      if (bot === 'farmbot') {
+        if (typeof c.mode === 'string') c.mode = simplify(c.mode);
+        if (typeof c.takeItems === 'string') c.takeItems = simplify(c.takeItems);
+        mapList('wantedItems', lk.items);
+      }
       if (c.evs !== undefined && c.evs !== null) c.evs = statsObj(c.evs) || c.evs;
       mapList('species', lk.species);
       mapList('avoidSpecies', lk.species);
@@ -143,7 +149,8 @@
     function checkNames(key, table, what) {
       var l = asList(cfg[key]);
       if (!l) return;
-      l.forEach(function (n) { if (!table[simplify(n)]) err(key, what + ' desconocida: "' + n + '"'); });
+      var adj = /a$/.test(what) ? ' desconocida: "' : ' desconocido: "';
+      l.forEach(function (n) { if (!table[simplify(n)]) err(key, what + adj + n + '"'); });
     }
 
     ['logDir', 'sharedDir'].forEach(function (k) {
@@ -208,7 +215,19 @@
         if (total > 510) err('evs', 'Los EVs suman ' + total + ' (máximo 510)');
       }
       if (isInt(cfg.targetLevel) && isInt(cfg.maxLevel) && cfg.maxLevel < cfg.targetLevel) warn('maxLevel', 'El nivel máximo es menor que el objetivo: nunca llegará al objetivo');
-      if ((evs === null || evs === undefined || total === 0) && !cfg.targetLevel && !cfg.maxLevel) warn('evs', 'Sin EVs ni nivel objetivo el bot no sabe cuándo parar');
+      if (bot === 'trainbot' && (evs === null || evs === undefined || total === 0) && !cfg.targetLevel && !cfg.maxLevel) warn('evs', 'Sin EVs ni nivel objetivo el bot no sabe cuándo parar');
+      if (bot === 'farmbot') {
+        var fm = cfg.mode === undefined ? 'nivel' : cfg.mode;
+        if (['nivel', 'objetos', 'robar', 'dinero'].indexOf(fm) === -1) err('mode', 'Modo desconocido: "' + fm + '"');
+        if (fm === 'nivel' && !cfg.targetLevel && !cfg.maxBattles) err('targetLevel', 'El modo nivel necesita un nivel objetivo (o un máximo de combates)');
+        checkNames('wantedItems', lk.items, 'Objeto');
+        if (fm === 'robar' && !asList(cfg.wantedItems)) info('wantedItems', 'Sin lista, robará cualquier objeto que lleve el salvaje');
+        if (fm === 'dinero' && !cfg.moneyTarget && !cfg.maxBattles) info('moneyTarget', 'Sin dinero objetivo, seguirá hasta que lo detengas con 7');
+        if ((fm === 'objetos' || fm === 'robar') && cfg.takeItems === 'pause') info('takeItems', 'El bot pausará cada vez que haya objetos para que los quites tú');
+        if (fm === 'objetos') info('mode', 'Lleva en el equipo al menos un Pokémon con Recogida (Meowth); solo recoge al GANAR');
+        if (fm === 'robar') info('mode', 'El primero del equipo necesita Ladrón o Antojo y no llevar objeto');
+        if (fm === 'dinero') info('mode', 'Registra el Buscapelea en SELECT y graba la ruta de entrenadores con la tecla 5');
+      }
       checkNames('species', lk.species, 'Especie');
       checkNames('avoidSpecies', lk.species, 'Especie');
       checkNames('wantedMoves', lk.moves, 'Ataque');
@@ -308,6 +327,9 @@
 
   // Which bot a loaded config belongs to, from its keys.
   function detectBot(cfg) {
+    var farm = ['itemTarget', 'moneyTarget', 'trainerRouteFile', 'takeItems', 'wantedItems', 'maxBattles'];
+    if (farm.some(function (k) { return k in cfg; }) ||
+        ['nivel', 'objetos', 'robar', 'dinero'].indexOf(simplify(cfg.mode || '')) !== -1) return 'farmbot';
     var train = ['evs', 'healBelow', 'learnMoves', 'routeFile', 'healMode', 'avoidSpecies', 'wantedMoves'];
     var shiny = ['mode', 'shiny', 'natures', 'minIVs', 'initialSeeds', 'farSearch', 'teachy'];
     var t = train.filter(function (k) { return k in cfg; }).length, s = shiny.filter(function (k) { return k in cfg; }).length;

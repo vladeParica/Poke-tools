@@ -30,6 +30,14 @@
     { value: 'Semilla inicial', label: 'Semilla inicial', icon: 'mode-seed', desc: 'Cae en una semilla del título y lanza otro modo.' }
   ];
 
+  var FARM_MODES = [
+    { value: 'nivel', label: 'Nivel', icon: 'stat-hp', desc: 'Pelea contra todo hasta que el primero llegue al nivel que pidas.' },
+    { value: 'objetos', label: 'Objetos (Recogida)', icon: 'mode-gift', desc: 'Gana combates con Meowth (Recogida) en el equipo y guarda lo que recogen.' },
+    { value: 'robar', label: 'Robar objetos', icon: 'bot-shiny', desc: 'Usa Ladrón/Antojo cuando el salvaje lleva un objeto que quieres, y huye.' },
+    { value: 'dinero', label: 'Dinero', icon: 'dice', desc: 'Revanchas con entrenadores usando el Buscapelea en una ruta grabada.' }
+  ];
+  function farmIn(list) { return function (c) { return list.indexOf(c.mode) !== -1; }; }
+
   var NATURES_ES_DISPLAY = {
     Hardy: 'Fuerte', Lonely: 'Huraña', Brave: 'Audaz', Adamant: 'Firme', Naughty: 'Pícara',
     Bold: 'Osada', Docile: 'Dócil', Relaxed: 'Plácida', Impish: 'Agitada', Lax: 'Floja',
@@ -189,9 +197,84 @@
     ]
   };
 
+  var farmbot = {
+    id: 'farmbot',
+    name: 'Farm Bot',
+    file: 'FRLG_FarmBot.json',
+    script: 'FRLG_FarmBot.lua',
+    icon: 'mode-gift',
+    tagline: 'Farmea objetos, nivel o dinero sin tocar los otros bots.',
+    header: [
+      'Configuracion de FRLG_FarmBot.lua (generada con el configurador de Poke-tools)',
+      'Guarda este archivo en la MISMA carpeta que el script.',
+      'Tras cambiar algo: deten el bot (7) y pulsa 0 para recargar.'
+    ],
+    sections: [
+      { id: 'mode', title: 'Modo', icon: 'compass', desc: 'Qué quieres farmear.', fields: [
+        { key: 'mode', type: 'mode', cards: FARM_MODES, def: 'nivel', label: 'Modo', comment: '"nivel", "objetos", "robar" o "dinero"' }
+      ] },
+      { id: 'goal', title: 'Meta', icon: 'target', desc: 'Cuándo se detiene. Si no pones ninguna, sigue hasta que lo pares con 7.', fields: [
+        { key: 'targetLevel', type: 'int', min: 1, max: 100, def: null, nullable: true, half: true, label: 'Nivel objetivo',
+          help: 'Del primero del equipo.', showIf: farmIn(['nivel']), comment: 'nivel: detenerse en este nivel' },
+        { key: 'itemTarget', type: 'int', min: 1, max: 99999, def: null, nullable: true, half: true, label: 'Objetos a guardar',
+          showIf: farmIn(['objetos', 'robar']), comment: 'objetos/robar: detenerse tras guardar estos objetos' },
+        { key: 'moneyTarget', type: 'int', min: 1, max: 999999, def: null, nullable: true, half: true, label: 'Dinero objetivo',
+          showIf: farmIn(['dinero']), comment: 'dinero: detenerse al tener este dinero' },
+        { key: 'maxBattles', type: 'int', min: 1, max: 999999, def: null, nullable: true, half: true, label: 'Máximo de combates',
+          comment: 'detenerse tras estos combates' },
+        { key: 'takeItems', type: 'enum', segmented: true, def: 'auto', label: 'Guardar los objetos',
+          options: [{ value: 'auto', label: 'El bot los quita' }, { value: 'pause', label: 'Pausar y avisarme' }],
+          help: 'El bot usa START > POKÉMON > OBJETO > QUITAR (solo versiones USA).', showIf: farmIn(['objetos', 'robar']),
+          comment: '"auto" o "pause"' },
+        { key: 'wantedItems', type: 'items', def: null, nullable: true, label: 'Objetos que quieres',
+          help: 'Solo roba estos (nombre en inglés). Vacío = cualquier objeto.', showIf: farmIn(['robar']),
+          comment: 'robar: objetos que quieres; null = cualquiera' }
+      ] },
+      { id: 'foes', title: 'Rivales', icon: 'mode-wild', desc: 'Contra quién pelea en los modos nivel y objetos. Del resto huye.', showIf: farmIn(['nivel', 'objetos']), fields: [
+        { key: 'species', type: 'species', def: null, nullable: true, label: 'Pelear solo contra', help: 'Vacío = contra todas.', comment: 'null = contra todas' },
+        { key: 'avoidSpecies', type: 'species', def: null, nullable: true, label: 'Nunca pelear contra',
+          help: 'Por ejemplo, las que usan Autodestrucción.', comment: 'especies a evitar' }
+      ] },
+      { id: 'battle', title: 'Combate', icon: 'stat-atk', desc: 'Cuándo curarse y huir. Contra entrenadores no se puede huir.', fields: [
+        { key: 'healBelow', type: 'int', min: 0, max: 100, def: 40, unit: '%', slider: true, label: 'Ir al Centro con PS bajo', comment: 'curarse si los PS quedan bajo este %' },
+        { key: 'fleeBelow', type: 'int', min: 0, max: 100, def: 20, unit: '%', slider: true, label: 'Huir en combate con PS bajo', comment: 'huir si los PS bajan de este %' },
+        { key: 'minPP', half: true, type: 'int', min: 0, max: 99, def: 3, label: 'PP mínimos', comment: 'curarse si quedan menos PP' },
+        { key: 'evolve', type: 'bool', def: false, half: true, label: 'Dejar evolucionar', comment: 'false = cancela las evoluciones' },
+        { key: 'stopOnShiny', type: 'bool', def: true, half: true, label: 'Pausar con un shiny salvaje', comment: 'pausar si aparece un shiny' }
+      ] },
+      { id: 'moves', title: 'Ataques', icon: 'spark', desc: 'Qué hacer cuando quiere aprender un ataque nuevo. En "robar" nunca olvida Ladrón ni Antojo.', fields: [
+        { key: 'learnMoves', type: 'enum', segmented: true, def: 'auto', label: 'Ataques nuevos',
+          options: [{ value: 'auto', label: 'Automático' }, { value: 'never', label: 'Nunca' }, { value: 'ask', label: 'Preguntarme' }],
+          comment: '"auto", "never" o "ask"' },
+        { key: 'wantedMoves', type: 'moves', max: 4, def: null, nullable: true, label: 'Ataques que quiero al final', comment: 'maximo 4' },
+        { key: 'keepMoves', type: 'moves', def: null, nullable: true, label: 'Nunca olvidar', comment: 'ataques que nunca debe olvidar' },
+        { key: 'askTimeout', half: true, type: 'int', min: 0, max: 86400, def: 300, nullable: true, unit: 's', label: 'Esperar mi respuesta',
+          showIf: function (c) { return c.learnMoves === 'ask'; }, comment: 'segundos; null = esperar siempre' }
+      ] },
+      { id: 'route', title: 'Rutas', icon: 'route', desc: 'Tecla 6: ruta al Centro (sirve la del Train Bot). Tecla 5: ruta por la vista de los entrenadores.', fields: [
+        { key: 'healMode', type: 'enum', segmented: true, def: 'nurse', label: 'Cómo se cura',
+          options: [{ value: 'nurse', label: 'Enfermera' }, { value: 'tile', label: 'Casilla que cura' }], comment: '"nurse" o "tile"' },
+        { key: 'routeFile', type: 'route', def: 'FRLG_TrainRoute.txt', label: 'Ruta al Centro', comment: 'ruta al Centro (tecla 6)' },
+        { key: 'trainerRouteFile', type: 'text', def: 'FRLG_FarmTrainers.txt', label: 'Ruta de entrenadores',
+          help: 'Grábala con la tecla 5: empieza y termina donde usas el Buscapelea.', showIf: farmIn(['dinero']),
+          comment: 'dinero: ruta grabada con la tecla 5' }
+      ] },
+      { id: 'notify', title: 'Avisos', icon: 'bell', desc: 'Te avisa al celular cuando termina, se detiene o tienes que quitar objetos.', fields: [
+        { key: 'notify', type: 'notify', def: null, nullable: true, label: 'Avisos', comment: 'avisos: {"ntfy": "tema"} y/o {"discord": "url"}' }
+      ] },
+      { id: 'advanced', title: 'Caminar y logs', icon: 'gear', advanced: true, desc: 'Los valores por defecto sirven casi siempre.', fields: [
+        { key: 'walkAxis', type: 'enum', options: [{ value: 'horizontal', label: 'Izquierda / derecha' }, { value: 'vertical', label: 'Arriba / abajo' }],
+          def: 'horizontal', half: true, label: 'Eje de la caminata', comment: '"horizontal" o "vertical"' },
+        { key: 'walkFrames', type: 'int', min: 1, max: 120, def: 16, half: true, label: 'Frames por paso', comment: 'frames por paso' },
+        { key: 'logFile', type: 'text', def: 'farm_log.txt', half: true, label: 'Archivo de log', comment: 'log' },
+        { key: 'logDir', type: 'text', def: 'logs', half: true, label: 'Carpeta de logs', comment: 'subcarpeta de logs' }
+      ] }
+    ]
+  };
+
   var api = {
-    STATS: STATS, MODES: MODES, NATURES_ES_DISPLAY: NATURES_ES_DISPLAY, TYPES_ES_DISPLAY: TYPES_ES_DISPLAY,
-    bots: { shinybot: shinybot, trainbot: trainbot },
+    STATS: STATS, MODES: MODES, FARM_MODES: FARM_MODES, NATURES_ES_DISPLAY: NATURES_ES_DISPLAY, TYPES_ES_DISPLAY: TYPES_ES_DISPLAY,
+    bots: { shinybot: shinybot, trainbot: trainbot, farmbot: farmbot },
     fields: function (bot) {
       var out = [];
       api.bots[bot].sections.forEach(function (s) { s.fields.forEach(function (f) { out.push(f); }); });

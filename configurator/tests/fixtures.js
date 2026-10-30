@@ -29,11 +29,22 @@ const rich = {
     notify: { ntfy: 'frlg-abcdefghijk', discord: 'https://discord.com/api/webhooks/123/abc_DEF-ghi' },
     healMode: 'tile',
     routeFile: 'FRLG_TrainRoute_Tower.txt'
+  },
+  farmbot: {
+    mode: 'Robar',
+    itemTarget: 25,
+    takeItems: 'auto',
+    wantedItems: ['tiny mushroom', 'Big Mushroom', 'Moon Stone'],
+    maxBattles: 500,
+    keepMoves: ['Thief'],
+    learnMoves: 'never',
+    notify: { ntfy: 'frlg-abcdefghijk' },
+    trainerRouteFile: 'FRLG_FarmTrainers.txt'
   }
 };
 
 const out = {};
-for (const bot of ['shinybot', 'trainbot']) {
+for (const bot of ['shinybot', 'trainbot', 'farmbot']) {
   const configs = data.presets[bot].map((p) => p.config).concat([rich[bot]]);
   out[bot] = configs.map((c) => {
     const n = core.normalize(bot, JSON.parse(JSON.stringify(c)), data);

@@ -80,9 +80,24 @@ test('warnings for configs that load but misbehave', () => {
   assert.ok(w('shinybot', { shiny: false }).includes('shiny'));
 });
 
-test('detectBot tells the two configs apart', () => {
+test('detectBot tells the three configs apart', () => {
   assert.equal(core.detectBot(data.presets.shinybot[0].config), 'shinybot');
   assert.equal(core.detectBot(data.presets.trainbot[0].config), 'trainbot');
+  for (const p of data.presets.farmbot) assert.equal(core.detectBot(p.config), 'farmbot', p.name);
+});
+
+test('Farm Bot: modes, required level and item names', () => {
+  assert.ok(errorKeys('farmbot', { mode: 'farmear' }).includes('mode'));
+  assert.ok(errorKeys('farmbot', { mode: 'nivel' }).includes('targetLevel'));
+  assert.deepEqual(errorKeys('farmbot', { mode: 'nivel', targetLevel: 30 }), []);
+  assert.deepEqual(errorKeys('farmbot', { mode: 'dinero', moneyTarget: 99999 }), []);
+  assert.ok(errorKeys('farmbot', { mode: 'robar', wantedItems: ['Nuggett'] }).includes('wantedItems'));
+  const c = core.normalize('farmbot', { mode: 'ROBAR', wantedItems: ['tiny mushroom'], takeItems: 'Pause' }, data);
+  assert.equal(c.mode, 'robar');
+  assert.equal(c.takeItems, 'pause');
+  assert.deepEqual(c.wantedItems, ['Tinymushroom']);
+  const msgs = issues('farmbot', { mode: 'robar', wantedItems: ['Nuggett'] }).map((i) => i.msg).join(' ');
+  assert.match(msgs, /Objeto desconocido/);
 });
 
 test('randomTopic is a valid, long ntfy topic', () => {
