@@ -1,6 +1,6 @@
 # ADR-0010 — Skins are sanitized data, and all art is original
 
-> **AI-DLC phase:** `02-design`  ·  **Status:** accepted
+> **AI-DLC phase:** `02-design`  ·  **Status:** accepted; art rule amended by [ADR-0013](0013-official-artwork-behind-the-configurator-forms.md)
 > **Date:** 2026-10-29  ·  **Owner:** vladeParica
 
 ## Context

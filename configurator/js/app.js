@@ -37,6 +37,14 @@
     return el;
   }
   function icon(name) { return skins.art(name, S.skin); }
+  // Artwork behind the form: the skin's own image if it sets one, else the official artwork.
+  function backdrop() {
+    var name = 'backdrop-' + S.bot, sk = skins.get(S.skin) || {};
+    if ((sk.sprites || {})[name]) return icon(name);
+    var img = h('img', { src: PT.art.backdrops[S.bot], alt: '', decoding: 'async', referrerpolicy: 'no-referrer' });
+    img.addEventListener('error', function () { img.remove(); });
+    return img;
+  }
   function store(key, val) { try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) { return null; } }
   function cfg() { return S.cfg[S.bot]; }
   function def() { return schema.bots[S.bot]; }
@@ -486,7 +494,7 @@
       return b;
     }
     main.appendChild(h('section', { class: 'card panel', 'data-section': s.id, role: 'tabpanel' },
-      h('div', { class: 'backdrop', 'aria-hidden': 'true' }, icon('backdrop-' + S.bot)),
+      h('div', { class: 'backdrop', 'aria-hidden': 'true' }, backdrop()),
       h('header', null, h('span', { class: 'sec-icon' }, icon(s.icon)),
         h('div', null, h('h2', { text: s.title }), s.desc ? h('p', { text: s.desc }) : null),
         h('span', { class: 'step', text: (i + 1) + ' / ' + vis.length })),

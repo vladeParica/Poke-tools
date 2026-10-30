@@ -21,6 +21,14 @@ That repository has more scripts that could be useful for future features:
 | `Gen 3/VBA/RS_RNG_2.0.lua`, `E_RNG_2.0.lua` | Ruby/Sapphire and Emerald |
 | `Gen 3/VBA/Side/` | Pokérus, Feebas, lottery, Mirage Island (RSE) |
 
+## Pokémon artwork
+
+Pokémon and their artwork are © Nintendo / Creatures Inc. / GAME FREAK inc. The configurator
+shows the official artwork of Pikachu, Machop and Meowth behind the forms, loaded at runtime
+from the [PokeAPI sprites](https://github.com/PokeAPI/sprites) repository. These images are not
+part of this repository or its releases ([ADR-0013](adr/0013-official-artwork-behind-the-configurator-forms.md)).
+Poke-tools is a fan project, not affiliated with or endorsed by those companies.
+
 ## pret/pokefirered
 
 [pret/pokefirered](https://github.com/pret/pokefirered) is the FireRed decompilation. It is
