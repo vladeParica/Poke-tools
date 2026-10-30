@@ -15,6 +15,7 @@ TITLE, PRERELEASE (true while the bot's README says it's experimental) and NOTES
 import argparse
 import os
 import re
+import shlex
 import sys
 import zipfile
 
@@ -106,9 +107,10 @@ def main():
         notes_path = os.path.join(args.out, 'notes.md')
         open(notes_path, 'w', encoding='utf-8').write(notes)
     with open(os.path.join(args.out, 'release.env'), 'w', encoding='utf-8') as f:
-        f.write('TITLE=%s v%s\n' % (name, version))
+        # Shell-quoted: the workflow reads this file with `source`.
+        f.write('TITLE=%s\n' % shlex.quote('%s v%s' % (name, version)))
         f.write('PRERELEASE=%s\n' % ('true' if prerelease else 'false'))
-        f.write('NOTES=%s\n' % notes_path)
+        f.write('NOTES=%s\n' % shlex.quote(notes_path))
 
     print('%s  (%d files%s)' % (zpath, len(entries), ', pre-release' if prerelease else ''))
 

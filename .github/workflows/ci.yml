@@ -31,7 +31,10 @@ jobs:
           fi
       - name: Release zips build (dry run)
         run: |
-          for b in shinybot trainbot farmbot; do python tools/package.py "$b" --out dist; done
+          for b in shinybot trainbot farmbot; do
+            python tools/package.py "$b" --out dist
+            (source dist/release.env && test -n "$TITLE")   # the release job reads it the same way
+          done
 
   shinybot:
     name: Shiny Bot simulator
