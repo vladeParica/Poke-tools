@@ -1,0 +1,5 @@
+# The generated bots ship with CRLF line endings for Windows (ADR-0002).
+# Store them byte for byte so CI can compare a fresh build with what is committed.
+shinybot/FRLG_ShinyBot.lua -text
+trainbot/FRLG_TrainBot.lua -text
+farmbot/FRLG_FarmBot.lua -text

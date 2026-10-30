@@ -1,0 +1,58 @@
+{
+  // EJEMPLO: revanchas con entrenadores hasta tener $500000.
+  // Registra el Buscapelea en SELECT y graba con la tecla 5 la ruta que pasa por la vista
+  // de los entrenadores (empieza y termina donde usas el Buscapelea).
+  // Copia este archivo junto al script con el nombre FRLG_FarmBot.json
+
+  // ================================================================
+  //  Configuracion de FRLG_FarmBot.lua (farmear objetos, nivel o dinero)
+  //  Guarda este archivo en la MISMA carpeta que el script.
+  //  Las lineas que empiezan con // son comentarios.
+  //  Tras cambiar algo: deten el bot (7) y pulsa 0 para recargar.
+  // ================================================================
+
+  // ---------------------- MODO ------------------------------------
+  // "nivel"   = pelea contra todo hasta que el primero llegue a targetLevel
+  // "objetos" = gana combates con Pokemon con RECOGIDA en el equipo y les quita
+  //             los objetos (START > POKEMON > OBJETO > QUITAR)
+  // "robar"   = usa LADRON / ANTOJO cuando el salvaje lleva un objeto que quieres
+  // "dinero"  = revanchas con entrenadores usando el BUSCAPELEA (registralo en SELECT)
+  "mode": "dinero",
+
+  "targetLevel": null,          // nivel: detenerse cuando el primero llegue a este nivel
+  "itemTarget": null,         // objetos/robar: detenerse tras guardar esta cantidad de objetos
+  "takeItems": "auto",        // "auto" = el bot quita los objetos; "pause" = pausa y te avisa
+  "wantedItems": null,        // robar: objetos que quieres (nombre en ingles); null = cualquiera
+  "moneyTarget": 500000,        // dinero: detenerse al tener este dinero
+  "trainerRouteFile": "FRLG_FarmTrainers.txt",  // dinero: ruta grabada con la tecla 5
+  "maxBattles": null,         // detenerse tras estos combates (cualquier modo)
+
+  // ---------------------- RIVALES ---------------------------------
+  "species": null,            // pelear SOLO contra estas especies (null = contra todas)
+  // Nunca pelear contra estas (las que se autodestruyen)
+  "avoidSpecies": ["Geodude", "Graveler", "Voltorb", "Electrode", "Koffing", "Weezing"],
+
+  // ---------------------- COMBATE ---------------------------------
+  "healBelow": 60,            // ir al Centro si los PS quedan bajo este % al terminar un combate
+  "fleeBelow": 20,            // huir si los PS bajan de este % (contra entrenadores no se puede)
+  "minPP": 3,                 // ir al Centro si quedan menos PP en ataques que hacen dano
+
+  "learnMoves": "auto",       // "auto", "never" o "ask" (igual que el Train Bot)
+  "wantedMoves": null,
+  "keepMoves": null,
+  "askTimeout": 300,
+  "evolve": false,            // false = cancela las evoluciones (mantiene B)
+  "stopOnShiny": true,        // pausar si aparece un shiny salvaje
+
+  // ---------------------- AVISOS AL CELULAR -----------------------
+  // ntfy: {"ntfy": "tema-dificil-de-adivinar"}   Discord: {"discord": "url del webhook"}
+  "notify": null,
+
+  // ---------------------- CAMINAR Y RUTAS -------------------------
+  "walkAxis": "horizontal",
+  "walkFrames": 16,
+  "routeFile": "FRLG_TrainRoute.txt",   // ruta al Centro (tecla 6); sirve la del Train Bot
+  "healMode": "nurse",                  // "nurse" o "tile" (zona purificada, Torre Pokemon 5F)
+  "logFile": "farm_log.txt",
+  "logDir": "logs"
+}
