@@ -7,8 +7,8 @@
   var VARS = ['--bg', '--bg-pattern', '--surface', '--surface-2', '--border', '--text', '--muted',
     '--accent', '--accent-ink', '--accent-2', '--accent-soft', '--ok', '--warn', '--error',
     '--header-bg', '--header-ink', '--radius', '--radius-sm', '--shadow',
-    '--font-body', '--font-display', '--font-mono'];
-  var SPRITES = ['mascot'].concat(Object.keys((root.PT && root.PT.art && root.PT.art.icons) || {}));
+    '--font-body', '--font-display', '--font-mono', '--backdrop-opacity'];
+  var SPRITES = ['mascot', 'backdrop-shinybot', 'backdrop-trainbot', 'backdrop-farmbot'].concat(Object.keys((root.PT && root.PT.art && root.PT.art.icons) || {}));
   var IMG = /^data:image\/(png|gif|webp|svg\+xml)[;,]/i;
   var FONT = /^data:(font\/(woff2?|ttf|otf)|application\/(font-woff2?|x-font-ttf|octet-stream))[;,]/i;
   var STORE = 'pt-configurator-custom-skins';

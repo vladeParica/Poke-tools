@@ -58,10 +58,12 @@ To ship it with the configurator, turn it into a `skins/<id>.js` file that calls
 | `--radius`, `--radius-sm` | Corner rounding |
 | `--shadow` | Card shadow |
 | `--font-body`, `--font-display`, `--font-mono` | Fonts |
+| `--backdrop-opacity` | Opacity of the bot silhouette behind the form (default `.07`; `0` hides it) |
 
 ### Sprites
 
-`mascot` (the pixel bot in the top bar) and every icon name from `js/sprites.js`:
+`mascot` (the pixel bot in the top bar), `backdrop-shinybot` / `backdrop-trainbot` /
+`backdrop-farmbot` (the silhouette behind each bot's form) and every icon name from `js/sprites.js`:
 `bot-shiny`, `bot-train`, `bot-farm`, `mode-coin`, `stat-hp`, `stat-atk`, `stat-def`, `stat-spa`, `stat-spd`,
 `stat-spe`, `mode-wild`, `mode-static`, `mode-gift`, `mode-roamer`, `mode-seed`,
 `mode-newgame`, and the UI icons (`folder`, `save`, `palette`…).

@@ -486,6 +486,7 @@
       return b;
     }
     main.appendChild(h('section', { class: 'card panel', 'data-section': s.id, role: 'tabpanel' },
+      h('div', { class: 'backdrop', 'aria-hidden': 'true' }, icon('backdrop-' + S.bot)),
       h('header', null, h('span', { class: 'sec-icon' }, icon(s.icon)),
         h('div', null, h('h2', { text: s.title }), s.desc ? h('p', { text: s.desc }) : null),
         h('span', { class: 'step', text: (i + 1) + ' / ' + vis.length })),
