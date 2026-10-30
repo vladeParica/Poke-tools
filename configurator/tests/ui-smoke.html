@@ -94,6 +94,10 @@ document.getElementById('f').onload = () => setTimeout(() => {
     // 8. skins
     const ss = d.getElementById('skin-select'); ss.value = 'noche'; fire(ss, 'change');
     ok('skin applied', d.documentElement.dataset.skin === 'noche' && w.getComputedStyle(d.body).backgroundColor === 'rgb(15, 17, 24)');
+    ss.value = 'aventura'; fire(ss, 'change');
+    const sp = w.PT.skins.get('aventura').sprites;
+    ok('pixel skin replaces sprites', d.documentElement.dataset.skin === 'aventura' && Object.keys(sp).length === 15 &&
+      Object.keys(sp).every(k => w.PT.art.sprites[sp[k]]) && /crispEdges/.test(d.getElementById('mascot').innerHTML));
     const s2 = w.PT.skins.sanitize({ id: 'x', vars: { '--bg': 'red;}</style>', '--accent': 'url(https://evil/x.png)', '--text': '#fff' }, sprites: { mascot: 'javascript:alert(1)' } });
     ok('skin sanitizer drops unsafe values', !s2.vars['--bg'] && !s2.vars['--accent'] && s2.vars['--text'] === '#fff' && !s2.sprites.mascot);
   } catch (e) { R.push('ERROR ' + e.message + ' ' + e.stack); }

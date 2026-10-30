@@ -95,7 +95,10 @@
     }, true)
   };
 
-  var api = { icons: icons, sprites: sprites, MASCOT: MASCOT };
+  // Lets built-in skins add their own pixel sprites (see skins/aventura.js).
+  function addPixel(name, rows, colors) { sprites[name] = pixelArt(rows, colors, false); }
+
+  var api = { icons: icons, sprites: sprites, MASCOT: MASCOT, addPixel: addPixel };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { root.PT = root.PT || {}; root.PT.art = api; }
 })(typeof window !== 'undefined' ? window : globalThis);

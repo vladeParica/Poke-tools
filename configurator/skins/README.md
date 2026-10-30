@@ -3,7 +3,7 @@
 A skin changes the configurator's colors, fonts, background and sprites. There are two kinds:
 
 - **Built-in skins** (`*.js` in this folder): `pokeball` (default), `noche`, `hoja`,
-  `shiny` and `gameboy`. Each one calls `PT.registerSkin({...})` and is loaded by a
+  `shiny`, `gameboy` and `aventura` (with its own pixel sprites). Each one calls `PT.registerSkin({...})` and is loaded by a
   `<script>` tag in `index.html`.
 - **Your own skins**: a `.json` file you import from the *Skins* button. It is stored in
   your browser, so it survives updates of the configurator.
@@ -67,7 +67,9 @@ To ship it with the configurator, turn it into a `skins/<id>.js` file that calls
 `mode-newgame`, and the UI icons (`folder`, `save`, `palette`…).
 
 A sprite value is either an image as a data URL (`data:image/png|gif|webp|svg+xml`) or the
-name of a built-in sprite (e.g. `"mascot": "mascot-shiny"`). Convert an image to a data URL
+name of a built-in sprite (e.g. `"mascot": "mascot-shiny"`). A built-in skin can draw its own
+pixel sprites from character maps with `PT.art.addPixel(name, rows, colors)`; see
+[`aventura.js`](aventura.js). Convert an image to a data URL
 with any "image to base64" tool.
 
 ## Safety rules
