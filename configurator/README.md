@@ -31,7 +31,7 @@ strong it looks.
 - **Saving:** in Edge or Chrome, *Abrir carpeta* opens the bot's folder and *Guardar*
   writes `FRLG_ShinyBot.json` / `FRLG_TrainBot.json` straight into it. Other browsers
   download the file. *Abrir JSON* (or drag and drop) loads an existing file.
-- **Skins:** four built-in themes (Poké Ball, Verde Hoja, Retro portátil, Game Boy Advance) and support for your own (see [skins/](skins/README.md)).
+- **Skins:** four built-in themes (Rojo Fuego, Verde Hoja, Retro portátil, Game Boy Advance) and support for your own (see [skins/](skins/README.md)).
 - Your work in progress is kept in the browser between visits.
 
 Deep links: `index.html#trainbot` opens the Train Bot tab, `index.html?skin=gba` picks a skin.

@@ -14,7 +14,7 @@
     origin: { shinybot: '', trainbot: '', farmbot: '' },
     dir: null,
     section: { shinybot: 'mode', trainbot: 'goal', farmbot: 'mode' },
-    skin: 'pokeball'
+    skin: 'fuego'
   };
 
   // ---------------------------------------------------------------- helpers
@@ -727,7 +727,7 @@
       var li = h('li', null, row);
       if (!s.builtin) {
         var del = h('button', { type: 'button', class: 'btn small', text: 'Borrar' });
-        del.addEventListener('click', function () { skins.remove(s.id); if (S.skin === s.id) applySkin('pokeball'); else renderSkins(); });
+        del.addEventListener('click', function () { skins.remove(s.id); if (S.skin === s.id) applySkin('fuego'); else renderSkins(); });
         li.appendChild(del);
       }
       ul.appendChild(li);
@@ -871,5 +871,5 @@
   if (/^#(shinybot|trainbot|farmbot)$/.test(location.hash)) S.bot = location.hash.slice(1);
   var qs = /[?&]skin=([a-z0-9-]+)/.exec(location.search);
   var saved = qs ? qs[1] : store(SKIN);
-  applySkin(saved && skins.get(saved) ? saved : 'pokeball');
+  applySkin(saved && skins.get(saved) ? saved : 'fuego');
 })();

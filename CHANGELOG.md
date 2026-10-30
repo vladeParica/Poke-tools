@@ -21,7 +21,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - Configurator: *Farm Bot* tab.
 - Configurator: *Game Boy Advance* skin (indigo shell, speaker grille, screen-like panels) and a
   `--bg-size`, `--on-bg` and `--on-bg-muted` skin variables. The *Noche* and *Shiny* skins were removed; saved choices fall back
-  to *Poké Ball*.
+  to *Rojo Fuego*.
+- Configurator: the default *Poké Ball* skin became *Rojo Fuego* (FireRed colors), pairing with
+  *Verde Hoja*.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live
   validation, sections as tabs (no page scrolling), examples, folder access in Edge/Chrome, four
   skins and custom skin import.

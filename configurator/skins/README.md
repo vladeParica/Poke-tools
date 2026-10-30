@@ -2,7 +2,7 @@
 
 A skin changes the configurator's colors, fonts, background and sprites. There are two kinds:
 
-- **Built-in skins** (`*.js` in this folder): `pokeball` (default), `hoja`, `gameboy`
+- **Built-in skins** (`*.js` in this folder): `fuego` (Rojo Fuego, default), `hoja`, `gameboy`
   and `gba`. Each one calls `PT.registerSkin({...})` and is loaded by a
   `<script>` tag in `index.html`.
 - **Your own skins**: a `.json` file you import from the *Skins* button. It is stored in

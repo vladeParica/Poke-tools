@@ -52,7 +52,7 @@ and a look they can customize.
 - [x] Every exported example is accepted by the real bots in the simulator ("Config cargada").
 - [x] Validation catches the same errors the bots report (unit tests).
 - [x] Desktop (1366×768) fits in one screen without page scrolling; usable at 390 px wide.
-- [x] Built-in skins: Poké Ball, Verde Hoja, Retro portátil, Game Boy Advance; custom skins import/export.
+- [x] Built-in skins: Rojo Fuego, Verde Hoja, Retro portátil, Game Boy Advance; custom skins import/export.
 - [x] UI smoke test (29 checks) passes in headless Chromium.
 - [ ] Tried by the owner in their own browser with their bot folder.
 
