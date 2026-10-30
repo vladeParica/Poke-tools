@@ -11,7 +11,7 @@
 const R = [];
 // Start from a clean page: put aside the saved draft and skin (file:// pages share storage),
 // and give them back when the test ends so running it in a normal browser loses nothing.
-const KEYS = ['pt-configurator-draft-v1', 'pt-configurator-skin', 'pt-configurator-custom-skins'];
+const KEYS = ['pt-configurator-draft-v1', 'pt-configurator-skin', 'pt-configurator-custom-skins', 'pt-configurator-backdrop'];
 const saved = {};
 try { KEYS.forEach(k => { saved[k] = localStorage.getItem(k); localStorage.removeItem(k); }); } catch (e) { /* no storage */ }
 function restore() {
@@ -99,6 +99,14 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('farm: money target hidden in robar', d.querySelector('.field[data-key="moneyTarget"]').hidden);
     d.getElementById('tab-shinybot').click();
 
+    // background picker: another Pokemon, none, back to the default
+    const bgImg = () => (d.querySelector('.panel > .backdrop img') || {}).src || '';
+    const bgIn = d.getElementById('bg-species'); bgIn.value = 'gengar'; fire(bgIn, 'change');
+    ok('background: pick a Pokemon by name', /\/94\.png$/.test(bgImg()) && d.getElementById('bg-species').value === 'Gengar');
+    d.getElementById('btn-bg-none').click();
+    ok('background: none', !d.querySelector('.panel > .backdrop img'));
+    d.getElementById('btn-bg-reset').click();
+    ok('background: restore the default', /\/25\.png$/.test(bgImg()) && d.querySelector('.panel > .bg-btn'));
     // 8. skins
     const bd = d.querySelector('.panel > .backdrop');
     ok('artwork behind the form', bd && /PokeAPI\/sprites\/.*\/25\.png$/.test((bd.querySelector('img') || {}).src || '') &&

@@ -18,7 +18,11 @@ GPL-3.0, which can't relicense Pokémon artwork.
   (`raw.githubusercontent.com/PokeAPI/sprites/.../official-artwork/<id>.png`). They are
   **never stored** in this repository or in the release zips.
 - Offline, or if the request fails, the image is removed and the page works as before.
-- A skin can replace each image (`backdrop-<bot>` sprite) or hide them (`--backdrop-opacity: 0`).
+- The player can change it in the *Apariencia* dialog (gear button, or the *Fondo* button on
+  the form): any Gen 1–3 Pokémon by name (same PokeAPI source, by national dex number), their
+  own image, or none, plus the intensity. The choice is stored in their browser, per bot.
+- Order: the player's choice, then the skin's image (`backdrop-<bot>` sprite), then the default.
+  A skin can also hide them (`--backdrop-opacity: 0`).
 - Everything else keeps ADR-0010's rule: icons, mascot and skin sprites are original work.
 
 ## Alternatives considered

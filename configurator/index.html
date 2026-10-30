@@ -30,7 +30,7 @@
         <span class="sr-only">Skin</span>
         <select id="skin-select"></select>
       </label>
-      <button class="btn ghost icon" id="btn-skins" title="Gestionar skins" aria-label="Gestionar skins"><span data-icon="gear"></span></button>
+      <button class="btn ghost icon" id="btn-skins" title="Apariencia: skins y fondo" aria-label="Apariencia: skins y fondo"><span data-icon="gear"></span></button>
       <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" hidden><span data-icon="folder"></span><span class="lbl">Abrir carpeta</span></button>
       <button class="btn ghost" id="btn-open" title="Abrir un JSON existente"><span data-icon="upload"></span><span class="lbl">Abrir JSON</span></button>
       <button class="btn primary" id="btn-save" title="Guardar (Ctrl+S)"><span data-icon="save"></span><span class="lbl">Guardar</span></button>
@@ -62,16 +62,34 @@
 
   <dialog id="skins-dialog" class="card">
     <form method="dialog">
-      <header><span data-icon="palette" class="sec-icon"></span>Skins</header>
+      <header><span data-icon="palette" class="sec-icon"></span>Apariencia</header>
       <div class="body">
+        <h3 class="dlg-sub">Skin</h3>
         <p class="help">Un skin cambia colores, fuentes y sprites de esta página. Puedes importar uno (archivo <code>.json</code>) o exportar el actual como punto de partida para el tuyo. Guía: <code>configurator/skins/README.md</code>.</p>
         <ul class="issues" id="skin-list"></ul>
         <div class="row">
           <button class="btn" type="button" id="btn-skin-import"><span data-icon="upload"></span>Importar skin</button>
           <button class="btn" type="button" id="btn-skin-export"><span data-icon="download"></span>Exportar el actual</button>
-          <button class="btn primary" value="close">Cerrar</button>
         </div>
         <input type="file" id="skin-file" accept=".json,application/json" hidden>
+
+        <h3 class="dlg-sub" id="bg-section">Fondo del <span id="bg-bot">bot</span></h3>
+        <div class="bg-edit">
+          <div class="bg-preview" id="bg-preview" aria-hidden="true"></div>
+          <div class="bg-controls">
+            <label class="help" for="bg-species">Pokémon (Gen 1–3), o sube tu imagen</label>
+            <input type="text" id="bg-species" list="bg-species-list" autocomplete="off" spellcheck="false">
+            <datalist id="bg-species-list"></datalist>
+            <div class="row">
+              <button class="btn small" type="button" id="btn-bg-upload"><span data-icon="upload"></span>Subir imagen</button>
+              <button class="btn small" type="button" id="btn-bg-none"><span data-icon="x"></span>Sin fondo</button>
+              <button class="btn small" type="button" id="btn-bg-reset"><span data-icon="refresh"></span>Restaurar</button>
+            </div>
+            <label class="help bg-range">Intensidad <input type="range" id="bg-opacity" min="0" max="40" step="1"> <span id="bg-opacity-val"></span></label>
+          </div>
+        </div>
+        <input type="file" id="bg-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        <div class="row end"><button class="btn primary" value="close">Cerrar</button></div>
       </div>
     </form>
   </dialog>

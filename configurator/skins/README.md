@@ -64,7 +64,7 @@ To ship it with the configurator, turn it into a `skins/<id>.js` file that calls
 
 `mascot` (the pixel bot in the top bar), `backdrop-shinybot` / `backdrop-trainbot` /
 `backdrop-farmbot` (the image behind each bot's form; by default the official artwork, loaded
-from PokeAPI) and every icon name from `js/sprites.js`:
+from PokeAPI. A background the player picks in *Apariencia* wins over the skin's) and every icon name from `js/sprites.js`:
 `bot-shiny`, `bot-train`, `bot-farm`, `mode-coin`, `stat-hp`, `stat-atk`, `stat-def`, `stat-spa`, `stat-spd`,
 `stat-spe`, `mode-wild`, `mode-static`, `mode-gift`, `mode-roamer`, `mode-seed`,
 `mode-newgame`, and the UI icons (`folder`, `save`, `palette`…).

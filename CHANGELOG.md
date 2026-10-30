@@ -15,7 +15,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - Releases: pushing a tag `<bot>-vX.Y` runs the CI and publishes a zip with the bot, its
   examples and the configurator (`tools/package.py`, ADR-0012).
 - Configurator: the official artwork of a Pokémon behind each bot's form (Pikachu, Machop,
-  Meowth), loaded from PokeAPI when online and never stored in the repo (ADR-0013).
+  Meowth), loaded from PokeAPI when online and never stored in the repo (ADR-0013). The
+  *Apariencia* dialog changes it per bot: any Gen 1–3 Pokémon, your own image or none, and
+  its intensity.
 - Configurator: *Farm Bot* tab.
 - Configurator: *Aventura* skin with its own 16x16 pixel sprites for the mascot, bots, stats and modes.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live

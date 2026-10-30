@@ -5,7 +5,7 @@
   'use strict';
 
   var PT = window.PT, schema = PT.schema, core = PT.core, data = PT.data, skins = PT.skins;
-  var DRAFT = 'pt-configurator-draft-v1', SKIN = 'pt-configurator-skin';
+  var DRAFT = 'pt-configurator-draft-v1', SKIN = 'pt-configurator-skin', BG = 'pt-configurator-backdrop';
   var lk = null;
 
   var S = {
@@ -37,14 +37,34 @@
     return el;
   }
   function icon(name) { return skins.art(name, S.skin); }
-  // Artwork behind the form: the skin's own image if it sets one, else the official artwork.
+  // Background behind each bot's form. The player's choice (Apariencia dialog, stored in
+  // this browser per bot) wins over the skin's image, which wins over the official artwork.
+  // Prefs: { opacity: 0..0.4, <bot>: { species } | { image: dataURL } | { none: true } }
+  function bgPrefs() { try { return JSON.parse(store(BG) || '{}') || {}; } catch (e) { return {}; } }
+  function bgSave(p) {
+    try { localStorage.setItem(BG, JSON.stringify(p)); return true; } catch (e) { return false; }
+  }
+  function speciesArt(name) {
+    var i = data.species.indexOf(name);
+    return i < 0 ? null : PT.art.artwork(i + 1);
+  }
+  function bgSource(bot) {
+    var mine = bgPrefs()[bot], sk = skins.get(S.skin) || {}, over = (sk.sprites || {})['backdrop-' + bot];
+    if (mine && mine.none) return null;
+    if (mine && mine.image) return { src: mine.image };
+    if (mine && mine.species && speciesArt(mine.species)) return { src: speciesArt(mine.species) };
+    if (over) return { skin: true };
+    return { src: PT.art.artwork(PT.art.backdrops[bot]) };
+  }
   function backdrop() {
-    var name = 'backdrop-' + S.bot, sk = skins.get(S.skin) || {};
-    if ((sk.sprites || {})[name]) return icon(name);
-    var img = h('img', { src: PT.art.backdrops[S.bot], alt: '', decoding: 'async', referrerpolicy: 'no-referrer' });
+    var src = bgSource(S.bot);
+    if (!src) return null;
+    if (src.skin) return icon('backdrop-' + S.bot);
+    var img = h('img', { src: src.src, alt: '', decoding: 'async', referrerpolicy: 'no-referrer' });
     img.addEventListener('error', function () { img.remove(); });
     return img;
   }
+  function bgOpacity() { var o = bgPrefs().opacity; return typeof o === 'number' ? o : null; }
   function store(key, val) { try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); } catch (e) { return null; } }
   function cfg() { return S.cfg[S.bot]; }
   function def() { return schema.bots[S.bot]; }
@@ -494,7 +514,9 @@
       return b;
     }
     main.appendChild(h('section', { class: 'card panel', 'data-section': s.id, role: 'tabpanel' },
-      h('div', { class: 'backdrop', 'aria-hidden': 'true' }, backdrop()),
+      h('div', { class: 'backdrop', 'aria-hidden': 'true', style: bgOpacity() === null ? null : 'opacity:' + bgOpacity() }, backdrop()),
+      h('button', { type: 'button', class: 'btn small bg-btn', title: 'Cambiar el fondo', onclick: function () { openAppearance(true); } },
+        icon('palette'), h('span', { text: 'Fondo' })),
       h('header', null, h('span', { class: 'sec-icon' }, icon(s.icon)),
         h('div', null, h('h2', { text: s.title }), s.desc ? h('p', { text: s.desc }) : null),
         h('span', { class: 'step', text: (i + 1) + ' / ' + vis.length })),
@@ -718,7 +740,60 @@
   }
 
   $('skin-select').addEventListener('change', function () { applySkin(this.value); });
-  $('btn-skins').addEventListener('click', function () { renderSkins(); $('skins-dialog').showModal(); });
+  $('btn-skins').addEventListener('click', function () { openAppearance(false); });
+
+  // ---------------------------------------------------------------- background
+  function openAppearance(toBackground) {
+    renderSkins(); renderBg();
+    $('skins-dialog').showModal();
+    if (toBackground) { $('bg-section').scrollIntoView({ block: 'start' }); $('bg-species').focus(); }
+  }
+  function renderBg() {
+    $('bg-bot').textContent = schema.bots[S.bot].name;
+    var mine = bgPrefs()[S.bot] || {}, src = bgSource(S.bot), pv = $('bg-preview');
+    $('bg-species').value = mine.species || '';
+    $('bg-species').placeholder = mine.image ? 'Imagen propia' : mine.none ? 'Sin fondo' : data.species[PT.art.backdrops[S.bot] - 1];
+    pv.innerHTML = '';
+    if (src && src.skin) pv.appendChild(icon('backdrop-' + S.bot));
+    else if (src) pv.appendChild(h('img', { src: src.src, alt: '', referrerpolicy: 'no-referrer' }));
+    var o = bgOpacity(), cur = o === null ? parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--backdrop-opacity')) || 0.14 : o;
+    $('bg-opacity').value = Math.round(cur * 100);
+    $('bg-opacity-val').textContent = Math.round(cur * 100) + '%';
+  }
+  function setBg(choice) {
+    var p = bgPrefs();
+    if (choice) p[S.bot] = choice; else delete p[S.bot];
+    if (!bgSave(p)) toast('El navegador no deja guardar el fondo: solo durará esta sesión', 'warn');
+    renderBg(); renderSection();
+  }
+  if (data.species) $('bg-species-list').innerHTML = data.species.map(function (n) { return '<option value="' + n + '">'; }).join('');
+  $('bg-species').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); this.blur(); } });
+  $('bg-species').addEventListener('change', function () {
+    var name = this.value.trim(), hit = data.species.filter(function (n) { return n.toLowerCase() === name.toLowerCase(); })[0];
+    if (!name) return;
+    if (!hit) { toast('No conozco ese Pokémon: elige uno de la lista (Gen 1–3)', 'warn'); this.value = ''; return; }
+    setBg({ species: hit });
+  });
+  $('btn-bg-none').addEventListener('click', function () { setBg({ none: true }); });
+  $('btn-bg-reset').addEventListener('click', function () { setBg(null); });
+  $('btn-bg-upload').addEventListener('click', function () { $('bg-file').value = ''; $('bg-file').click(); });
+  $('bg-file').addEventListener('change', function () {
+    var f = this.files[0];
+    if (!f) return;
+    if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast('Usa una imagen PNG, JPG, WebP o GIF', 'warn'); return; }
+    if (f.size > 1500000) { toast('La imagen pesa más de 1,5 MB: usa una más pequeña', 'warn'); return; }
+    var r = new FileReader();
+    r.onload = function () { setBg({ image: String(r.result) }); };
+    r.readAsDataURL(f);
+  });
+  $('bg-opacity').addEventListener('input', function () {
+    var p = bgPrefs();
+    p.opacity = Number(this.value) / 100;
+    bgSave(p);
+    $('bg-opacity-val').textContent = this.value + '%';
+    var bd = document.querySelector('.panel > .backdrop');
+    if (bd) bd.style.opacity = p.opacity;
+  });
   $('btn-skin-import').addEventListener('click', function () { $('skin-file').value = ''; $('skin-file').click(); });
   $('skin-file').addEventListener('change', function () {
     var f = this.files[0];

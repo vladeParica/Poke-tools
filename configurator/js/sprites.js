@@ -100,12 +100,13 @@
   // Official artwork shown faintly behind each bot's form. Loaded at runtime from the
   // PokeAPI sprites repository and never stored here (ADR-0013); offline it just doesn't show.
   var ARTWORK = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/';
-  var backdrops = { shinybot: ARTWORK + '25.png', trainbot: ARTWORK + '66.png', farmbot: ARTWORK + '52.png' };
+  var backdrops = { shinybot: 25, trainbot: 66, farmbot: 52 };   // national dex numbers
+  function artwork(dex) { return ARTWORK + dex + '.png'; }
 
   // Lets built-in skins add their own pixel sprites (see skins/aventura.js).
   function addPixel(name, rows, colors) { sprites[name] = pixelArt(rows, colors, false); }
 
-  var api = { icons: icons, sprites: sprites, MASCOT: MASCOT, addPixel: addPixel, backdrops: backdrops };
+  var api = { icons: icons, sprites: sprites, MASCOT: MASCOT, addPixel: addPixel, backdrops: backdrops, artwork: artwork };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { root.PT = root.PT || {}; root.PT.art = api; }
 })(typeof window !== 'undefined' ? window : globalThis);
