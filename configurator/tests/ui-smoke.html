@@ -117,7 +117,9 @@ document.getElementById('f').onload = () => setTimeout(() => {
       w.getComputedStyle(bd).pointerEvents === 'none' &&
       w.PT.skins.sanitize({ id: 'y', sprites: { 'backdrop-farmbot': 'data:image/png;base64,AA' } }).sprites['backdrop-farmbot']);
     const ss = d.getElementById('skin-select');
-    ok('only the kept skins are listed', [...ss.options].map(o => o.value).join() === 'fuego,hoja,gameboy,gba');
+    ok('only the kept skins are listed', [...ss.options].map(o => o.value).join() === 'fuego,hoja,gengar,mewtwo,charizard,gba');
+    ss.value = 'gengar'; fire(ss, 'change');
+    ok('skin picks its own background Pokemon', /firered-leafgreen\/normal\/gengar\.png$/.test(bgImg()));
     ss.value = 'gba'; fire(ss, 'change');
     ok('skin applied', d.documentElement.dataset.skin === 'gba' && w.getComputedStyle(d.body).backgroundColor === 'rgb(106, 98, 214)'
       && /svg/.test(w.getComputedStyle(d.body).backgroundImage) && w.getComputedStyle(d.querySelector('.sections')).color === 'rgb(255, 255, 255)');

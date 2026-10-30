@@ -28,7 +28,8 @@ can't relicense Pokémon art.
   the form): any Gen 1–3 Pokémon by name, the style (FireRed/LeafGreen sprite, Pokémon HOME
   render, or official artwork from PokeAPI), shiny, their own image or none, and the intensity.
   The choice is stored in their browser (Pokémon per bot; style, shiny and intensity for all).
-- Order: the player's choice, then the skin's image (`backdrop-<bot>` sprite), then the default.
+- Order: the player's choice, then the skin's image (`backdrop-<bot>` sprite), then the skin's
+  Pokémon (`backdrop`, e.g. the Gengar skin), then the bot's default.
   A skin can also hide them (`--backdrop-opacity: 0`).
 - Everything else keeps ADR-0010's rule: icons, mascot and skin sprites are original work.
 

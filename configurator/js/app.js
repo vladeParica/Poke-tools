@@ -57,6 +57,7 @@
     if (mine && mine.image) return { srcs: [mine.image] };
     if (mine && mine.species && speciesSprite(mine.species)) return speciesSprite(mine.species);
     if (over) return { skin: true };
+    if (sk.backdrop && speciesSprite(sk.backdrop)) return speciesSprite(sk.backdrop);
     return speciesSprite(data.species[PT.art.backdrops[bot] - 1]);
   }
   // An <img> that tries each source in turn and disappears if none loads.
@@ -756,7 +757,9 @@
     $('bg-bot').textContent = schema.bots[S.bot].name;
     var mine = bgPrefs()[S.bot] || {}, src = bgSource(S.bot), pv = $('bg-preview');
     $('bg-species').value = mine.species || '';
-    $('bg-species').placeholder = mine.image ? 'Imagen propia' : mine.none ? 'Sin fondo' : data.species[PT.art.backdrops[S.bot] - 1];
+    var sk = skins.get(S.skin) || {};
+    $('bg-species').placeholder = mine.image ? 'Imagen propia' : mine.none ? 'Sin fondo'
+      : (sk.backdrop && data.species.indexOf(sk.backdrop) !== -1 ? sk.backdrop : data.species[PT.art.backdrops[S.bot] - 1]);
     pv.innerHTML = '';
     if (src) pv.appendChild(bgImage(src));
     $('bg-style').value = bgPrefs().style || 'frlg';

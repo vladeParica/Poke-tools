@@ -2,7 +2,7 @@
 
 A skin changes the configurator's colors, fonts, background and sprites. There are two kinds:
 
-- **Built-in skins** (`*.js` in this folder): `fuego` (Rojo Fuego, default), `hoja`, `gameboy`
+- **Built-in skins** (`*.js` in this folder): `fuego` (Rojo Fuego, default), `hoja`, `gengar`, `mewtwo`, `charizard`
   and `gba`. Each one calls `PT.registerSkin({...})` and is loaded by a
   `<script>` tag in `index.html`.
 - **Your own skins**: a `.json` file you import from the *Skins* button. It is stored in
@@ -39,6 +39,7 @@ To ship it with the configurator, turn it into a `skins/<id>.js` file that calls
 | `name`, `author` | Shown in the skin list |
 | `dark` | `true` for dark skins (native controls follow it) |
 | `pixelated` | `true` to draw image sprites without smoothing (pixel art) |
+| `backdrop` | Pokémon shown behind every form with this skin, by English name (e.g. `"Gengar"`); the player's own choice still wins |
 | `vars` | CSS variables (table below). Anything you leave out keeps the default |
 | `sprites` | Replace any icon or the mascot with your own image |
 | `fonts` | Up to 4 embedded fonts; use their `family` in `--font-body` / `--font-display` |

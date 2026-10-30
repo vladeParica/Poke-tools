@@ -24,6 +24,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   to *Rojo Fuego*.
 - Configurator: the default *Poké Ball* skin became *Rojo Fuego* (FireRed colors), pairing with
   *Verde Hoja*.
+- Configurator: the *Retro portátil* skin became *Gengar* (ghost purple, shows Gengar behind
+  the forms); skins can set their background Pokémon with `backdrop`.
+- Configurator: *Mewtwo* (light psychic lilac) and *Charizard* (dark ember) skins, each with its
+  Pokémon behind the forms.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live
   validation, sections as tabs (no page scrolling), examples, folder access in Edge/Chrome, four
   skins and custom skin import.

@@ -38,6 +38,7 @@
       author: skin.author ? String(skin.author).slice(0, 60) : '',
       dark: !!skin.dark,
       pixelated: !!skin.pixelated,
+      backdrop: typeof skin.backdrop === 'string' ? skin.backdrop.replace(/[^A-Za-z0-9 .'-]/g, '').slice(0, 20) : '',
       vars: {}, sprites: {}, fonts: []
     };
     Object.keys(skin.vars || {}).forEach(function (k) {
@@ -130,7 +131,7 @@
     var s = registry[id];
     return JSON.stringify({
       id: s.builtin ? s.id + '-mio' : s.id, name: s.builtin ? s.name + ' (mío)' : s.name,
-      author: s.author, dark: s.dark, pixelated: s.pixelated, vars: s.vars, sprites: s.sprites, fonts: s.fonts
+      author: s.author, dark: s.dark, pixelated: s.pixelated, backdrop: s.backdrop, vars: s.vars, sprites: s.sprites, fonts: s.fonts
     }, null, 2);
   }
 
