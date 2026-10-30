@@ -1,40 +1,40 @@
 -- ===================================================================
---  FRLG Shiny Bot v4.3  (Rojo Fuego / Verde Hoja - VBA-ReRecording)
+--  FRLG Shiny Bot v4.3  (FireRed / LeafGreen - VBA-ReRecording)
 --
---  Usa las direcciones de memoria de "FRLG_RNG_2.0.lua"
---  (Devon Studios x Real.96). Este archivo es independiente:
---  carga SOLO este script, no los dos a la vez.
+--  Uses the memory addresses from "FRLG_RNG_2.0.lua"
+--  (Devon Studios x Real.96). This file is standalone:
+--  load ONLY this script, not both at once.
 --
---  Teclas (teclado, no el control del juego):
---    7 = iniciar / detener el bot
---    8 = cambiar de modo (solo con el bot detenido)
---    9 = mostrar / ocultar el panel
+--  Keys (keyboard, not the game controls):
+--    7 = start / stop the bot
+--    8 = change mode (only with the bot stopped)
+--    9 = show / hide the panel
 --
 --  Modos:
---    Salvaje  : camina de lado a lado, revisa cada encuentro y huye
---    Estatico : soft reset + A hasta que empieza el combate
---               (Snorlax, Mewtwo, aves legendarias, Hypno no, etc.)
---    Regalo   : soft reset + A hasta recibir el Pokemon
---               (iniciales, Eevee, Lapras, fosiles, Hitmon, Magikarp...)
---    Roamer   : soft reset + A hasta que se activa el perro legendario
+--    Salvaje  : walks side to side, checks every encounter and runs
+--    Estatico : soft reset + A until the battle starts
+--               (Snorlax, Mewtwo, legendary birds, not Hypno, etc.)
+--    Regalo   : soft reset + A until the Pokemon is received
+--               (starters, Eevee, Lapras, fossils, Hitmon, Magikarp...)
+--    Roamer   : soft reset + A until the legendary dog is activated
 -- ===================================================================
 
 -- ============================ CONFIGURACION =========================
 local CONFIG = {
-  -- Que buscar (se puede cambiar en FRLG_ShinyBot.json)
-  shiny         = true,         -- false = no exigir shiny (solo naturaleza/IVs)
-  species       = nil,          -- solo salvajes, ej. {"Magnemite"}
-  natures       = nil,          -- ej. {"Modest","Timid"} (ingles o espanol)
-  minIVs        = nil,          -- ej. {hp=31, spa=31}
-  maxIVs        = nil,          -- ej. {atk=0}
+  -- What to look for (can be changed in FRLG_ShinyBot.json)
+  shiny         = true,         -- false = shiny not required (nature/IVs only)
+  species       = nil,          -- wild only, e.g. {"Magnemite"}
+  natures       = nil,          -- e.g. {"Modest","Timid"} (English or Spanish)
+  minIVs        = nil,          -- e.g. {hp=31, spa=31}
+  maxIVs        = nil,          -- e.g. {atk=0}
   minIVTotal    = nil,
-  hiddenPower   = nil,          -- ej. {type="Fire", minPower=60}
-  mode          = nil,          -- modo al iniciar, ej. "Salvaje RNG"
+  hiddenPower   = nil,          -- e.g. {type="Fire", minPower=60}
+  mode          = nil,          -- mode on start, e.g. "Salvaje RNG"
 
   -- Caminar
-  walkAxis      = "horizontal", -- "horizontal" (izq/der) o "vertical" (arriba/abajo)
-  walkFrames    = 16,           -- frames por paso (16 = 1 casilla caminando)
-  holdB         = false,        -- correr con B (solo modo Salvaje normal)
+  walkAxis      = "horizontal", -- "horizontal" (left/right) or "vertical" (up/down)
+  walkFrames    = 16,           -- frames per step (16 = 1 tile walking)
+  holdB         = false,        -- run with B (normal Salvaje mode only)
 
   -- Soft reset
   pressGapMin   = 2,
@@ -42,28 +42,28 @@ local CONFIG = {
   resetTimeout  = 5400,
 
   -- RNG
-  farSearch     = 20000000,     -- avances a revisar buscando el objetivo
-  teachy        = true,         -- usar la Tele Pokemon (registrada en SELECT) si esta lejos
-  teachyBeyond  = 5000,         -- usar la Tele si ahorra mas de estos avances de espera
-  teachyMargin  = nil,          -- cerrarla estos avances antes; nil = automatico (retraso + 1500)
-  triesPerTarget = 10,          -- intentos de correccion por objetivo
-  reseed        = true,         -- soft reset y otra semilla si no hay objetivo / fallan varios
+  farSearch     = 20000000,     -- advances to check when looking for the target
+  teachy        = true,         -- use the Teachy TV (registered on SELECT) if the target is far
+  teachyBeyond  = 5000,         -- use the Teachy TV if it saves more than this many advances of waiting
+  teachyMargin  = nil,          -- close it this many advances before; nil = automatic (delay + 1500)
+  triesPerTarget = 10,          -- correction attempts per target
+  reseed        = true,         -- soft reset and another seed if there is no target / several fail
   reseedAfterFailedTargets = 3,
   maxReseeds    = 10,
   newGameTSV    = nil,
-  initialSeeds  = nil,          -- Semilla inicial: lista en hex, ej. {"BC75","0A16"}
-  afterSeedMode = nil,          -- modo a lanzar al caer en la semilla, ej. "Regalo RNG"          -- Partida nueva: rangos de TID xor SID (nil = los de Ditto 6x31 shiny)
-  rngMaxSearch  = nil,          -- (obsoleto, se ignora)
-  wildMaxSearch = nil,          -- (obsoleto, se ignora)
-  wildOneStep   = true,         -- Salvaje RNG: acercarse a un paso del encuentro antes de buscar el frame
-  reseedBeyond  = nil,          -- (obsoleto, se ignora)
+  initialSeeds  = nil,          -- Initial seed: list in hex, e.g. {"BC75","0A16"}
+  afterSeedMode = nil,          -- mode to launch when the seed is hit, e.g. "Regalo RNG"          -- New game: TID xor SID ranges (nil = the ones for a shiny 6x31 Ditto)
+  rngMaxSearch  = nil,          -- (obsolete, ignored)
+  wildMaxSearch = nil,          -- (obsolete, ignored)
+  wildOneStep   = true,         -- Wild RNG: get one step away from the encounter before looking for the frame
+  reseedBeyond  = nil,          -- (obsolete, ignored)
 
-  -- Al encontrar / varias instancias
-  savestateSlot = nil,          -- nil = no guardar solo (en VBA-rr v22 da "Error creating file")
+  -- On finding / several instances
+  savestateSlot = nil,          -- nil = don't save by itself (in VBA-rr v22 it gives "Error creating file")
   logFile       = "shiny_log.txt",
   stopOthers    = true,
   sharedDir     = nil,
-  logDir        = "logs",       -- subcarpeta para el log y los archivos de trabajo
+  logDir        = "logs",       -- subfolder for the log and the working files
   resetOnLoad   = true,
 }
 local CONFIG_FILE = "FRLG_ShinyBot.json"
@@ -149,7 +149,7 @@ local nationalDexList = {
  376, 377, 378, 379, 382, 383, 384, 380, 381, 385, 386, 358}
 
 
--- ------------------------- Version / direcciones ---------------------
+-- ------------------------- Version / addresses ---------------------
 local gameCode = read8(0x080000AE)
 local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
@@ -184,26 +184,26 @@ else                            -- EUR (ESP, FRA, ITA, GER)
   A.sb2      = 0x03004F5C
 end
 if not A.gMain then
-  -- Estimado: misma distancia que en USA entre gMain y la semilla del RNG.
-  -- Revisa en el panel que "Combate" cambie a 1 dentro de una batalla.
+  -- Estimated: same distance as in USA between gMain and the RNG seed.
+  -- Check in the panel that "Combate" turns to 1 inside a battle.
   A.gMain = A.currSeed - 0x1F10
 end
 A.inBattleByte = A.gMain + 0x439   -- gMain.inBattle (bit 1)
--- Verificados con el mapa de simbolos de pokefirered (USA). En otros
--- idiomas se calculan con la misma distancia a gEnemyParty.
-A.actionCursor  = A.enemy - 0x34   -- gActionSelectionCursor[0] (0x02023FF8 en USA)
-A.battleOutcome = A.enemy - 0x1A2  -- gBattleOutcome (0x02023E8A en USA), 4 = huyo
+-- Verified with the pokefirered (USA) symbol map. In other
+-- languages they are computed with the same distance to gEnemyParty.
+A.actionCursor  = A.enemy - 0x34   -- gActionSelectionCursor[0] (0x02023FF8 in USA)
+A.battleOutcome = A.enemy - 0x1A2  -- gBattleOutcome (0x02023E8A in USA), 4 = ran away
 
 -- ------------------------------ Utilidades ---------------------------
--- Carpeta de este script (alli se busca el .json)
+-- Folder of this script (the .json is looked up there)
 local SCRIPT_DIR = ""
 pcall(function()
   local src = debug.getinfo(1, "S").source
   if src:sub(1, 1) == "@" then SCRIPT_DIR = src:sub(2):match("^(.*[/\\])") or "" end
 end)
 
--- ------------------------- Lector de JSON ----------------------------
--- JSON normal, y ademas acepta comentarios // hasta el final de la linea.
+-- ------------------------- JSON reader ----------------------------
+-- Standard JSON that also accepts // comments up to the end of the line.
 local function jsonDecode(str)
   local pos = 1
   local function err(msg) error(string.format("JSON: %s (caracter %d)", msg, pos), 0) end
@@ -295,7 +295,7 @@ local function jsonDecode(str)
   return v
 end
 
--- --------------------- Normalizar nombres y filtros ------------------
+-- --------------------- Normalize names and filters ------------------
 local function simplify(name)
   name = tostring(name):lower()
   local acc = { ["\195\161"] = "a", ["\195\169"] = "e", ["\195\173"] = "i", ["\195\179"] = "o",
@@ -321,7 +321,7 @@ local HP_TYPES = { "Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Gho
 local HP_TYPES_ES = { lucha = 1, volador = 2, veneno = 3, tierra = 4, roca = 5, bicho = 6, fantasma = 7,
   acero = 8, fuego = 9, agua = 10, planta = 11, electrico = 12, psiquico = 13, hielo = 14, dragon = 15, siniestro = 16 }
 
-local filt = {}     -- filtros ya interpretados
+local filt = {}     -- filters already parsed
 
 local function toList(v)
   if v == nil then return nil end
@@ -390,7 +390,7 @@ local function loadConfig()
       end
       CONFIG[k] = v
     end
-    -- null en el JSON = quitar el valor
+    -- null in the JSON = clear the value
     for _, k in ipairs({ "species", "natures", "minIVs", "maxIVs", "minIVTotal", "hiddenPower", "mode", "sharedDir" }) do
       if cfg[k] == nil then CONFIG[k] = nil end
     end
@@ -400,7 +400,7 @@ local function loadConfig()
   return ok, msg, problems
 end
 
--- Carpeta compartida entre instancias (por defecto, donde esta este script)
+-- Folder shared between instances (by default, where this script is)
 local cfgOk, cfgMsg, cfgProblems = loadConfig()
 local SHARED = CONFIG.sharedDir
 if not SHARED then
@@ -409,7 +409,7 @@ elseif not SHARED:match("[/\\]$") then
   SHARED = SHARED .. "/"
 end
 
--- Carpeta de archivos generados (log, avisos entre instancias, reservas)
+-- Folder for generated files (log, cross-instance flags, locks)
 local IS_WINDOWS = package and package.config and package.config:sub(1, 1) == "\\"
 local LOGDIR = SHARED
 if CONFIG.logDir and CONFIG.logDir ~= "" then
@@ -426,14 +426,14 @@ end
 if not dirWritable(LOGDIR) then
   pcall(function()
     local d = LOGDIR:gsub("/$", "")
-    if d:find('["%%$`]') then return end   -- no pasar al shell rutas con comillas o variables
+    if d:find('["%%$`]') then return end   -- never pass paths with quotes or variables to the shell
     if IS_WINDOWS then
       os.execute('mkdir "' .. d:gsub("/", "\\") .. '" 2>nul')
     else
       os.execute('mkdir -p "' .. d .. '" 2>/dev/null')
     end
   end)
-  if not dirWritable(LOGDIR) then LOGDIR = SHARED end   -- si no se pudo crear, usar la carpeta del script
+  if not dirWritable(LOGDIR) then LOGDIR = SHARED end   -- if it could not be created, use the script folder
 end
 
 local function readFile(name)
@@ -454,7 +454,7 @@ end
 local now = 0
 pcall(function() now = os.time() end)
 
--- Semilla distinta en cada instancia (si no, todas harian exactamente lo mismo)
+-- Different seed per instance (otherwise they would all do exactly the same)
 do
   local h = 0
   for c in tostring({}):gmatch(".") do h = (h * 31 + c:byte()) % 2147483647 end
@@ -465,9 +465,9 @@ do
 end
 local TOKEN = string.format("%04x%04x%04x", math.random(0, 65535), math.random(0, 65535), math.random(0, 65535))
 
--- Numero de instancia: cada ventana "reserva" un numero libre (inst_N.lock)
--- y lo renueva cada pocos segundos. Al cerrar o recargar el script se libera,
--- asi que recargar en la misma ventana conserva el mismo numero.
+-- Instance number: each window "reserves" a free number (inst_N.lock)
+-- and renews it every few seconds. Closing or reloading the script frees it,
+-- so reloading in the same window keeps the same number.
 local INSTANCE = 1
 local function lockName(n) return "inst_" .. n .. ".lock" end
 do
@@ -483,8 +483,8 @@ do
     end
   end
 end
--- Limpieza al cargar: borrar reservas viejas y, si no hay otra ventana
--- activa, el aviso de shiny de la corrida anterior. El log se conserva.
+-- Cleanup on load: delete stale locks and, if no other window is
+-- active, the shiny flag from the previous run. The log is kept.
 do
   local othersAlive = false
   for n = 1, 32 do
@@ -498,7 +498,7 @@ do
     end
   end
   if not othersAlive then pcall(function() os.remove(LOGDIR .. "shiny_stop.flag") end) end
-  -- Archivos de versiones anteriores que quedaban sueltos junto al script
+  -- Files from older versions left lying next to the script
   if LOGDIR ~= SHARED then
     pcall(function()
       local old = io.open(SHARED .. CONFIG.logFile, "r")
@@ -548,7 +548,7 @@ end
 local function ivsFromWord(w)
   return { band(w, 0x1F), band(rshift(w, 5), 0x1F), band(rshift(w, 10), 0x1F),
            band(rshift(w, 20), 0x1F), band(rshift(w, 25), 0x1F), band(rshift(w, 15), 0x1F) }
-  -- orden: PS / Ata / Def / AtEsp / DefEsp / Vel
+  -- order: HP / Atk / Def / SpA / SpD / Spe
 end
 
 local function speciesName(idx)
@@ -556,7 +556,7 @@ local function speciesName(idx)
   return (dex and speciesNamesList[dex]) or ("#" .. idx)
 end
 
--- Lee una estructura de Pokemon (100 bytes) y la valida con el checksum.
+-- Reads a Pokemon structure (100 bytes) and validates it with the checksum.
 local function decodeMonRaw(addr)
   local pid = read32(addr)
   if pid == 0 then return nil end
@@ -579,10 +579,10 @@ local function decodeMonRaw(addr)
            sig = string.format("%08X%08X%08X%04X%02X", pid, otid, misc % 4294967296, read16(addr + 0x1C), read8(addr + 0x54)) }
 end
 
--- El juego puede estar A MEDIO crear el Pokemon cuando termina un frame
--- (frames con lag): PID ya escrito pero el OT, los IVs o el nivel todavia
--- no. Leerlo asi daba shinies falsos y calibraciones fallidas. Solo se
--- acepta cuando todo (incluido el nivel) lleva 3 frames sin cambiar.
+-- The game may be HALFWAY through creating the Pokemon when a frame ends
+-- (lag frames): PID already written but not yet the OT, IVs or level.
+-- Reading it then gave false shinies and failed calibrations. It is only
+-- accepted once everything (level included) has been stable for 3 frames.
 local gFrame = 0
 local monWatch = {}
 local function decodeMon(addr)
@@ -604,7 +604,7 @@ local function playerIDs()
   return ids % 0x10000, floor(ids / 0x10000)
 end
 
--- Roamer: SaveBlock1 + 0x30D0 (IVs u32, PID u32, especie u16, ... activo en +0x13)
+-- Roamer: SaveBlock1 + 0x30D0 (IVs u32, PID u32, species u16, ... active at +0x13)
 local function readRoamer()
   local sb1 = read32(A.sb1)
   if not validPtr(sb1) then return nil end
@@ -616,18 +616,18 @@ end
 -- ------------------------------ Estado -------------------------------
 local MODES = { "Salvaje", "Estatico", "Regalo", "Roamer", "Estatico RNG", "Regalo RNG", "Roamer RNG", "Salvaje RNG",
                 "Partida nueva", "Semilla inicial" }
--- 1 = salvaje, 2 = estatico, 3 = regalo, 4 = roamer (los modos RNG usan el mismo tipo)
+-- 1 = wild, 2 = static, 3 = gift, 4 = roamer (RNG modes use the same type)
 
 local bot = {
   mode = 1, running = false, found = false, st = "idle", t = 0,
   encounters = 0, timeouts = 0, startFrame = 0,
   sawBattle = false, outFrames = 0, ranAt = nil,
   armed = false, baseParty = 0, tid = nil, sid = nil,
-  last = nil, panel = 1, msg = "",     -- panel: 1 compacto, 2 completo, 0 oculto
+  last = nil, panel = 1, msg = "",     -- panel: 1 compact, 2 full, 0 hidden
 }
 local queue = {}
 local walkToggle = false
-local stopBot   -- se define mas abajo
+local stopBot   -- defined further down
 local function kind()
   if bot.mode == 8 then return 1 end
   if bot.mode == 9 then return 5 end
@@ -651,7 +651,7 @@ end
 
 local function natureOf(pid) return natureNamesList[(pid % 25) + 1] end
 
-local function hiddenPowerOf(iv)  -- iv = {PS, Ata, Def, AtEsp, DefEsp, Vel}
+local function hiddenPowerOf(iv)  -- iv = {HP, Atk, Def, SpA, SpD, Spe}
   local hp, at, df, sa, sd, sp = iv[1], iv[2], iv[3], iv[4], iv[5], iv[6]
   local t = floor(((hp % 2) + 2 * (at % 2) + 4 * (df % 2) + 8 * (sp % 2) + 16 * (sa % 2) + 32 * (sd % 2)) * 15 / 63)
   local function b(x) return floor(x / 2) % 2 end
@@ -659,14 +659,14 @@ local function hiddenPowerOf(iv)  -- iv = {PS, Ata, Def, AtEsp, DefEsp, Vel}
   return t + 1, pw
 end
 
--- shinyNeeded=false para revisar solo los demas filtros
+-- shinyNeeded=false to check only the other filters
 local function passesFilters(mon)
   if filt.species and mon.species and (bot.mode == 1 or bot.mode == 8) then
     if not filt.species[simplify(speciesName(mon.species))] then return false end
   end
   if filt.natures and not filt.natures[natureOf(mon.pid)] then return false end
   local iv = mon.ivs
-  if iv and bot.mode ~= 4 and bot.mode ~= 7 then  -- roamer: IVs truncados por el bug
+  if iv and bot.mode ~= 4 and bot.mode ~= 7 then  -- roamer: IVs truncated by the bug
     local total = 0
     for i = 1, 6 do
       if iv[i] < filt.minIV[i] or iv[i] > filt.maxIV[i] then return false end
@@ -727,7 +727,7 @@ local function onShiny(mon)
   emu.pause()
 end
 
--- Devuelve true si se detuvo por shiny
+-- Returns true if it stopped because of a shiny
 local function evaluate(mon)
   bot.encounters = bot.encounters + 1
   mon.shiny = mon.sv < 8
@@ -737,7 +737,7 @@ local function evaluate(mon)
   return false
 end
 
--- ---------------------------- Modo salvaje ---------------------------
+-- ---------------------------- Wild mode ---------------------------
 local function pushWalk()
   local d1, d2 = "left", "right"
   if CONFIG.walkAxis == "vertical" then d1, d2 = "up", "down" end
@@ -746,19 +746,19 @@ local function pushWalk()
   local b = { [dir] = true }
   if CONFIG.holdB then b.B = true end
   push(b, CONFIG.walkFrames)
-  wait(math.random(0, 3))   -- variacion para que cada instancia tenga encuentros distintos
+  wait(math.random(0, 3))   -- variation so each instance gets different encounters
 end
 
--- Menu de combate:  LUCHA(0)   MOCHILA(1)
---                   POKEMON(2) HUIR(3)
--- Se lee la posicion real del cursor (gActionSelectionCursor) y solo se
--- pulsa A cuando el cursor YA esta en HUIR. Asi nunca entra en LUCHA.
+-- Battle menu:  FIGHT(0)   BAG(1)
+--                   POKEMON(2) RUN(3)
+-- Reads the real cursor position (gActionSelectionCursor) and only
+-- presses A when the cursor is ALREADY on RUN. So it never enters FIGHT.
 local function pushFleeCycle()
   local c = band(read8(A.actionCursor), 3)
   if c == 3 then
-    tap("A"); wait(14)            -- elige HUIR (o avanza el texto)
+    tap("A"); wait(14)            -- choose RUN (or advance the text)
   else
-    tap("B"); wait(8)             -- avanza texto / sale de un submenu
+    tap("B"); wait(8)             -- advance text / leave a submenu
     if band(c, 1) == 0 then tap("right") else tap("down") end
     wait(6)
   end
@@ -766,7 +766,7 @@ end
 
 local function enterFlee(sawBattle)
   queue = {}
-  write8(A.battleOutcome, 0)         -- borrar resultado del combate anterior
+  write8(A.battleOutcome, 0)         -- clear the previous battle's outcome
   bot.st, bot.t, bot.sawBattle, bot.outFrames, bot.ranAt = "flee", 0, sawBattle, 0, nil
 end
 
@@ -778,7 +778,7 @@ local function stepWild()
       if evaluate(mon) then return end
       enterFlee(false)
     elseif inBattle() then
-      enterFlee(true)                  -- combate sin Pokemon detectado: huir igual
+      enterFlee(true)                  -- battle without a detected Pokemon: run anyway
     elseif #queue == 0 then
       pushWalk()
     end
@@ -789,7 +789,7 @@ local function stepWild()
     if not bot.ranAt and read8(A.battleOutcome) == 4 then bot.ranAt = bot.t end
 
     if bot.ranAt then
-      -- Ya huyo: solo B para cerrar "Escapaste sin problemas" hasta volver al mapa
+      -- Already ran: only B to close "Got away safely" until back on the map
       if ib then bot.outFrames = 0 elseif bot.sawBattle then bot.outFrames = bot.outFrames + 1 end
       local back = (bot.sawBattle and bot.outFrames >= 20)
                 or (not bot.sawBattle and bot.t - bot.ranAt > 240)
@@ -802,14 +802,14 @@ local function stepWild()
     end
 
     if bot.sawBattle and not ib then
-      -- el combate termino sin huir (p. ej. lo terminaste tu)
+      -- the battle ended without running (e.g. you ended it)
       queue = {}
       bot.outFrames = bot.outFrames + 1
       if bot.outFrames >= 20 then zeroEnemy(); bot.st = bot.returnState or "walk" end
       return
     end
 
-    if bot.t > 3000 then               -- seguridad: algo raro, volver a caminar
+    if bot.t > 3000 then               -- safety net: something odd, go back to walking
       bot.msg = "Aviso: no se pudo confirmar la huida"
       print(bot.msg)
       queue = {}; zeroEnemy(); bot.st = bot.returnState or "walk"
@@ -819,7 +819,7 @@ local function stepWild()
   end
 end
 
--- ------------------------- Modos con soft reset ----------------------
+-- ------------------------- Soft reset modes ----------------------
 local function targetReady()
   local m = kind()
   if m == 2 then                                     -- Estatico
@@ -841,7 +841,7 @@ local function targetReady()
       return nil
     end
     if r.active and r.pid ~= 0 then
-      local w = r.ivWord  -- bug de Gen 3: solo se guarda el primer byte de IVs
+      local w = r.ivWord  -- Gen 3 bug: only the first byte of the IVs is stored
       return { pid = r.pid, species = r.species,
                ivs = { band(w, 0x1F), band(rshift(w, 5), 0x07), 0, 0, 0, 0 },
                sv = shinyValue(r.pid, bot.tid, bot.sid) }
@@ -859,7 +859,7 @@ local function stepReset()
     bot.st, bot.t, bot.armed = "boot", 0, false
   elseif bot.st == "boot" then
     bot.t = bot.t + 1
-    if bot.t < 45 then return end                     -- dejar que el reset ocurra
+    if bot.t < 45 then return end                     -- let the reset happen
     if bot.t == 45 and kind() == 2 then zeroEnemy(); bot.armed = true end
     local mon = targetReady()
     if mon then
@@ -880,17 +880,17 @@ local function stepReset()
 end
 
 
--- ---------------------- Manipulacion de RNG (Metodo 1) ---------------
--- Hace lo mismo que RNG Reporter, pero dentro del script:
---  1. Guarda un savestate frente al Pokemon y anota la semilla actual.
---  2. Calibra: pulsa A una vez y mide cuantos avances pasan entre la A
---     y el momento en que el juego genera el PID ("retraso").
---  3. Busca hacia adelante el primer avance que da un shiny (y cumple
---     los filtros), carga el savestate y pulsa A justo en el avance
---     correcto. Si cae unos avances antes o despues, corrige y repite.
--- ------------- Frame actual (como RNG Reporter / FRLG_RNG_2.0) ------------
--- Cuenta los avances desde la semilla inicial del titulo. Si la semilla
--- salta (savestate, reset), lo vuelve a ubicar buscando por partes.
+-- ---------------------- RNG manipulation (Method 1) ---------------
+-- Does the same as RNG Reporter, but inside the script:
+--  1. Saves a savestate in front of the Pokemon and records the current seed.
+--  2. Calibrates: presses A once and measures how many advances pass between A
+--     and the moment the game generates the PID ("delay").
+--  3. Searches forward for the first advance that gives a shiny (and passes
+--     the filters), loads the savestate and presses A on exactly the right
+--     advance. If it lands a few advances early or late, it corrects and retries.
+-- ------------- Current frame (like RNG Reporter / FRLG_RNG_2.0) ------------
+-- Counts advances since the initial seed from the title screen. If the seed
+-- jumps (savestate, reset), it finds it again by searching in chunks.
 local function lcrng(s, mh, ml, add)
   local lo, hi = s % 0x10000, floor(s / 0x10000)
   local a = mh * lo + hi * ml
@@ -916,7 +916,7 @@ local function updateFrameTracker()
       b = prevSeedOf(b)
       if b == cur then ft.seed, ft.frame = cur, ft.frame - i; return end
     end
-    ft.frame, ft.sSeed, ft.sK = nil, init, 0     -- salto grande: buscar desde el inicio
+    ft.frame, ft.sSeed, ft.sK = nil, init, 0     -- big jump: search from the start
   end
   if not ft.frame and ft.sSeed then
     local s, k = ft.sSeed, ft.sK
@@ -926,14 +926,14 @@ local function updateFrameTracker()
       s = lcrng(s, 0x41C6, 0x4E6D, 0x6073); k = k + 1
     end
     ft.sSeed, ft.sK = s, k
-    if k >= FT_MAX then ft.sSeed = nil end         -- no encontrado
+    if k >= FT_MAX then ft.sSeed = nil end         -- not found
   end
 end
 
 
--- ======================= RNG: piezas comunes ==========================
--- Estas funciones hacen lo mismo que RNG Reporter / PokeFinder, pero
--- dentro del script, y ademas pulsan los botones en el frame exacto.
+-- ======================= RNG: shared pieces ==========================
+-- These functions do the same as RNG Reporter / PokeFinder, but
+-- inside the script, and they also press the buttons on the exact frame.
 local function nextSeed(s)
   local lo, hi = s % 0x10000, floor(s / 0x10000)
   local a = 0x41C6 * lo + hi * 0x4E6D
@@ -941,7 +941,7 @@ local function nextSeed(s)
   return b % 4294967296
 end
 
--- PID e IVs (Metodo 1) generados a partir de la semilla "s"
+-- PID and IVs (Method 1) generated from seed "s"
 local function method1(s)
   local s1 = nextSeed(s);  local lo = floor(s1 / 0x10000)
   local s2 = nextSeed(s1); local hi = floor(s2 / 0x10000)
@@ -959,7 +959,7 @@ end
 
 local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000 }
 local rngState = nil
-local wr = { r = {}, built = 0 }   -- r[k] = k-esima llamada a Random() desde la semilla base
+local wr = { r = {}, built = 0 }   -- r[k] = k-th call to Random() from the base seed
 
 local function trackAdvances()
   local cur = read32(A.currSeed)
@@ -979,16 +979,16 @@ local function rngLoad()
   monWatch = {}
   if kind() == 2 or kind() == 1 then
     zeroEnemy(); bot.armed = true
-    -- en algunos emuladores la carga se aplica al terminar el frame: repetir
-    -- el borrado unos frames para no ver el Pokemon del intento anterior
+    -- on some emulators the load is applied at the end of the frame: repeat
+    -- the clearing for a few frames so the previous attempt's Pokemon is not seen
     pendingZero = 3
   end
   bot.t = 0
 end
 
--- Guarda un savestate aqui y lo usa como nueva "base" (avance 0)
+-- Saves a savestate here and uses it as the new "base" (advance 0)
 local function rebaseHere()
-  zeroEnemy()                      -- la base no debe guardar el Pokemon del intento anterior
+  zeroEnemy()                      -- the base must not keep the previous attempt's Pokemon
   monWatch = {}
   rngState = savestate.create()
   savestate.save(rngState)
@@ -1007,7 +1007,7 @@ local function buildR(limit, budget)
   return k >= limit
 end
 
--- Avance (desde la base) en el que se genero un PID de Metodo 1
+-- Advance (from the base) at which a Method 1 PID was generated
 local function findHit(pid, limit)
   local s = rng.seed0
   for k = 0, limit do
@@ -1017,7 +1017,7 @@ local function findHit(pid, limit)
   return nil
 end
 
--- --------------------------- Filtros rapidos ---------------------------
+-- --------------------------- Quick filters ---------------------------
 local fast = {}
 local function prepareFastFilters()
   fast.tsv = bxor(bot.tid, bot.sid)
@@ -1040,7 +1040,7 @@ local function ivsOk(iv)
   return true
 end
 
--- ------------------ Salvaje: tabla de encuentros (ROM) -----------------
+-- ------------------ Wild: encounter table (ROM) -----------------
 A.wildData = (gameLang == 0x4A) and 0x0203861C or 0x020386D0   -- sWildEncounterData
 A.avatar   = (gameLang == 0x4A) and 0x02036FAC or 0x02037078   -- gPlayerAvatar.flags
 
@@ -1119,10 +1119,10 @@ local function slotOfRoll(roll)
   return #th
 end
 
--- Orden de las llamadas a Random() al generar un salvaje. El normal es
--- el Metodo H-1 (espacio, nivel, naturaleza, PID hasta que coincida la
--- naturaleza, IVs). Si en tu zona el juego mete una llamada extra (por
--- ejemplo una interrupcion de pantalla), la calibracion la detecta.
+-- Order of the Random() calls when generating a wild Pokemon. The normal one is
+-- Method H-1 (slot, level, nature, PID until the nature
+-- matches, IVs). If in your area the game adds an extra call (for
+-- example a screen interrupt), calibration detects it.
 local LAYOUTS = {
   { name = "H-1",               s = 1, l = 2, a = 3, b = 0, i1 = 2, i2 = 3 },
   { name = "H-1 nivel primero", s = 2, l = 1, a = 3, b = 0, i1 = 2, i2 = 3 },
@@ -1133,7 +1133,7 @@ local LAYOUTS = {
   { name = "H-4", s = 1, l = 2, a = 3, b = 0, i1 = 2, i2 = 4 },
 }
 
--- Lo que generaria el juego si el encuentro empieza en la semilla E
+-- What the game would generate if the encounter starts at seed E
 local function predictWild(E, lay)
   lay = lay or wr.layout or LAYOUTS[1]
   local r = wr.r
@@ -1152,7 +1152,7 @@ local function predictWild(E, lay)
   end
 end
 
--- Encuentra la semilla E (y el orden de llamadas) que produjo el Pokemon observado
+-- Finds the seed E (and call order) that produced the observed Pokemon
 local function findWildE(mon, level, minE, expectE, onlyLayout)
   local lo, hi = mon.pid % 65536, floor(mon.pid / 65536)
   local iv = mon.ivs
@@ -1180,7 +1180,7 @@ local function findWildE(mon, level, minE, expectE, onlyLayout)
               if ok then
                 if not bestCost or cost < bestCost then best, bestCost = E, cost end
               elseif li == 1 and not looseE then
-                looseE, looseLay = E, lay      -- coincide el RNG pero no la especie/nivel
+                looseE, looseLay = E, lay      -- the RNG matches but not the species/level
               end
             end
           end
@@ -1193,22 +1193,22 @@ local function findWildE(mon, level, minE, expectE, onlyLayout)
   return looseE, looseLay, true
 end
 
--- ------------------- Busqueda lejana (millones de avances) ------------------
--- Recorre el RNG por bloques (sin guardar millones de valores) y devuelve el
--- primer avance que cumple todos los filtros.
+-- ------------------- Far search (millions of advances) ------------------
+-- Walks the RNG in blocks (without storing millions of values) and returns the
+-- first advance that passes every filter.
 local far = nil
 
 local function startFar(from)
   prepareFastFilters()
   far = { from = from, best = nil }
-  -- punto de partida: semilla en el indice (inicio del bloque - margen)
+  -- starting point: seed at index (block start - margin)
   local gs = math.max(from - rng.M, 1)
   local s, k = rng.seed0, 0
-  for _, an in ipairs(rng.anchors or {}) do      -- reanudar desde un bloque ya recorrido
+  for _, an in ipairs(rng.anchors or {}) do      -- resume from a block already walked
     if an.base == rng.seed0 and an.idx <= gs - 1 and an.idx > k then s, k = an.seed, an.idx end
   end
   while k < gs - 1 do s = nextSeed(s); k = k + 1 end
-  far.bs, far.seed = math.max(from, 1), s          -- far.seed = semilla del indice gs - 1
+  far.bs, far.seed = math.max(from, 1), s          -- far.seed = seed at index gs - 1
   far.gs = gs
   if bot.mode == 8 then
     far.slotOk = {}
@@ -1228,7 +1228,7 @@ local function scanFarBlock()
   local R = {}
   local s = far.seed
   local n = be + 12 - gs + 1
-  local anchorIdx = be + 1 - M - 1            -- semilla para el siguiente bloque
+  local anchorIdx = be + 1 - M - 1            -- seed for the next block
   local nextSeedVal
   for j = 1, n do
     local lo, hi = s % 0x10000, floor(s / 0x10000)
@@ -1295,8 +1295,8 @@ local function scanFarBlock()
   return doneByBest, be
 end
 
--- ---------------------- Nueva semilla (soft reset) ----------------------
--- Requiere haber GUARDADO la partida en el lugar de la caza.
+-- ---------------------- New seed (soft reset) ----------------------
+-- Requires having SAVED the game at the hunting spot.
 local function startReseed(reason)
   bot.reseeds = (bot.reseeds or 0) + 1
   bot.seedsTried = (bot.seedsTried or 1) + 1
@@ -1327,7 +1327,7 @@ local function stepReseed()
       tap("A")
     end
   elseif bot.st == "rquest" then
-    -- saltar el resumen "Anteriormente en tu aventura..." con B
+    -- skip the "Previously on your quest..." recap with B
     if decodeMon(A.enemy) then startReseed("encuentro inesperado"); return end
     if bot.t >= 400 then queue = {}; bot.st, bot.t = "rsettle", 0; return end
     if #queue == 0 then wait(18); tap("B") end
@@ -1348,10 +1348,10 @@ end
 
 local function isReseedState() return bot.st == "rboot" or bot.st == "rquest" or bot.st == "rsettle" end
 
--- ------------- Resultado de la busqueda lejana: ir al objetivo --------------
--- La Tele avanza el RNG 312 veces por frame (dibuja su "estatica" con
--- Random) + 1 normal. Al pulsar B deja de hacerlo casi enseguida, asi que
--- se puede cerrar muy cerca del objetivo.
+-- ------------- Far search result: go to the target --------------
+-- The Teachy TV advances the RNG 312 times per frame (it draws its "static" with
+-- Random) + 1 normal. Pressing B stops it almost at once, so
+-- it can be closed very close to the target.
 local function teachyMargin()
   return CONFIG.teachyMargin or ((rng.delay or 300) + 1500)
 end
@@ -1379,13 +1379,13 @@ local function goToTarget(best)
     useTv = false
   end
   if useTv then
-    -- lejos: Tele Pokemon (313 avances por frame) hasta acercarse
+    -- far: Teachy TV (313 advances per frame) until close
     rngLoad()
     bot.st, bot.t = "tv_open", 0
     return
   end
   if bot.mode == 8 and wr.built < rng.target + 3000 then
-    bot.st = "wbuild2"           -- calcular los valores del RNG hasta el objetivo
+    bot.st = "wbuild2"           -- compute the RNG values up to the target
     return
   end
   bot.st = "wait"
@@ -1408,9 +1408,9 @@ local function stepFar()
 end
 
 -- ------------------------- Tele Pokemon (Teachy TV) -------------------------
--- Registrala en SELECT. Mientras esta abierta el RNG avanza ~313 veces por
--- frame: millones de avances en pocos minutos. El bot la abre, la cierra
--- poco antes del objetivo, guarda un savestate alli y sigue normal.
+-- Register it on SELECT. While it is open the RNG advances ~313 times per
+-- frame: millions of advances in a few minutes. The bot opens it, closes it
+-- shortly before the target, saves a savestate there and carries on as usual.
 local function stepTeachy()
   local rate = rng.adv - (rng.prevAdv or rng.adv)
   rng.prevAdv = rng.adv
@@ -1434,7 +1434,7 @@ local function stepTeachy()
     if rng.tvSlow >= 90 then queue = {}; bot.st, bot.t = "tv_settle", 0 end
   elseif bot.st == "tv_settle" then
     if bot.t >= 30 then
-      -- nueva base cerca del objetivo; el retraso medido sigue valiendo
+      -- new base near the target; the measured delay is still valid
       local lost = rng.adv > rng.pressAt - rng.preDelay
       rebaseHere()
       zeroEnemy()
@@ -1444,7 +1444,7 @@ local function stepTeachy()
   end
 end
 
--- =========================== Estatico/Regalo/Roamer RNG =====================
+-- =========================== Static/Gift/Roamer RNG =====================
 local function wantedTarget(pid, ivs, lo, hi)
   return isWanted({ pid = pid, ivs = ivs, sv = bxor(bxor(bot.tid, bot.sid), bxor(lo, hi)) })
 end
@@ -1536,13 +1536,13 @@ local function stepRng()
 end
 rng.startFn = rngStart
 
--- ===================== Partida nueva: elegir TID/SID =====================
--- Al confirmar TU nombre, el juego fija el TID (contador de tiempo) y
--- reinicia el RNG con ese mismo valor. Al terminar el discurso de Oak,
--- NewGameInitData pide UN numero al RNG: ese es el SID. Asi que el SID
--- depende del frame en que cierras el ultimo dialogo. El bot busca el
--- frame que da un SID tal que TID xor SID quede en los rangos elegidos
--- (por defecto, los que hacen shiny a uno de los Ditto 6x31).
+-- ===================== New game: pick TID/SID =====================
+-- When YOUR name is confirmed, the game sets the TID (time counter) and
+-- reseeds the RNG with that same value. When Oak's speech ends,
+-- NewGameInitData asks the RNG for ONE number: that is the SID. So the SID
+-- depends on the frame on which you close the last dialog. The bot looks for
+-- the frame that gives a SID such that TID xor SID falls in the chosen ranges
+-- (by default, the ones that make one of the 6x31 Ditto shiny).
 local NG_DEFAULT = { 0x9630, 0xB378, 0x79F8 }
 local NG_INFO = {
   [0x9630] = "Ditto 6x31 shiny: Timid (sem. 448B) o Modest (BC75), Ruta 14 / Mansion S1",
@@ -1635,7 +1635,7 @@ local function stepNewGame()
     if id and id ~= rng.ngOldId and id ~= 0 then
       queue = {}
       local tid, sid = id % 0x10000, floor(id / 0x10000)
-      -- avance donde salio ese SID (primera coincidencia tras pulsar)
+      -- advance where that SID came out (first match after pressing)
       local s, hit = rng.seed0, nil
       for k = 0, rng.pressedAdv + 30000 do
         local nx = nextSeed(s)
@@ -1675,13 +1675,13 @@ local function stepNewGame()
   end
 end
 
--- =================== Semilla inicial (Initial Seed Bot) ===================
--- La semilla inicial es el valor del Timer1 cuando, tras pulsar A en el
--- titulo, termina el grito y el fundido (SeedRngAndSetTrainerId). El timer
--- avanza 280896 ciclos por frame, asi que pulsar d frames mas tarde suma
--- d * 280896 (mod 65536) a la semilla. El bot mide la semilla con dos
--- pulsaciones, calcula en que frame cae la que quieres y la verifica. Si
--- con ese arranque no se puede, cambia el momento en que salta la intro.
+-- =================== Initial seed (Initial Seed Bot) ===================
+-- The initial seed is Timer1's value when, after pressing A on the
+-- title screen, the cry and the fade end (SeedRngAndSetTrainerId). The timer
+-- advances 280896 cycles per frame, so pressing d frames later adds
+-- d * 280896 (mod 65536) to the seed. The bot measures the seed with two
+-- presses, computes on which frame the wanted one lands and verifies it. If
+-- that boot can't reach it, it changes the moment the intro is skipped.
 local sbSeedWritten = false
 pcall(function() memory.registerwrite(0x02020000, function() sbSeedWritten = true end) end)
 local TM1CNT_H = 0x04000106
@@ -1704,7 +1704,7 @@ end
 
 local function sbSeedNow() return read16(0x02020000) end
 
-local function modInv(a, m)          -- inverso modular (a y m coprimos, m <= 65536)
+local function modInv(a, m)          -- modular inverse (a and m coprime, m <= 65536)
   local t, newt, r, newr = 0, 1, m, a % m
   while newr ~= 0 do
     local q = floor(r / newr)
@@ -1732,13 +1732,13 @@ local function sbStart()
   bot.st, bot.t = "sb_reset", 0
 end
 
--- Solo cuenta si el VALOR cambio: durante la intro el juego puede escribir
--- en esa direccion (por ejemplo ceros) sin que haya semilla nueva.
+-- Only counts if the VALUE changed: during the intro the game may write
+-- to that address (for example zeros) without a new seed.
 local function sbSeedSeen()
   return sbSeedNow() ~= sb.before
 end
 
--- Carga el estado tras el reset, espera w frames y pulsa A n veces (cada 8 frames).
+-- Loads the state after the reset, waits w frames and presses A n times (every 8 frames).
 local function sbReplay(n)
   savestate.load(sb.S0)
   queue = {}
@@ -1749,8 +1749,8 @@ local function sbReplay(n)
   bot.t = 0
 end
 
--- Construye el savestate "titulo listo": repetir K-1 pulsaciones y parar
--- justo antes de la K-esima (la que llega al titulo).
+-- Builds the "title ready" savestate: repeat K-1 presses and stop
+-- right before the K-th (the one that reaches the title).
 local function sbBuildTitle()
   sbReplay(sb.K - 1)
   wait(7)
@@ -1758,7 +1758,7 @@ local function sbBuildTitle()
 end
 
 local function sbBeginW()
-  -- 1) pulsar A cada 8 frames hasta que se escriba una semilla
+  -- 1) press A every 8 frames until a seed is written
   sbReplay(400)
   bot.st = "sb_find"
 end
@@ -1782,14 +1782,14 @@ local function sbNextW(reason)
   end
   if sb.K then
     sb.Kfix = 0
-    sbBuildTitle()           -- mismo numero de pulsaciones, arrancando 1 frame despues
+    sbBuildTitle()           -- same number of presses, starting 1 frame later
   else
     sbBeginW()
   end
 end
 
 local function sbPlan()
-  -- semilla(d) = s1 + paso*(d - 1) (mod 65536)
+  -- seed(d) = s1 + step*(d - 1) (mod 65536)
   local step = (sb.s2 - sb.s1) % 65536
   local g = gcd(step, 65536)
   local m = 65536 / g
@@ -1817,7 +1817,7 @@ local function stepSeedBot()
     end
   elseif bot.st == "sb_find" then
     if bot.t > 5 and sbSeedSeen() then
-      -- la semilla aparece ~1-2 s despues de la pulsacion (grito + fundido)
+      -- the seed appears ~1-2 s after the press (cry + fade)
       sb.K = math.max(1, floor((bot.t - 130 - sb.w) / 8) + 1)
       sb.Kfix = 0
       sbBuildTitle()
@@ -1827,7 +1827,7 @@ local function stepSeedBot()
     end
   elseif bot.st == "sb_title" then
     if sbSeedSeen() then
-      -- ya llego al titulo antes de lo pensado: una pulsacion menos
+      -- it reached the title earlier than expected: one press fewer
       sb.K = sb.K - 1; sb.Kfix = sb.Kfix + 1
       if sb.K < 1 or sb.Kfix > 40 then sbNextW("no ubico el titulo"); return end
       sbBuildTitle(); return
@@ -1869,8 +1869,8 @@ local function stepSeedBot()
       if sb.phase == 2 then
         sb.s2 = seed
         if sb.s2 == sb.s1 then
-          -- misma semilla pulsando en frames distintos: una pulsacion anterior ya
-          -- habia llegado al titulo. Guardar el titulo una pulsacion antes.
+          -- same seed pressing on different frames: an earlier press had already
+          -- reached the title. Save the title one press earlier.
           sb.K = sb.K - 1; sb.Kfix = sb.Kfix + 1
           if sb.K < 1 or sb.Kfix > 40 then sbNextW("no ubico el titulo"); return end
           sbBuildTitle(); return
@@ -1892,7 +1892,7 @@ local function stepSeedBot()
       end
     elseif bot.t > 400 then
       if sb.phase == 1 then
-        -- el titulo aun no aceptaba A: una pulsacion mas antes de guardar
+        -- the title did not accept A yet: one more press before saving
         sb.K = sb.K + 1; sb.Kfix = sb.Kfix + 1
         if sb.Kfix > 40 then sbNextW("no ubico el titulo"); return end
         sbBuildTitle(); return
@@ -1902,37 +1902,37 @@ local function stepSeedBot()
   end
 end
 
--- ================== Salvaje RNG (hierba / cueva / surf) ===================
---  1. Prepara: camina (y huye) hasta llenar el contador de pasos minimos
---     entre encuentros. Desde ahi el paso del encuentro no depende del frame.
---  2. Savestate aqui; empieza a caminar y mide el retraso y el orden de
---     llamadas al RNG (calibracion).
---  3. Busca el objetivo (hasta millones de avances), llega con la Tele
---     Pokemon si esta lejos, y empieza a caminar en el avance exacto.
+-- ================== Wild RNG (grass / cave / surf) ===================
+--  1. Prepare: walk (and run) until the minimum step counter between
+--     encounters is full. From there the encounter step does not depend on the frame.
+--  2. Savestate here; start walking and measure the delay and the order of
+--     RNG calls (calibration).
+--  3. Search for the target (up to millions of advances), get there with the Teachy
+--     TV if it is far, and start walking on the exact advance.
 local function stepDir(i)
   local d1, d2 = "left", "right"
   if CONFIG.walkAxis == "vertical" then d1, d2 = "up", "down" end
   return (i % 2 == 1) and d1 or d2
 end
 
--- El jugador esta quieto (gPlayerAvatar.runningState y tileTransitionState = 0)
+-- The player is standing still (gPlayerAvatar.runningState and tileTransitionState = 0)
 local function playerStill()
   return read8(A.avatar + 2) == 0 and read8(A.avatar + 3) == 0
 end
 
 local function pushWildWalk()
   if rng.oneStep then
-    push({ [rng.oneDir] = true }, CONFIG.walkFrames)   -- solo el paso final
+    push({ [rng.oneDir] = true }, CONFIG.walkFrames)   -- only the final step
     return
   end
   for i = 1, 400 do push({ [stepDir(i)] = true }, CONFIG.walkFrames) end
 end
 
--- ------- Modo "a un paso": como lo harias a mano con RNG Reporter -------
--- Tras la primera calibracion ya sabemos en que paso sale el encuentro (N).
--- Camina N-1 pasos, se queda quieto y guarda ahi la base: desde ese punto
--- basta UN paso en el frame exacto. Caminar muchos pasos acumula variacion
--- (el juego gasta RNG de mas en algunos pasos); un solo paso casi no.
+-- ------- "One step away" mode: as you would do it by hand with RNG Reporter -------
+-- After the first calibration we know on which step the encounter comes (N).
+-- Walk N-1 steps, stand still and save the base there: from that point
+-- ONE step on the exact frame is enough. Walking many steps adds up variation
+-- (the game spends extra RNG on some steps); a single step barely does.
 local function startApproach()
   savestate.load(rng.base0State)
   queue = {}
@@ -2017,7 +2017,7 @@ local function stepWildRng()
   if bot.st == "approach" then
     bot.t = bot.t + 1
     if decodeMon(A.enemy) then
-      -- salio el encuentro antes: un paso menos
+      -- the encounter came earlier: one step fewer
       rng.approachK = rng.approachK - 1
       if rng.approachK < 0 then oneStepFallback("el encuentro sale sin caminar"); return end
       startApproach(); return
@@ -2055,7 +2055,7 @@ local function stepWildRng()
   if bot.st == "wait" then
     local early = (bot.t > 6 and not rng.noPrePressCheck) and decodeMon(A.enemy) or nil
     if early then
-      -- salio un encuentro SIN pulsar: la base no estaba quieta. Rehacerla.
+      -- an encounter came WITHOUT pressing: the base was not still. Redo it.
       rng.rebuilds = (rng.rebuilds or 0) + 1
       print(string.format("Encuentro antes de dar el paso (%s PID %08X): rehago la base con el jugador quieto",
             speciesName(early.species), early.pid))
@@ -2097,8 +2097,8 @@ local function stepWildRng()
       if not E and wr.layout then E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect) end
       if evaluate(mon) then return end
       if not E and rng.delay and rng.target then
-        -- en el objetivo: ese frame dio un encuentro que no cuadra (interrupcion
-        -- del juego a mitad de generar). Probar el frame vecino.
+        -- at the target: that frame gave an encounter that doesn't match (the game
+        -- interrupted itself mid-generation). Try the neighboring frame.
         rng.tries = rng.tries + 1
         rng.tried[rng.pressedAdv] = true
         print(string.format("Intento %d: encuentro fuera del calculo (%s), pruebo el frame vecino", rng.tries,
@@ -2122,7 +2122,7 @@ local function stepWildRng()
           bot.msg = "No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."
           print(bot.msg); bot.running = false; bot.st = "idle"; return
         end
-        rng.pressAt = rng.pressAt + 5      -- otro encuentro distinto
+        rng.pressAt = rng.pressAt + 5      -- a different encounter
         bot.st = "wait"; rngLoad(); return
       end
       if loose then
@@ -2151,7 +2151,7 @@ local function stepWildRng()
       retryOrNext(E)
     elseif rng.oneStep and bot.t > 150 then
       if not rng.delay then
-        -- el paso final no dio encuentro: faltaba un paso por caminar
+        -- the final step gave no encounter: one more step was needed
         rng.approachK = rng.approachK + 1
         if rng.approachK > (rng.stepsMeasured or 0) + 3 then oneStepFallback("no encuentro el paso"); return end
         startApproach(); return
@@ -2221,7 +2221,7 @@ stopBot = function()
   queue = {}
 end
 
--- El juego se reinicio (soft reset, reset del emulador): limpiar todo
+-- The game was reset (soft reset, emulator reset): clear everything
 local function onGameReset()
   stopBot()
   bot.found, bot.last, bot.tid, bot.sid = false, nil, nil, nil
@@ -2235,7 +2235,7 @@ end
 
 local resetFrames = 0
 local function watchGameReset()
-  -- en los modos con soft reset el propio bot reinicia el juego
+  -- in the soft reset modes the bot itself resets the game
   if bot.running and ((kind() >= 2 and not isRngMode()) or bot.selfReset) then resetFrames = 0; return end
   if validPtr(read32(A.sb1)) then resetFrames = 0; return end
   resetFrames = resetFrames + 1
@@ -2272,7 +2272,7 @@ reloadConfig = function()
   reportConfig(ok, msg, problems)
 end
 
-local prevKeys = {}  -- (reloadConfig definido arriba)
+local prevKeys = {}  -- (reloadConfig defined above)
 local function pressed(k, keys)
   return (keys[k] or keys["numpad" .. k]) and not (prevKeys[k] or prevKeys["numpad" .. k])
 end
@@ -2332,7 +2332,7 @@ local function monLines(y, label, sp, pid, sv, ivs, color)
   end
 end
 
--- Panel compacto: solo lo que se usa en cada momento (2-4 lineas arriba)
+-- Compact panel: only what matters at each moment (2-4 lines at the top)
 local PHASE_SHORT = { prep = "Preparando", settle = "Preparando", wbuild = "Calculando", wbuild2 = "Calculando",
   far = "Buscando objetivo", wait = "Esperando", pressed = "Comprobando", walking = "Caminando",
   flee = "Huyendo", tv_open = "Abriendo Tele", tv_run = "Tele", tv_exit = "Cerrando Tele",
@@ -2399,7 +2399,7 @@ local function drawCompact()
     local l = bot.last
     line(string.format("%s %s  IVs %s", speciesName(l.species), natureOf(l.pid), table.concat(l.ivs, "/")), "green")
   end
-  -- avisos importantes abajo (errores, encontrado)
+  -- important notices at the bottom (errors, found)
   if bot.msg ~= "" and (bot.found or not bot.running) then gui.text(1, 150, bot.msg, "orange") end
 end
 
@@ -2413,7 +2413,7 @@ local function draw()
        bot.found and "green" or nil)
   line("Busca: " .. filterSummary())
   if bot.tid then line(string.format("TID %d  SID %d", bot.tid, bot.sid)) end
-  -- Semilla inicial (la que fija el titulo; misma direccion que FRLG_RNG_2.0) y semilla actual
+  -- Initial seed (the one set by the title; same address as FRLG_RNG_2.0) and current seed
   local seedLine = string.format("Semilla inicial: %04X   Actual: %08X", read16(0x02020000), read32(A.currSeed))
   if (bot.mode >= 5) and rng.seed0 then seedLine = seedLine .. string.format("   Base: %08X", rng.seed0) end
   line(seedLine)
@@ -2425,7 +2425,7 @@ local function draw()
 
   local m = bot.mode
   if m <= 4 then
-    -- Caza a ciegas: lo util es cuantos intentos van y la probabilidad acumulada
+    -- Blind hunt: what matters is the attempt count and the cumulative probability
     local frames = emu.framecount() - bot.startFrame
     local perHour = 0
     if bot.encounters > 0 and frames > 0 then perHour = floor(bot.encounters * 216000 / frames) end
@@ -2441,7 +2441,7 @@ local function draw()
       line("Timeouts: " .. bot.timeouts)
     end
   else
-    -- RNG: lo util es el objetivo y cuanto falta
+    -- RNG: what matters is the target and how far it is
     local phase = ({ prep = "Preparando", settle = "Preparando", wbuild = "Calculando", search = "Buscando",
       wsearch = "Buscando", wait = rng.delay and "Esperando el frame" or "Calibrando",
       pressed = "Comprobando", walking = "Caminando", flee = "Huyendo", idle = "Detenido",
@@ -2514,7 +2514,7 @@ print("7 = iniciar/detener   8 = cambiar modo   9 = panel (compacto/completo/ocu
 applyModeFromConfig()
 reportConfig(cfgOk, cfgMsg, cfgProblems)
 
--- Revisa cada ~2 s si otra instancia encontro un shiny
+-- Checks every ~2 s whether another instance found a shiny
 local function checkStopFlag()
   if not CONFIG.stopOthers or not bot.running then return end
   if emu.framecount() % 120 ~= 0 then return end
@@ -2530,7 +2530,7 @@ local function checkStopFlag()
   end
 end
 
--- Reinicio del juego al cargar el script
+-- Game reset when the script loads
 local bootResetFrames = CONFIG.resetOnLoad and 3 or 0
 
 while true do

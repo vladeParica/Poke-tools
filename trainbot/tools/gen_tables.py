@@ -1,8 +1,8 @@
-"""Genera trainbot/src/train_tables.lua con datos de pret/pokefirered:
-ataques, especies (tipos y EVs que dan), tabla de tipos, ataques por nivel,
-nombres de objetos y habilidades, y genero.
-Descarga los archivos necesarios de GitHub a tools/pret_cache/ la primera vez.
-Uso:  python trainbot/tools/gen_tables.py
+"""Generates trainbot/src/train_tables.lua from pret/pokefirered data:
+moves, species (types and EV yields), type chart, level-up moves,
+item and ability names, and gender.
+Downloads the needed files from GitHub to tools/pret_cache/ the first time.
+Usage:  python trainbot/tools/gen_tables.py
 """
 import os, re, urllib.request
 H = os.path.dirname(os.path.abspath(__file__))
@@ -81,7 +81,7 @@ out.append('local EF = {'+', '.join('%s=%d'%(n[7:],EF[n]) for n in dict.fromkeys
 missing=[n for n in need if n not in EF]
 open(OUT,'w').write('\n'.join(out)+'\n')
 print(len(moves),len(sp),len(trip),'missing',missing)
-# Ataques por nivel (especie interna -> {nivel, ataque, nivel, ataque, ...})
+# Level-up moves (internal species -> {level, move, level, move, ...})
 ls=open(P+'learnsets.h').read()
 sets={}
 for m in re.finditer(r'static const u16 (s\w+LevelUpLearnset)\[\]\s*=\s*\{(.*?)\};',ls,re.S):
@@ -96,7 +96,7 @@ with open(OUT,'a') as f:
         f.write('[%d]={%s},\n'%(i,','.join('%d,%d'%(l,mv) for l,mv in learn[i])))
     f.write('}\n')
 print('learnsets',len(learn))
-# Nombres de objetos y habilidades, habilidades y genero por especie (modo inspeccion)
+# Item and ability names, abilities and gender per species (inspection mode)
 import json as _j
 SC=CACHE
 IT=defs('items.h','ITEM_')

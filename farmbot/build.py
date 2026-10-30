@@ -1,7 +1,7 @@
-"""Genera FRLG_FarmBot.lua (CRLF, para Windows) a partir de src/.
-Usa las tablas de nombres del Shiny Bot y los datos del juego del Train Bot
-(trainbot/src/train_tables.lua, generado desde pret/pokefirered), sin copiarlos.
-Uso:  python farmbot/build.py
+"""Generates FRLG_FarmBot.lua (CRLF, for Windows) from src/.
+Uses the Shiny Bot name tables and the Train Bot game data
+(trainbot/src/train_tables.lua, generated from pret/pokefirered) without copying them.
+Usage:  python farmbot/build.py
 """
 import os
 H = os.path.dirname(os.path.abspath(__file__))

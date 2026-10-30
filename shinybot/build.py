@@ -1,5 +1,5 @@
-"""Genera FRLG_ShinyBot.lua (CRLF, para Windows) a partir de src/.
-Uso:  python shinybot/build.py
+"""Generates FRLG_ShinyBot.lua (CRLF, for Windows) from src/.
+Usage:  python shinybot/build.py
 """
 import os
 H = os.path.dirname(os.path.abspath(__file__))

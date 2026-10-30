@@ -1,48 +1,48 @@
 -- ===================================================================
---  FRLG Train Bot v1.10  (Rojo Fuego / Verde Hoja - VBA-ReRecording)
+--  FRLG Train Bot v1.10  (FireRed / LeafGreen - VBA-ReRecording)
 --
---  Script APARTE del Shiny Bot: entrena al primer Pokemon del equipo.
---  Carga SOLO este script (no junto con FRLG_ShinyBot.lua).
+--  SEPARATE script from the Shiny Bot: trains the first Pokemon in the party.
+--  Load ONLY this script (not together with FRLG_ShinyBot.lua).
 --
---  Que hace:
---    - Camina en la hierba de lado a lado buscando combates.
---    - Pelea solo contra especies que dan los EVs que pediste (huye del resto).
---    - Elige el ataque que mas dano hace contra cada rival.
---    - No aprende ataques nuevos (o te deja decidir) y cancela evoluciones
---      (configurable en el .json).
---    - Cuando el Pokemon esta debil o sin PP, va al Centro Pokemon por la
---      ruta que grabaste, se cura y vuelve al mismo lugar.
---    - Se detiene al completar los EVs y el nivel objetivo.
+--  What it does:
+--    - Walks side to side in the grass looking for battles.
+--    - Fights only species that give the EVs you asked for (runs from the rest).
+--    - Picks the move that does the most damage against each opponent.
+--    - Doesn't learn new moves (or lets you decide) and cancels evolutions
+--      (configurable in the .json).
+--    - When the Pokemon is weak or out of PP, it goes to the Pokemon Center along the
+--      route you recorded, heals and comes back to the same spot.
+--    - Stops when the EVs and the target level are reached.
 --
 --  Teclas:
---    7 = iniciar / detener
---    6 = grabar la ruta al Centro Pokemon (ver instrucciones en pantalla)
---    8 = ver Pokemon: stats, IVs, EVs, naturaleza, ataques (equipo 1-6 y rival)
---    9 = panel (compacto / completo / oculto)
---    0 = recargar FRLG_TrainBot.json
+--    7 = start / stop
+--    6 = record the route to the Pokemon Center (see on-screen instructions)
+--    8 = view Pokemon: stats, IVs, EVs, nature, moves (party 1-6 and opponent)
+--    9 = panel (compact / full / hidden)
+--    0 = reload FRLG_TrainBot.json
 -- ===================================================================
 
 local CONFIG = {
-  evs            = nil,     -- EVs objetivo, ej. {atk=252, spe=252, hp=4}
-  targetLevel    = nil,     -- nivel objetivo (nil = solo EVs)
-  maxLevel       = nil,     -- detenerse al llegar a este nivel aunque falten EVs
-  species        = nil,     -- pelear SOLO contra estas especies (nil = segun EVs)
-  avoidSpecies   = nil,     -- nunca pelear contra estas
-  allowOvershoot = false,   -- permitir pasarse del objetivo de EVs
-  healBelow      = 40,      -- ir a curarse si los PS bajan de este % (tras el combate)
-  fleeBelow      = 20,      -- huir en pleno combate si los PS bajan de este %
-  minPP          = 3,       -- ir a curarse si quedan menos PP en total en ataques utiles
-  learnMoves     = "auto",  -- "auto" = aprende si es mejor, "never" = nunca, "ask" = te deja decidir
-  keepMoves      = nil,     -- ataques que nunca se olvidan, ej. {"Thunder Wave"}
-  wantedMoves    = nil,     -- ataques finales deseados (max 4): solo aprende estos y rechaza el resto
-  askTimeout     = 300,     -- "ask": segundos esperando tu decision antes de decidir solo (nil = esperar siempre)
-  notify         = nil,     -- avisos al celular: {ntfy = "tu-tema"} y/o {discord = "url del webhook"}
-  evolve         = false,   -- false = cancelar evoluciones (B), true = dejar evolucionar (decides tu)
-  stopOnShiny    = true,    -- pausar si aparece un shiny salvaje
+  evs            = nil,     -- target EVs, e.g. {atk=252, spe=252, hp=4}
+  targetLevel    = nil,     -- target level (nil = EVs only)
+  maxLevel       = nil,     -- stop at this level even if EVs are missing
+  species        = nil,     -- fight ONLY these species (nil = based on EVs)
+  avoidSpecies   = nil,     -- never fight these
+  allowOvershoot = false,   -- allow going over the EV target
+  healBelow      = 40,      -- go heal if HP drops below this % (after the battle)
+  fleeBelow      = 20,      -- run mid-battle if HP drops below this %
+  minPP          = 3,       -- go heal if fewer total PP are left in useful moves
+  learnMoves     = "auto",  -- "auto" = learns if it is better, "never" = never, "ask" = lets you decide
+  keepMoves      = nil,     -- moves that are never forgotten, e.g. {"Thunder Wave"}
+  wantedMoves    = nil,     -- wanted final moves (max 4): learns only these and rejects the rest
+  askTimeout     = 300,     -- "ask": seconds to wait for your decision before deciding alone (nil = always wait)
+  notify         = nil,     -- phone notifications: {ntfy = "your-topic"} and/or {discord = "webhook url"}
+  evolve         = false,   -- false = cancel evolutions (B), true = let it evolve (you decide)
+  stopOnShiny    = true,    -- pause if a wild shiny appears
   walkAxis       = "horizontal",
   walkFrames     = 16,
   routeFile      = "FRLG_TrainRoute.txt",
-  healMode       = "nurse",   -- "nurse" = hablar con la enfermera; "tile" = casilla que cura al pisarla (zona purificada Torre 5F)
+  healMode       = "nurse",   -- "nurse" = talk to the nurse; "tile" = tile that heals when stepped on (Tower 5F purified zone)
   logFile        = "train_log.txt",
   logDir         = "logs",
 }
@@ -126,7 +126,7 @@ local nationalDexList = {
  335, 369, 304, 305, 306, 351, 313, 314, 345, 346, 347, 348, 280, 281, 282, 371, 372, 373, 374, 375,
  376, 377, 378, 379, 382, 383, 384, 380, 381, 385, 386, 358}
 
--- Generado desde pret/pokefirered (gen_tables.py)
+-- Generated from pret/pokefirered (gen_tables.py)
 local TT_MOVE = {
 [1]={40,0,100,0,35,0,"POUND"},
 [2]={50,1,100,43,25,0,"KARATE CHOP"},
@@ -1291,7 +1291,7 @@ local TT_ABILNAME = {[1]="STENCH",[2]="DRIZZLE",[3]="SPEED BOOST",[4]="BATTLE AR
 local TT_SPECX = {[0]={65,0,31},[2]={65,0,31},[3]={65,0,31},[4]={66,0,31},[5]={66,0,31},[6]={66,0,31},[7]={67,0,31},[8]={67,0,31},[9]={67,0,31},[10]={19,0,127},[11]={61,0,127},[12]={14,0,127},[13]={19,0,127},[14]={61,0,127},[15]={68,0,127},[16]={51,0,127},[17]={51,0,127},[18]={51,0,127},[19]={50,62,127},[20]={50,62,127},[21]={51,0,127},[22]={51,0,127},[23]={22,61,127},[24]={22,61,127},[25]={9,0,127},[26]={9,0,127},[27]={8,0,127},[28]={8,0,127},[29]={38,0,254},[30]={38,0,254},[31]={38,0,254},[32]={38,0,0},[33]={38,0,0},[34]={38,0,0},[35]={56,0,191},[36]={56,0,191},[37]={18,0,191},[38]={18,0,191},[39]={56,0,191},[40]={56,0,191},[41]={39,0,127},[42]={39,0,127},[43]={34,0,127},[44]={34,0,127},[45]={34,0,127},[46]={27,0,127},[47]={27,0,127},[48]={14,0,127},[49]={19,0,127},[50]={8,71,127},[51]={8,71,127},[52]={53,0,127},[53]={7,0,127},[54]={6,13,127},[55]={6,13,127},[56]={72,0,127},[57]={72,0,127},[58]={22,18,63},[59]={22,18,63},[60]={11,6,127},[61]={11,6,127},[62]={11,6,127},[63]={28,39,63},[64]={28,39,63},[65]={28,39,63},[66]={62,0,63},[67]={62,0,63},[68]={62,0,63},[69]={34,0,127},[70]={34,0,127},[71]={34,0,127},[72]={29,64,127},[73]={29,64,127},[74]={69,5,127},[75]={69,5,127},[76]={69,5,127},[77]={50,18,127},[78]={50,18,127},[79]={12,20,127},[80]={12,20,127},[81]={42,5,255},[82]={42,5,255},[83]={51,39,127},[84]={50,48,127},[85]={50,48,127},[86]={47,0,127},[87]={47,0,127},[88]={1,60,127},[89]={1,60,127},[90]={75,0,127},[91]={75,0,127},[92]={26,0,127},[93]={26,0,127},[94]={26,0,127},[95]={69,5,127},[96]={15,0,127},[97]={15,0,127},[98]={52,75,127},[99]={52,75,127},[100]={43,9,255},[101]={43,9,255},[102]={34,0,127},[103]={34,0,127},[104]={69,31,127},[105]={69,31,127},[106]={7,0,0},[107]={51,0,0},[108]={20,12,127},[109]={26,0,127},[110]={26,0,127},[111]={31,69,127},[112]={31,69,127},[113]={30,32,254},[114]={34,0,127},[115]={48,0,254},[116]={33,0,127},[117]={38,0,127},[118]={33,41,127},[119]={33,41,127},[120]={35,30,255},[121]={35,30,255},[122]={43,0,127},[123]={68,0,127},[124]={12,0,254},[125]={9,0,63},[126]={49,0,63},[127]={52,0,127},[128]={22,0,0},[129]={33,0,127},[130]={22,0,127},[131]={11,75,127},[132]={7,0,255},[133]={50,0,31},[134]={11,0,31},[135]={10,0,31},[136]={18,0,31},[137]={36,0,255},[138]={33,75,31},[139]={33,75,31},[140]={33,4,31},[141]={33,4,31},[142]={69,46,31},[143]={17,47,31},[144]={46,0,255},[145]={46,0,255},[146]={46,0,255},[147]={61,0,127},[148]={61,0,127},[149]={39,0,127},[150]={46,0,255},[151]={28,0,255},[152]={65,0,31},[153]={65,0,31},[154]={65,0,31},[155]={66,0,31},[156]={66,0,31},[157]={66,0,31},[158]={67,0,31},[159]={67,0,31},[160]={67,0,31},[161]={50,51,127},[162]={50,51,127},[163]={15,51,127},[164]={15,51,127},[165]={68,48,127},[166]={68,48,127},[167]={68,15,127},[168]={68,15,127},[169]={39,0,127},[170]={10,35,127},[171]={10,35,127},[172]={9,0,127},[173]={56,0,191},[174]={56,0,191},[175]={55,32,31},[176]={55,32,31},[177]={28,48,127},[178]={28,48,127},[179]={9,0,127},[180]={9,0,127},[181]={9,0,127},[182]={34,0,127},[183]={47,37,127},[184]={47,37,127},[185]={5,69,127},[186]={11,6,127},[187]={34,0,127},[188]={34,0,127},[189]={34,0,127},[190]={50,53,127},[191]={34,0,127},[192]={34,0,127},[193]={3,14,127},[194]={6,11,127},[195]={6,11,127},[196]={28,0,31},[197]={28,0,31},[198]={15,0,127},[199]={12,20,127},[200]={26,0,127},[201]={26,0,255},[202]={23,0,127},[203]={39,48,127},[204]={5,0,127},[205]={5,0,127},[206]={32,50,127},[207]={52,8,127},[208]={69,5,127},[209]={22,50,191},[210]={22,22,191},[211]={38,33,127},[212]={68,0,127},[213]={5,0,127},[214]={68,62,127},[215]={39,51,127},[216]={53,0,127},[217]={62,0,127},[218]={40,49,127},[219]={40,49,127},[220]={12,0,127},[221]={12,0,127},[222]={55,30,191},[223]={55,0,127},[224]={21,0,127},[225]={72,55,127},[226]={33,11,127},[227]={51,5,127},[228]={48,18,127},[229]={48,18,127},[230]={33,0,127},[231]={53,0,127},[232]={5,0,127},[233]={36,0,255},[234]={22,0,127},[235]={20,0,127},[236]={62,0,0},[237]={22,0,0},[238]={12,0,254},[239]={9,0,63},[240]={49,0,63},[241]={47,0,254},[242]={30,32,254},[243]={46,0,255},[244]={46,0,255},[245]={46,0,255},[246]={62,0,127},[247]={61,0,127},[248]={45,0,127},[249]={46,0,255},[250]={46,0,255},[251]={30,0,255},[277]={65,0,31},[278]={65,0,31},[279]={65,0,31},[280]={66,0,31},[281]={66,0,31},[282]={66,0,31},[283]={67,0,31},[284]={67,0,31},[285]={67,0,31},[286]={50,0,127},[287]={22,0,127},[288]={53,0,127},[289]={53,0,127},[290]={19,0,127},[291]={61,0,127},[292]={68,0,127},[293]={61,0,127},[294]={19,0,127},[295]={33,44,127},[296]={33,44,127},[297]={33,44,127},[298]={34,48,127},[299]={34,48,127},[300]={34,48,127},[301]={14,0,127},[302]={3,0,127},[303]={25,0,255},[304]={62,0,127},[305]={62,0,127},[306]={27,0,127},[307]={27,0,127},[308]={20,0,127},[309]={51,0,127},[310]={51,0,127},[311]={33,0,127},[312]={22,0,127},[313]={41,12,127},[314]={41,12,127},[315]={56,0,191},[316]={56,0,191},[317]={16,0,127},[318]={26,0,255},[319]={26,0,255},[320]={5,42,127},[321]={73,0,127},[322]={51,0,127},[323]={12,0,127},[324]={12,0,127},[325]={33,0,191},[326]={52,75,127},[327]={52,75,127},[328]={33,0,127},[329]={63,0,127},[330]={24,0,127},[331]={24,0,127},[332]={52,71,127},[333]={26,26,127},[334]={26,26,127},[335]={47,62,63},[336]={47,62,63},[337]={9,31,127},[338]={9,31,127},[339]={12,0,127},[340]={40,0,127},[341]={47,0,127},[342]={47,0,127},[343]={47,0,127},[344]={8,0,127},[345]={8,0,127},[346]={39,0,127},[347]={39,0,127},[348]={26,0,255},[349]={26,0,255},[350]={47,37,191},[351]={47,20,127},[352]={47,20,127},[353]={57,0,127},[354]={58,0,127},[355]={52,22,127},[356]={74,0,127},[357]={74,0,127},[358]={30,0,127},[359]={30,0,127},[360]={23,0,127},[361]={26,0,127},[362]={46,0,127},[363]={30,38,127},[364]={54,0,127},[365]={72,0,127},[366]={54,0,127},[367]={64,60,127},[368]={64,60,127},[369]={34,0,127},[370]={43,0,127},[371]={43,0,127},[372]={43,0,127},[373]={75,0,127},[374]={33,0,127},[375]={33,0,127},[376]={46,0,127},[377]={15,0,127},[378]={15,0,127},[379]={61,0,127},[380]={17,0,127},[381]={33,69,31},[382]={5,69,127},[383]={5,69,127},[384]={5,69,127},[385]={59,0,127},[386]={35,68,0},[387]={12,0,254},[388]={21,0,31},[389]={21,0,31},[390]={4,0,31},[391]={4,0,31},[392]={28,36,127},[393]={28,36,127},[394]={28,36,127},[395]={69,0,127},[396]={69,0,127},[397]={22,0,127},[398]={29,0,255},[399]={29,0,255},[400]={29,0,255},[401]={29,0,255},[402]={29,0,255},[403]={29,0,255},[404]={2,0,255},[405]={70,0,255},[406]={77,0,255},[407]={26,0,254},[408]={26,0,0},[409]={32,0,255},[410]={46,0,255},[411]={26,0,127}}
 
 
--- ------------------------- Version / direcciones ---------------------
+-- ------------------------- Version / addresses ---------------------
 local gameCode = read8(0x080000AE)
 local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
@@ -1312,11 +1312,11 @@ end
 A.gMain = A.gMain or (A.currSeed - 0x1F10)
 A.inBattleByte = A.gMain + 0x439
 A.callback2    = A.gMain + 4
--- Variables de combate (pokefirered, USA) a la misma distancia de gEnemyParty
+-- Battle variables (pokefirered, USA) at the same distance from gEnemyParty
 A.actionCursor = A.enemy - 0x34    -- gActionSelectionCursor[0]
 A.moveCursor   = A.enemy - 0x30    -- gMoveSelectionCursor[0]
 A.battleMons   = A.enemy - 0x448   -- gBattleMons[0..3] (0x58 c/u)
-A.bufferA      = A.enemy - 0x1468  -- gBattleBufferA[0][0] = comando del jugador
+A.bufferA      = A.enemy - 0x1468  -- gBattleBufferA[0][0] = player command
 A.execFlags    = A.enemy - 0x464   -- gBattleControllerExecFlags
 A.scriptPtr    = A.enemy - 0x2B8   -- gBattlescriptCurrInstr
 A.yesNoCursor  = A.enemy - 0x1A9   -- gBattleCommunication[1]
@@ -1327,7 +1327,7 @@ A.objects = A.avatar - 0x240                                   -- gObjectEvents
 local CMD_CHOOSEACTION, CMD_CHOOSEMOVE = 18, 20
 local OP_LEARNMOVE, OP_STOPLEARNING = 0x5A, 0x5B
 A.moveToLearn = A.enemy - 0xA       -- gMoveToLearn
-A.sumCursor   = A.enemy + 0x17141   -- sMoveSelectionCursorPos (pantalla de datos, elegir ataque a olvidar)
+A.sumCursor   = A.enemy + 0x17141   -- sMoveSelectionCursorPos (summary screen, picking the move to forget)
 local HM_MOVES = { [15] = true, [19] = true, [57] = true, [70] = true, [127] = true, [148] = true, [249] = true, [291] = true }
 
 -- ------------------------------ Utilidades ---------------------------
@@ -1422,15 +1422,15 @@ local function simplify(name)
   return (name:gsub("[^%w]", ""))
 end
 
--- Estadisticas: indice de pantalla 1..6 = PS, At, Df, AtE, DfE, Vel
+-- Stats: screen index 1..6 = HP, Atk, Def, SpA, SpD, Spe
 local STAT_KEYS = { hp = 1, ps = 1, atk = 2, ata = 2, attack = 2, ataque = 2, def = 3, defense = 3, defensa = 3,
   spa = 4, spatk = 4, ate = 4, atesp = 4, ataqueespecial = 4, spd = 5, spdef = 5, dfe = 5, defesp = 5,
   defensaespecial = 5, spe = 6, speed = 6, vel = 6, velocidad = 6 }
 local STAT_LABEL = { "PS", "At", "Df", "AtE", "DfE", "Vel" }
--- Los EVs en memoria van en orden PS, At, Df, Vel, AtE, DfE
+-- EVs in memory are ordered HP, Atk, Def, Spe, SpA, SpD
 local EV_OF_STAT = { 1, 2, 3, 5, 6, 4 }
 
-local tcfg = {}   -- configuracion interpretada
+local tcfg = {}   -- parsed configuration
 
 local function speciesName(idx)
   local dex = nationalDexList[idx + 1]
@@ -1453,7 +1453,7 @@ end
 local function interpretConfig(problems)
   tcfg = { target = nil }
   if type(CONFIG.evs) == "table" then
-    tcfg.target = { 0, 0, 0, 0, 0, 0 }     -- en orden de memoria
+    tcfg.target = { 0, 0, 0, 0, 0, 0 }     -- in memory order
     local total = 0
     for k, v in pairs(CONFIG.evs) do
       local i = STAT_KEYS[simplify(k)]
@@ -1528,7 +1528,7 @@ if CONFIG.logDir and CONFIG.logDir ~= "" then
   if not okDir then
     pcall(function()
       local d = LOGDIR:gsub("/$", "")
-      if d:find('["%%$`]') then return end   -- no pasar al shell rutas con comillas o variables
+      if d:find('["%%$`]') then return end   -- never pass paths with quotes or variables to the shell
       if package and package.config and package.config:sub(1, 1) == "\\" then
         os.execute('mkdir "' .. d:gsub("/", "\\") .. '" 2>nul')
       else os.execute('mkdir -p "' .. d .. '" 2>/dev/null') end
@@ -1554,8 +1554,8 @@ local function logLine(text)
   end)
 end
 
--- Aviso al celular (ntfy.sh y/o Discord) con curl, sin bloquear el emulador.
--- curl viene incluido en Windows 10/11.
+-- Phone notification (ntfy.sh and/or Discord) via curl, without blocking the emulator.
+-- curl ships with Windows 10/11.
 local function notify(text)
   local n = CONFIG.notify
   if type(n) ~= "table" then return end
@@ -1577,20 +1577,20 @@ end
 local function validPtr(p) return p >= 0x02000000 and p < 0x02040000 end
 local function s16(v) if v >= 0x8000 then return v - 0x10000 end return v end
 
--- ------------------------- Datos de Pokemon --------------------------
--- Orden de las 4 subestructuras segun PID % 24 (G=crecimiento A=ataques E=EVs M=varios)
+-- ------------------------- Pokemon data --------------------------
+-- Order of the 4 substructures by PID % 24 (G=growth A=attacks E=EVs M=misc)
 local SUB_ORDER = { "GAEM", "GAME", "GEAM", "GEMA", "GMAE", "GMEA", "AGEM", "AGME", "AEGM", "AEMG", "AMGE", "AMEG",
                     "EGAM", "EGMA", "EAGM", "EAMG", "EMGA", "EMAG", "MGAE", "MGEA", "MAGE", "MAEG", "MEGA", "MEAG" }
 local function subOffset(pid, letter)
   return (SUB_ORDER[(pid % 24) + 1]:find(letter) - 1) * 12
 end
 
-local function ivsFromWord(w)   -- orden de pantalla: PS/At/Df/AtE/DfE/Vel
+local function ivsFromWord(w)   -- screen order: HP/Atk/Def/SpA/SpD/Spe
   return { band(w, 0x1F), band(rshift(w, 5), 0x1F), band(rshift(w, 10), 0x1F),
            band(rshift(w, 20), 0x1F), band(rshift(w, 25), 0x1F), band(rshift(w, 15), 0x1F) }
 end
 
--- Lee un Pokemon del equipo (100 bytes) con checksum
+-- Reads a party Pokemon (100 bytes) with checksum
 local function readPartyMon(addr)
   local pid = read32(addr)
   if pid == 0 then return nil end
@@ -1623,7 +1623,7 @@ local function readPartyMon(addr)
   return mon
 end
 
--- Rival salvaje: se acepta cuando lleva 3 frames sin cambiar (puede estar a medio crear)
+-- Wild opponent: accepted once stable for 3 frames (it may be half-created)
 local gFrame = 0
 local enemyWatch = nil
 local function readEnemyStable()
@@ -1636,7 +1636,7 @@ local function readEnemyStable()
 end
 local function zeroEnemy() write32(A.enemy, 0); enemyWatch = nil end
 
--- Pokemon en combate (gBattleMons): 0 = el tuyo, 1 = el rival
+-- Pokemon in battle (gBattleMons): 0 = yours, 1 = the opponent
 local function battleMon(i)
   local b = A.battleMons + i * 0x58
   return { species = read16(b), atk = read16(b + 2), def = read16(b + 4), spe = read16(b + 6),
@@ -1664,7 +1664,7 @@ end
 local function samePos(a, b) return a and b and a.g == b.g and a.n == b.n and a.x == b.x and a.y == b.y end
 local DIR_KEY = { [1] = "down", [2] = "up", [3] = "left", [4] = "right" }
 
--- ------------------------ Tipos y danos ------------------------------
+-- ------------------------ Types and damage ------------------------------
 local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",
   "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }
 local EFFM = {}
@@ -1698,12 +1698,12 @@ local function hiddenPower(ivWord)
   local t = floor(((hp % 2) + 2 * (at % 2) + 4 * (df % 2) + 8 * (sp % 2) + 16 * (sa % 2) + 32 * (sd % 2)) * 15 / 63)
   local function b(x) return floor(x / 2) % 2 end
   local pw = floor((b(hp) + 2 * b(at) + 4 * b(df) + 8 * b(sp) + 16 * b(sa) + 32 * b(sd)) * 40 / 63) + 30
-  local typ = t + 1                 -- 1..16 = Lucha..Siniestro (sin el tipo ???)
+  local typ = t + 1                 -- 1..16 = Fighting..Dark (without the ??? type)
   if typ >= 9 then typ = typ + 1 end
   return typ, pw
 end
 
--- Dano esperado de un ataque (ya multiplicado por la precision)
+-- Expected damage of a move (already multiplied by accuracy)
 local function moveValue(moveId, me, foe)
   local mv = TT_MOVE[moveId]
   if not mv then return 0, 0 end
@@ -1718,12 +1718,12 @@ local function moveValue(moveId, me, foe)
   if foe.ability == ABIL_WONDERGUARD and mult <= 1 then mult = 0 end
   if mult == 0 then return 0, 0 end
   local accF = (acc == 0) and 1 or acc / 100
-  -- Dano fijo
+  -- Fixed damage
   if eff == EF.LEVEL_DAMAGE or eff == EF.PSYWAVE then return me.level * accF, me.level end
   if eff == EF.DRAGON_RAGE then return 40 * accF, 40 end
   if eff == EF.SONICBOOM then return 20 * accF, 20 end
   if eff == EF.SUPER_FANG then local d = math.max(floor(foe.hp / 2), 1); return d * accF, d end
-  -- Poder variable
+  -- Variable power
   if eff == EF.RETURN then power = math.max(floor(me.friendship * 10 / 25), 1)
   elseif eff == EF.FRUSTRATION then power = math.max(floor((255 - me.friendship) * 10 / 25), 1)
   elseif eff == EF.FLAIL then
@@ -1750,8 +1750,8 @@ local function moveValue(moveId, me, foe)
   return dmg * accF, dmg
 end
 
--- Mejor ataque contra el rival: el que mas dano esperado hace, sin pasarse
--- de los PS que le quedan (asi no gasta un ataque fuerte si basta uno debil).
+-- Best move against the opponent: the one with the most expected damage, without going
+-- over its remaining HP (so it doesn't waste a strong move when a weak one is enough).
 local function bestMove(blocked)
   local me, foe = battleMon(0), battleMon(1)
   local best, bestScore, bestPP = nil, 0, -1
@@ -1771,7 +1771,7 @@ local function bestMove(blocked)
   return best, bestScore
 end
 
--- PP que quedan en ataques que hacen dano (fuera de combate, del equipo)
+-- PP left in damaging moves (outside battle, from the party)
 local function usefulPP(mon)
   local total = 0
   for i = 1, 4 do
@@ -1786,8 +1786,8 @@ local function usefulPP(mon)
   return total
 end
 
--- --------------------- Aprender ataques nuevos ----------------------
--- Quien aprende: gBattleStruct->expGetterMonId (indice en el equipo)
+-- --------------------- Learning new moves ----------------------
+-- Who learns: gBattleStruct->expGetterMonId (party index)
 local function learnerIndex()
   local p = read32(A.enemy - 0x44)
   if validPtr(p) then local i = read8(p + 0x10); if i < 6 then return i end end
@@ -1802,22 +1802,22 @@ local function monAsAttacker(idx)
            spa = read16(addr + 0x60), spd = read16(addr + 0x62), type1 = sp[1], type2 = sp[2], ivWord = m.ivWord,
            friendship = m.friendship, hp = m.hp, maxHP = m.maxHP, status = read32(addr + 0x50) }
 end
--- Valor de un ataque contra un rival neutro (sin ventaja de tipo), con STAB y precision
+-- Value of a move against a neutral opponent (no type advantage), with STAB and accuracy
 local function moveWorth(id, me)
   if id == 0 or not TT_MOVE[id] then return 0 end
   local ref = { type1 = 9, type2 = 9, ability = 0, def = math.max(me.def, 1), spd = math.max(me.spd, 1), hp = math.max(me.maxHP, 1) * 4 }
   return (moveValue(id, me, ref))
 end
 local function moveName(id) return (TT_MOVE[id] and TT_MOVE[id][7]) or ("#" .. tostring(id)) end
--- Devuelve (casilla a olvidar 1-4 o nil, ataque nuevo, ataque que se olvidaria)
+-- Returns (slot to forget 1-4 or nil, new move, move that would be forgotten)
 local function planLearn()
   local new = read16(A.moveToLearn)
   local me = monAsAttacker(learnerIndex())
   if not me or not TT_MOVE[new] then return nil, new end
-  -- Solo se cambian ataques del Pokemon que se entrena (el primero del equipo)
+  -- Only the trained Pokemon's moves change (the first in the party)
   if learnerIndex() ~= 0 then return nil, new end
   if tcfg.wanted then
-    -- Lista de ataques deseados: solo aprende esos, y olvida uno que NO este en la lista
+    -- Wanted moves list: learns only those, and forgets one NOT on the list
     if not tcfg.wanted[new] then return nil, new end
     local worst, worstW
     for i = 1, 4 do
@@ -1844,7 +1844,7 @@ local function planLearn()
   return nil, new
 end
 
--- Como va cada ataque deseado: ya lo sabe, a que nivel lo aprende, o si no es por nivel
+-- Status of each wanted move: already known, level it is learned at, or not by level
 local function wantedStatus(m)
   if not tcfg.wanted or not m then return nil end
   local out = {}
@@ -1892,7 +1892,7 @@ local function evsDone(mon)
   return true
 end
 
--- Decide si conviene pelear contra esta especie. Devuelve (pelear, motivo)
+-- Decides whether fighting this species is worth it. Returns (fight, reason)
 local function shouldFight(mon, species)
   if tcfg.avoid and tcfg.avoid[species] then return false, "evitada" end
   if tcfg.only and not tcfg.only[species] then return false, "no esta en la lista" end
@@ -1941,9 +1941,9 @@ local function runQueue()
 end
 local function hold(dir) joypad.set(1, { [dir] = true }) end
 
--- ------------------------- Ruta al Centro ----------------------------
+-- ------------------------- Route to the Center ----------------------------
 local route = { go = nil, back = nil }
-local rec = nil      -- grabacion en curso
+local rec = nil      -- recording in progress
 
 local function routeToText(r)
   local t = {}
@@ -1967,9 +1967,9 @@ local function saveRoute()
     end
   end)
 end
--- Limpieza de rutas: al cruzar una puerta el juego cambia el mapa unos frames
--- antes que las coordenadas (y la memoria del mapa se mueve), asi que quedaban
--- puntos falsos: mapa nuevo con las coordenadas viejas, o mapas imposibles.
+-- Route cleanup: when going through a door the game changes the map a few frames
+-- before the coordinates (and the map memory moves), so bogus points were
+-- left: new map with the old coordinates, or impossible maps.
 local function cleanRoute(r)
   if not r then return nil end
   local out = {}
@@ -1985,13 +1985,13 @@ local function cleanRoute(r)
   return out
 end
 
--- Si la ida termino AFUERA del Centro y la entrada a la enfermera quedo grabada
--- al principio de la vuelta, se mueve ese tramo a la ida (hasta el punto mas
--- adentro, que es donde se habla con la enfermera).
+-- If the way there ended OUTSIDE the Center and the walk to the nurse was recorded
+-- at the start of the way back, that stretch is moved to the way there (up to the
+-- innermost point, which is where you talk to the nurse).
 local function fixRoute(go, back)
   if not go or not back or #go < 2 or #back < 2 then return go, back end
-  -- Modo casilla: si la vuelta empieza con un "desvio" que regresa al mismo
-  -- punto (entraste a la zona que cura DESPUES de pulsar 6), ese desvio va a la ida.
+  -- Tile mode: if the way back starts with a "detour" that returns to the same
+  -- point (you entered the healing zone AFTER pressing 6), that detour goes to the way there.
   if simplify(CONFIG.healMode or "nurse") == "tile" then
     local k
     for j = 2, math.min(#back, 40) do if samePos(back[j], back[1]) then k = j; break end end
@@ -2018,7 +2018,7 @@ local function fixRoute(go, back)
     elseif first then break end
   end
   if not first then return go, back end
-  -- punto mas lejano de la entrada dentro de ese tramo
+  -- point farthest from the entrance within that stretch
   local e = back[first]
   local best, bestD = first, -1
   for k = first, lastIn do
@@ -2060,7 +2060,7 @@ local function recStep()
   local list = rec.list
   local last = list[#list]
   local junk = p.g > 42 or p.n > 120
-  -- mapa nuevo con las coordenadas viejas = a mitad de una puerta: esperar
+  -- new map with the old coordinates = halfway through a door: wait
   if last and (p.g ~= last.g or p.n ~= last.n) and p.x == last.x and p.y == last.y then junk = true end
   if not junk and not samePos(p, last) then
     list[#list + 1] = { g = p.g, n = p.n, x = p.x, y = p.y, d = rec.prevFace or p.face }
@@ -2091,7 +2091,7 @@ local function recHotkey()
   print(bot.msg)
 end
 
--- Seguir una ruta grabada. Devuelve "done", "fail" o nil (sigue).
+-- Follow a recorded route. Returns "done", "fail" or nil (keep going).
 local nav = nil
 local function navStart(r) nav = { r = r, idx = 1, stuck = 0, tries = 0, cool = 0, lastMap = nil } end
 local function navFind(p)
@@ -2104,7 +2104,7 @@ local function navStep()
   local p = playerPos()
   if not p then nav.cool = 20; return nil end
   local mapKey = p.g * 256 + p.n
-  if nav.lastMap and nav.lastMap ~= mapKey then nav.cool = 40 end   -- cambio de mapa: soltar un momento
+  if nav.lastMap and nav.lastMap ~= mapKey then nav.cool = 40 end   -- map change: release for a moment
   nav.lastMap = mapKey
   if nav.cool > 0 then nav.cool = nav.cool - 1; return nil end
   local r = nav.r
@@ -2115,7 +2115,7 @@ local function navStep()
     if nav.idx >= #r then return "done" end
     nxt = r[nav.idx + 1]
   else
-    -- fuera de la ruta (lo empujo un NPC, etc.): buscar un punto vecino de la ruta
+    -- off the route (pushed by an NPC, etc.): look for a nearby route point
     for k = nav.idx, #r do
       local q = r[k]
       if q.g == p.g and q.n == p.n and math.abs(q.x - p.x) + math.abs(q.y - p.y) == 1 then nxt = q; nav.idx = math.max(k - 1, 1); break end
@@ -2132,11 +2132,11 @@ local function navStep()
     if nxt.x > cur.x then dir = "right" elseif nxt.x < cur.x then dir = "left"
     elseif nxt.y > cur.y then dir = "down" else dir = "up" end
   else
-    dir = DIR_KEY[nxt.d] or "up"      -- cambio de mapa (puerta): la direccion que se usaba al entrar
+    dir = DIR_KEY[nxt.d] or "up"      -- map change (door): the direction used when entering
   end
   nav.stuck = nav.stuck + 1
   if nav.stuck > 120 then
-    -- atascado (NPC en medio o un cartel abierto): soltar, cerrar texto y reintentar
+    -- stuck (NPC in the way or a sign open): release, close text and retry
     nav.stuck, nav.tries = 0, nav.tries + 1
     if nav.tries > 12 then return "fail" end
     tap("B", 20)
@@ -2148,13 +2148,13 @@ end
 
 -- ------------------------------ Control ------------------------------
 local stopBot
--- Detenerse con un mensaje: se muestra, se guarda en el log y se avisa al celular
+-- Stop with a message: shown, written to the log and sent to the phone
 local function halt(msg)
   stopBot()
   bot.msg = msg
   logLine(msg)
   notify(msg)
-  pcall(emu.pause)            -- pausar para que lo veas
+  pcall(emu.pause)            -- pause so you see it
 end
 local function leadOk()
   local m = lead()
@@ -2169,8 +2169,8 @@ local function needHeal(m)
   return nil
 end
 
--- Curado de verdad: PS al maximo, sin estado alterado y PP de todos los ataques al maximo
--- (antes solo se miraban los PS y, si iba al Centro por falta de PP, se iba sin hablar)
+-- Really healed: full HP, no status condition and every move at full PP
+-- (before, only HP was checked and, if it went to the Center for lack of PP, it left without talking)
 local function partyHealed()
   local n = partyCount()
   if n == 0 then return false end
@@ -2217,11 +2217,11 @@ local function beginHeal(reason)
   bot.st, bot.t = "heal_go", 0
 end
 
--- Despues de un combate: decidir que sigue
+-- After a battle: decide what comes next
 local function afterBattleDecide()
   local m = leadOk()
   if not m then halt("No se pudo leer el Pokemon del equipo"); return end
-  -- EVs ganados en el ultimo combate
+  -- EVs gained in the last battle
   if bot.prevEvs then
     local parts = {}
     for st = 1, 6 do
@@ -2249,8 +2249,8 @@ local function afterBattleDecide()
     emu.pause()
     return
   end
-  -- Con Pokerus o Brazal Firme cada combate da 2 o 4 EVs: si falta menos que eso
-  -- y no se permite pasarse, nunca se podria completar.
+  -- With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
+  -- and going over is not allowed, it could never finish.
   if tcfg.target and not CONFIG.allowOvershoot then
     local mult = ((m.pokerus ~= 0) and 2 or 1) * ((m.item == ITEM_MACHO_BRACE) and 2 or 1)
     for s = 1, 6 do
@@ -2265,7 +2265,7 @@ local function afterBattleDecide()
   end
   local why = needHeal(m)
   if why then beginHeal(why); return end
-  -- Si no esta en el punto de entreno (p. ej. perdio y aparecio en el Centro)
+  -- If it is not at the training spot (e.g. it lost and woke up at the Center)
   local p = playerPos()
   if bot.spot and p and not (p.g == bot.spot.g and p.n == bot.spot.n and math.abs(p.x - bot.spot.x) <= 2
      and math.abs(p.y - bot.spot.y) <= 2) then
@@ -2280,8 +2280,8 @@ local function afterBattleDecide()
   startWalk()
 end
 
--- Solo un Train Bot a la vez: si quedo otra ventana de Lua corriendo (por ejemplo
--- una version vieja), las dos pulsarian botones al mismo tiempo.
+-- Only one Train Bot at a time: if another Lua window was left running (for example
+-- an old version), both would press buttons at the same time.
 local MY_TOKEN = string.format("%d%d", math.random(100000, 999999), math.random(100000, 999999))
 local LOCK_FILE = "train_running.lock"
 local lastLockWrite = -1
@@ -2335,7 +2335,7 @@ stopBot = function()
   queue = {}
 end
 
--- ------------------------------ Combate ------------------------------
+-- ------------------------------ Battle ------------------------------
 local function enterBattle(returnTo)
   queue = {}
   bot.st, bot.t = "battle", 0
@@ -2377,9 +2377,9 @@ local function stepBattle()
   end
   if #queue > 0 then return end
 
-  -- Escena de evolucion: el juego la muestra con gMain.inBattle todavia activo,
-  -- pero con otra pantalla (callback2 distinto al del combate). Antes aqui se
-  -- seguia pulsando B para los textos y eso cancelaba la evolucion.
+  -- Evolution scene: the game shows it with gMain.inBattle still set,
+  -- but on another screen (callback2 differs from the battle one). Before, this
+  -- kept pressing B for the texts and that cancelled the evolution.
   if bot.cbBattle and read32(A.callback2) ~= bot.cbBattle then
     bot.evoT = (bot.evoT or 0) + 1
     if CONFIG.evolve then
@@ -2390,19 +2390,19 @@ local function stepBattle()
         bot.msg = "Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
         notify("Tu Pokemon evoluciono a " .. speciesName(m.species) .. ": termina la escena y el bot sigue solo")
         print(bot.msg)
-        pcall(emu.pause)        -- pausa: quita la pausa, termina la escena y el bot sigue solo
+        pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
         return
       end
-      -- La animacion avanza sola; solo si se queda en un texto mucho rato, pulsar A
+      -- The animation advances by itself; only if it stays on a text for a long time, press A
       if bot.evoT > 1800 and bot.evoT % 60 == 0 then tap("A", 10) end
     else
-      tap("B", 6)                                       -- mantener B cancela la evolucion
+      tap("B", 6)                                       -- holding B cancels the evolution
     end
     return
   end
   bot.evoT = 0
 
-  -- Preguntas de "aprender ataque"
+  -- "Learn move" prompts
   local sp = read32(A.scriptPtr)
   local op = (sp >= 0x08000000 and sp < 0x0A000000) and read8(sp) or 0
   if op == OP_LEARNMOVE or op == OP_STOPLEARNING then
@@ -2420,7 +2420,7 @@ local function stepBattle()
       local slot, new, old = nil, nil, nil
       if mode == "auto" then slot, new, old = planLearn() end
       if slot then
-        -- "Olvidar un ataque para aprender X?" -> SI, y luego elegir cual en la pantalla de datos
+        -- "Forget a move to learn X?" -> YES, then pick which one on the summary screen
         if read8(A.yesNoCursor) ~= 0 then tap("up", 6)
         else
           tap("A", 12)
@@ -2431,7 +2431,7 @@ local function stepBattle()
         tap("B", 12)                                    -- -> NO
       end
     else
-      if read8(A.yesNoCursor) ~= 0 then tap("up", 6) else tap("A", 12) end  -- "Dejar de aprender?" -> SI
+      if read8(A.yesNoCursor) ~= 0 then tap("up", 6) else tap("A", 12) end  -- "Stop learning?" -> YES
     end
     return
   end
@@ -2456,7 +2456,7 @@ local function stepBattle()
   end
   if waiting and cmd == CMD_CHOOSEMOVE then
     if bot.sawMove and bot.lastMoveSlot then
-      -- volvio a pedir ataque sin pasar por el menu: ese ataque no se pudo usar
+      -- it asked for a move again without going through the menu: that move could not be used
       bot.blocked[bot.lastMoveSlot] = true
     end
     local slot = bestMove(bot.blocked)
@@ -2469,7 +2469,7 @@ local function stepBattle()
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
   end
-  -- Textos del combate: B (nunca elige SI por error ni entra en menus)
+  -- Battle texts: B (never picks YES by mistake nor enters menus)
   tap("B", 10)
 end
 
@@ -2495,15 +2495,15 @@ local function stepAfter()
       if r == "heal_back" and m2 and needHeal(m2) then beginHeal(needHeal(m2)); return end
       bot.st, bot.t = r, 0
       if r == "heal_go" then
-        -- retomar desde donde quedo
+        -- resume from where it stopped
       end
       return
     end
     afterBattleDecide()
     return
   end
-  -- Fuera del mapa (textos, evolucion): B cancela la evolucion y avanza textos.
-  -- En el mapa no se pulsa A (podria hablar con alguien o leer un cartel).
+  -- Off the map (texts, evolution): B cancels the evolution and advances texts.
+  -- On the map A is not pressed (it could talk to someone or read a sign).
   if #queue == 0 and not inOverworld() then
     if CONFIG.evolve then tap("A", 10) else tap("B", 6) end
   end
@@ -2511,7 +2511,7 @@ local function stepAfter()
 end
 
 local function stepManual()
-  -- El jugador decide; el bot espera a que vuelva el mapa o termine la pregunta
+  -- The player decides; the bot waits for the map to come back or the prompt to end
   if bot.manualFrom == "learn" then
     bot.t = bot.t + 1
     local sp = read32(A.scriptPtr)
@@ -2519,7 +2519,7 @@ local function stepManual()
     if inBattle() and op ~= OP_LEARNMOVE and op ~= OP_STOPLEARNING then
       bot.msg = ""; bot.st = "battle"; return
     end
-    -- Nadie respondio: decidir solo (solo si sigue en la pregunta, no en la pantalla de datos)
+    -- Nobody answered: decide alone (only if still on the prompt, not on the summary screen)
     local onPrompt = not bot.cbBattle or read32(A.callback2) == bot.cbBattle
     if CONFIG.askTimeout and bot.t > CONFIG.askTimeout * 60 and onPrompt and inBattle() then
       bot.learnForce = "auto"
@@ -2538,7 +2538,7 @@ local function stepManual()
   end
 end
 
--- Pantalla de datos: elegir el ataque que se olvida
+-- Summary screen: pick the move to forget
 local function stepLearnPick()
   bot.t = bot.t + 1
   if #queue > 0 then return end
@@ -2546,7 +2546,7 @@ local function stepLearnPick()
   local L = bot.learn
   if not bot.sumSeen then
     if inSummary then bot.sumSeen = true; bot.t = 0
-    elseif bot.t > 90 then bot.st = "battle" end    -- el A no entro: volver a intentarlo
+    elseif bot.t > 90 then bot.st = "battle" end    -- the A did not register: try again
     return
   end
   if not inSummary then
@@ -2557,7 +2557,7 @@ local function stepLearnPick()
     bot.st, bot.t = "battle", 0
     return
   end
-  if bot.picked or bot.t < 60 then return end        -- esperar el fundido y el grito
+  if bot.picked or bot.t < 60 then return end        -- wait for the fade and the cry
   local c = read8(A.sumCursor)
   local function abort(why)
     tap("B", 30); bot.picked = true; bot.learnForce = "never"
@@ -2565,7 +2565,7 @@ local function stepLearnPick()
     notify("No se pudo elegir el ataque a olvidar: " .. why)
   end
   if not bot.probe then
-    -- comprobar que la direccion del cursor es la correcta: abajo debe pasar de 0 a 1
+    -- check that the cursor direction is right: down must go from 0 to 1
     if c == 1 then bot.probe = true
     elseif bot.t > 400 then abort("el cursor no responde")
     elseif c == 0 then tap("down", 20)
@@ -2588,7 +2588,7 @@ local function stepWalk()
     if vertical then d1, d2 = "up", "down" end
     walkToggle = not walkToggle
     local dir = walkToggle and d1 or d2
-    -- No alejarse del punto de entreno: si quedo a un lado, volver hacia el
+    -- Don't drift from the training spot: if it ended up to one side, walk back to it
     local p = playerPos()
     if p and bot.spot and p.g == bot.spot.g and p.n == bot.spot.n then
       local off = vertical and (p.y - bot.spot.y) or (p.x - bot.spot.x)
@@ -2624,7 +2624,7 @@ local function stepNurse()
   tap("A", 14)
 end
 
--- Casilla que cura al pisarla (zona purificada): solo cerrar el mensaje y esperar
+-- Tile that heals when stepped on (purified zone): just close the message and wait
 local function stepHealTile()
   bot.t = bot.t + 1
   if #queue > 0 then return end
@@ -2671,7 +2671,7 @@ local function handleHotkeys()
   elseif pressed("6", keys) then
     recHotkey()
   elseif pressed("8", keys) then
-    -- Modo inspeccion: equipo 1..6, luego el rival (si hay combate), luego apagado
+    -- Inspection mode: party 1..6, then the opponent (if in battle), then off
     local n = partyCount()
     local nxt = (bot.inspect or 0) + 1
     while true do
@@ -2706,7 +2706,7 @@ local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate"
   heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",
   heal_back = "Volviendo al punto" }
 
--- Bloque de progreso de EVs: barra por estadistica, total, sesion, ritmo y tiempo estimado
+-- EV progress block: bar per stat, total, session, rate and estimated time
 local function evBlock(m, line)
   local shown = 0
   for st = 1, 6 do
@@ -2762,8 +2762,8 @@ local function evLine(m)
   return "EVs " .. table.concat(t, "  ")
 end
 
--- ------------------------- Modo inspeccion ---------------------------
-local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- orden de naturaleza en el juego
+-- ------------------------- Inspection mode ---------------------------
+local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game
 local function drawInspect()
   local which = bot.inspect
   local addr = (which == 7) and A.enemy or (A.party + (which - 1) * 0x64)
@@ -2788,10 +2788,10 @@ local function drawInspect()
   line(string.format("%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and "  * SHINY *" or ""),
        shiny and "green" or nil)
   line(string.format("%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
-  -- Stats reales (en memoria: PS max 0x58, At 0x5A, Df 0x5C, Vel 0x5E, AtE 0x60, DfE 0x62)
+  -- Real stats (in memory: max HP 0x58, Atk 0x5A, Def 0x5C, Spe 0x5E, SpA 0x60, SpD 0x62)
   local st = { read16(addr + 0x58), read16(addr + 0x5A), read16(addr + 0x5C), read16(addr + 0x60), read16(addr + 0x62),
                read16(addr + 0x5E) }
-  local ev = { m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }   -- orden de pantalla
+  local ev = { m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }   -- screen order
   local function row(label, t, fmt)
     local parts = {}
     for i = 1, 6 do parts[i] = string.format(fmt or "%4d", t[i]) end
@@ -2858,7 +2858,7 @@ local function draw()
     end
   end
   if bot.panel == 2 then
-    -- Para revisar las direcciones en otros idiomas: en el menu LUCHA/HUIR "Menu" debe ser 18 y "Espera" 1
+    -- To check the addresses in other languages: on the FIGHT/RUN menu "Menu" must be 18 and "Espera" 1
     local p = playerPos()
     line(string.format("Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
       band(read32(A.execFlags), 1), band(read8(A.actionCursor), 3), band(read8(A.moveCursor), 3),

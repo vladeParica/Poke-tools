@@ -1,6 +1,6 @@
-"""Escenarios del Farm Bot en el simulador (mock_farm.lua).
-Uso:  python farmbot/tests/run_farm.py [-v]
-Sale con codigo 1 si algun escenario no da el resultado esperado.
+"""Farm Bot scenarios in the simulator (mock_farm.lua).
+Usage:  python farmbot/tests/run_farm.py [-v]
+Exits with code 1 if any scenario doesn't give the expected result.
 """
 import json
 import os
@@ -34,12 +34,12 @@ def line(g, n, x0, y0, x1, y1, d):
     return out
 
 
-# Ruta al Centro del simulador: (8,10) -> (10,10) -> (10,3) -> puerta -> enfermera (5,3)
+# Simulator route to the Center: (8,10) -> (10,10) -> (10,3) -> door -> nurse (5,3)
 HEAL_ROUTE = 'GO ' + pts([(3, 20, 8, 10, 0)], line(3, 20, 9, 10, 10, 10, 4), line(3, 20, 10, 9, 10, 3, 2),
                          line(4, 1, 5, 8, 5, 3, 2)) + '\n' + \
              'BACK ' + pts([(4, 1, 5, 3, 0)], line(4, 1, 5, 4, 5, 8, 1), line(3, 20, 10, 3, 10, 10, 1),
                            line(3, 20, 9, 10, 8, 10, 3)) + '\n'
-# Ruta de entrenadores: (8,10) -> (15,10) y vuelta
+# Trainer route: (8,10) -> (15,10) and back
 TRAINER_ROUTE = 'GO ' + pts([(3, 20, 8, 10, 0)], line(3, 20, 9, 10, 15, 10, 4)) + '\n' + \
                 'BACK ' + pts([(3, 20, 15, 10, 0)], line(3, 20, 14, 10, 8, 10, 3)) + '\n'
 
@@ -72,7 +72,7 @@ CASES = [
     ('objetos', 'objetos', {'mode': 'objetos', 'itemTarget': 4},
      lambda r: 'PAUSED' in r['err'] and r['taken'] >= 4 and 'FARMEO COMPLETO' in r['log'] and r['menus'] >= 2),
     ('mochila llena', 'bagfull', {'mode': 'objetos', 'itemTarget': 4},
-     # halt() pausa con pcall(emu.pause): en el simulador acaba en IDLE con el bot detenido
+     # halt() pauses with pcall(emu.pause): in the simulator it ends IDLE with the bot stopped
      lambda r: ('PAUSED' in r['err'] or 'IDLE' in r['err']) and 'mochila no tiene espacio' in r['log'] and r['taken'] == 0),
     ('objetos en pausa', 'pausa', {'mode': 'objetos', 'takeItems': 'pause'},
      lambda r: ('PAUSED' in r['err'] or 'IDLE' in r['err']) and 'Quita los objetos' in r['log'] and r['menus'] == 0),

@@ -1,6 +1,6 @@
-"""Genera FRLG_TrainBot.lua (CRLF, para Windows) a partir de src/.
-src/train_tables.lua se regenera con tools/gen_tables.py (datos de pret/pokefirered).
-Uso:  python trainbot/build.py
+"""Generates FRLG_TrainBot.lua (CRLF, for Windows) from src/.
+src/train_tables.lua is regenerated with tools/gen_tables.py (pret/pokefirered data).
+Usage:  python trainbot/build.py
 """
 import os
 H = os.path.dirname(os.path.abspath(__file__))

@@ -1,5 +1,5 @@
 import os, tempfile
-os.chdir(os.path.dirname(os.path.abspath(__file__)))  # las pruebas corren desde shinybot/tests
+os.chdir(os.path.dirname(os.path.abspath(__file__)))  # the tests run from shinybot/tests
 import lupa.lua51 as L, time, sys
 base=open('../FRLG_ShinyBot.lua').read()
 cases=[

@@ -1,4 +1,4 @@
--- Generado desde pret/pokefirered (gen_tables.py)
+-- Generated from pret/pokefirered (gen_tables.py)
 local TT_MOVE = {
 [1]={40,0,100,0,35,0,"POUND"},
 [2]={50,1,100,43,25,0,"KARATE CHOP"},

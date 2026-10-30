@@ -1,9 +1,9 @@
-/* Busca en TODO el ciclo del RNG posiciones Method 1 (estaticos, regalos,
- * iniciales) shiny para una partida, con naturaleza e IVs minimos.
- * Imprime: estado(s1 = llamada del PID bajo) PID naturaleza PS At Df AtE DfE Vel total
- * Para semillas: seeds_near_target.py con el estado ANTERIOR a s1.
- * Compilar:  gcc -O2 -o static static_search.c -DTID=<tu TID> -DSID=<tu SID>
- * Editar naturalezas (3 Adamant, 23 Careful) y el total minimo abajo. */
+/* Searches the WHOLE RNG cycle for shiny Method 1 positions (statics, gifts,
+ * starters) for a save, with minimum nature and IVs.
+ * Prints: state(s1 = PID-low call) PID nature HP Atk Def SpA SpD Spe total
+ * For seeds: seeds_near_target.py with the state BEFORE s1.
+ * Build:  gcc -O2 -o static static_search.c -DTID=<your TID> -DSID=<your SID>
+ * Edit the natures (3 Adamant, 23 Careful) and the minimum total below. */
 #include <stdio.h>
 #include <stdint.h>
 #if !defined(TID) || !defined(SID)

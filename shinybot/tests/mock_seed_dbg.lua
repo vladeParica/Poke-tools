@@ -1,10 +1,10 @@
 REG_ITEM = rawget(_G, "REG_ITEM")
 USER_RESET_AT = rawget(_G, "USER_RESET_AT")
--- Simulador minimo de VBA-rr + juego FRLG para probar la logica del bot
+-- Minimal VBA-rr + FRLG game simulator to test the bot logic
 local MODE_TO_TEST, SHINY_AT, CLEAR_ON_RESET, RNG = ...
 SHINY_AT = SHINY_AT or 3
 
--- ---------- bit (semantica LuaBitOp: resultados con signo 32 bits) ----------
+-- ---------- bit (LuaBitOp semantics: signed 32-bit results) ----------
 local function tou(x) x = x % 4294967296; return x end
 local function tos(x) x = tou(x); if x >= 2147483648 then return x - 4294967296 end return x end
 local function bitop(a, b, f)
@@ -73,7 +73,7 @@ local function randPid(shiny)
   return hi * 65536 + lo
 end
 
--- ---------- estado del "juego" ----------
+-- ---------- "game" state ----------
 local frame, held, prevHeld = 0, {}, {}
 local realFrame = 0
 local function nextSeed(x)
@@ -140,7 +140,7 @@ local function gameFrame()
   if g.loadAt then
     if frame >= g.loadAt then
       loadSave(); g.loadAt = nil
-      w8(SB1 + 0x30D0 + 0x13, 0)        -- roamer inactivo en el save
+      w8(SB1 + 0x30D0 + 0x13, 0)        -- roamer inactive in the save
       w8(PCNT, 2)
     end
     return
@@ -213,7 +213,7 @@ local function gameFrame()
   end
 end
 
--- ---------- API emulador ----------
+-- ---------- emulator API ----------
 local MAXF = 60000
 local pendingPad = {}
 joypad = { set = function(_, t) pendingPad = t or {} end }
@@ -241,7 +241,7 @@ emu = {
 _G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end io.write("  | " .. table.concat(t, " ") .. "\n") end
 io = { open = function() return nil end, write = io.write }
 
--- pulsar 8 (cambiar modo) las veces necesarias y 7 para iniciar
+-- press 8 (change mode) as many times as needed and 7 to start
 local modeIndex = (MODE_TO_TEST == "seed") and 10 or (({ wild = 1, static = 2, gift = 3, roamer = 4 })[MODE_TO_TEST] + (RNG and 3 or 0))
 local f = 300
 for i = 2, modeIndex do hotkeys[f] = { ["8"] = true }; f = f + 3 end

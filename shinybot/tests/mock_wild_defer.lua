@@ -1,10 +1,10 @@
 REG_ITEM = rawget(_G, "REG_ITEM")
 USER_RESET_AT = rawget(_G, "USER_RESET_AT")
--- Simulador minimo de VBA-rr + juego FRLG para probar la logica del bot
+-- Minimal VBA-rr + FRLG game simulator to test the bot logic
 local MODE_TO_TEST, SHINY_AT, CLEAR_ON_RESET, RNG = ...
 SHINY_AT = SHINY_AT or 3
 
--- ---------- bit (semantica LuaBitOp: resultados con signo 32 bits) ----------
+-- ---------- bit (LuaBitOp semantics: signed 32-bit results) ----------
 local function tou(x) x = x % 4294967296; return x end
 local function tos(x) x = tou(x); if x >= 2147483648 then return x - 4294967296 end return x end
 local function bitop(a, b, f)
@@ -45,7 +45,7 @@ end
 local WD = 0x020386D0
 local HDR = 0x083C9CB8
 local function writeRom()
-  -- tabla de encuentros: 40 mapas, el nuestro es grupo 3 mapa 19
+  -- encounter table: 40 maps, ours is group 3 map 19
   for i = 0, 39 do
     local a = HDR + i * 20
     w8(a, 3); w8(a + 1, i); w8(a + 2, 0); w8(a + 3, 0)
@@ -54,7 +54,7 @@ local function writeRom()
     w8(info, 21); w32(info + 4, info + 8)
     for k = 0, 11 do
       local m = info + 8 + k * 4
-      w8(m, 3); w8(m + 1, 5); w16(m + 2, (k % 4 == 0) and 25 or (16 + k))   -- Pikachu en espacios 0,4,8
+      w8(m, 3); w8(m + 1, 5); w16(m + 2, (k % 4 == 0) and 25 or (16 + k))   -- Pikachu in slots 0,4,8
     end
   end
   w8(HDR + 40 * 20, 0xFF)
@@ -93,7 +93,7 @@ local function randPid(shiny)
   return hi * 65536 + lo
 end
 
--- ---------- estado del "juego" ----------
+-- ---------- "game" state ----------
 local frame, held, prevHeld = 0, {}, {}
 local realFrame = 0
 local function nextSeed(x)
@@ -141,7 +141,7 @@ local function gameFrame()
   if g.loadAt then
     if frame >= g.loadAt then
       loadSave(); g.loadAt = nil
-      w8(SB1 + 0x30D0 + 0x13, 0)        -- roamer inactivo en el save
+      w8(SB1 + 0x30D0 + 0x13, 0)        -- roamer inactive in the save
       w8(PCNT, 2)
     end
     return
@@ -160,7 +160,7 @@ local function gameFrame()
   end
   if MODE_TO_TEST == "wild" then
     if not g.battle then
-      -- inercia: si sueltas justo al llegar a la casilla, da un paso mas
+      -- inertia: if you release right when reaching the tile, it takes one more step
       local realHeld = held.left or held.right
       if not realHeld and not g.momentum and not g.momDone and g.walkHeld > 0 and g.walkHeld % 16 == 0 then
         g.momentum = 16; g.momDir = g.lastDir or "right"
@@ -177,7 +177,7 @@ local function gameFrame()
         w16(SB1, (r16(SB1) + (held.left and -1 or 1)) % 65536)      -- posicion
         local function Rand() local x = nextSeed(r32(0x03005000)); w32(0x03005000, x); return math.floor(x / 65536) end
         local function WRand() local x = (r32(WD) * 1103515245 + 12345) % 4294967296
-          -- multiplicacion exacta
+          -- exact multiplication
           local lo, hi = r32(WD) % 65536, math.floor(r32(WD) / 65536)
           local a = 0x41C6 * lo + hi * 0x4E6D
           x = (0x4E6D * lo + (a % 65536) * 65536 + 0x3039) % 4294967296
@@ -204,7 +204,7 @@ local function gameFrame()
             g.battle = { start = frame, cx = 0, cy = 0, sub = false, ending = nil }
           else
             w16(WD + 6, r16(WD + 6) + 21)
-            for _ = 1, frame % 3 do Rand() end      -- el juego gasta RNG de mas en algunos pasos
+            for _ = 1, frame % 3 do Rand() end      -- the game spends extra RNG on some steps
           end
         end
       end
@@ -261,7 +261,7 @@ local function gameFrame()
   end
 end
 
--- ---------- API emulador ----------
+-- ---------- emulator API ----------
 local MAXF = 3000000
 local pendingPad = {}
 joypad = { set = function(_, t) pendingPad = t or {} end }
@@ -290,7 +290,7 @@ emu = {
 _G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end io.write("  | " .. table.concat(t, " ") .. "\n") end
 io = { open = function() return nil end, write = io.write }
 
--- pulsar 8 (cambiar modo) las veces necesarias y 7 para iniciar
+-- press 8 (change mode) as many times as needed and 7 to start
 local modeIndex = (RNG and MODE_TO_TEST == "wild") and 8 or (({ wild = 1, static = 2, gift = 3, roamer = 4 })[MODE_TO_TEST] + (RNG and 3 or 0))
 local f = 300
 for i = 2, modeIndex do hotkeys[f] = { ["8"] = true }; f = f + 3 end

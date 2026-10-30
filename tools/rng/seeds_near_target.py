@@ -1,18 +1,18 @@
-"""Semillas iniciales (16 bits) desde las que se llega a un estado del RNG.
+"""Initial seeds (16 bits) from which an RNG state can be reached.
 
-Uso:  python seeds_near_target.py <estado_hex> [max_avances]
-  estado_hex   estado del RNG ANTES de la primera llamada del objetivo
-               (para wild_h1_search.c: la primera columna; para estaticos:
-               el estado anterior a la llamada del PID bajo)
-  max_avances  distancia maxima (por defecto 2.000.000: con la Tele Pokemon
-               el bot llega en 1-2 minutos)
+Usage:  python seeds_near_target.py <state_hex> [max_advances]
+  state_hex     RNG state BEFORE the target's first call
+                (for wild_h1_search.c: the first column; for statics:
+                the state before the PID-low call)
+  max_advances  maximum distance (default 2,000,000: with the Teachy TV
+                the bot gets there in 1-2 minutes)
 
-Imprime la lista lista para "initialSeeds" del FRLG_ShinyBot.json y cuantas
-"clases" (semilla mod 64) cubre: cuantas mas, mas probable caer en un reinicio.
+Prints the list ready for "initialSeeds" in FRLG_ShinyBot.json and how many
+"classes" (seed mod 64) it covers: the more, the likelier a reset hits one.
 """
 import sys
 M = 0xFFFFFFFF
-pv = lambda s: (s * 0xEEB9EB65 + 0x0A3561A1) & M   # LCRNG hacia atras
+pv = lambda s: (s * 0xEEB9EB65 + 0x0A3561A1) & M   # LCRNG backwards
 
 def seeds(target, limit=2000000):
     s, out = target, []

@@ -2,8 +2,8 @@ M=0xFFFFFFFF
 A,C=0x41C64E6D,0x6073; RA,RC=0xEEB9EB65,0x0A3561A1
 nx=lambda s:(s*A+C)&M; pv=lambda s:(s*RA+RC)&M
 N="Hardy Lonely Brave Adamant Naughty Bold Docile Relaxed Impish Lax Timid Hasty Serious Jolly Naive Modest Mild Quiet Bashful Rash Calm Gentle Sassy Careful Quirky".split()
-# Uso: python static_perfect_positions.py [TID SID [TID SID ...]]
-# Sin argumentos lista las posiciones; con TID/SID dice en cuales partidas son shiny.
+# Usage: python static_perfect_positions.py [TID SID [TID SID ...]]
+# Without arguments it lists the positions; with TID/SID it says in which saves they are shiny.
 import sys
 _a=[int(x) for x in sys.argv[1:]]
 if len(_a)%2: sys.exit("Uso: python static_perfect_positions.py [TID SID [TID SID ...]]")

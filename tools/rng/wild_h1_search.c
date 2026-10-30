@@ -1,14 +1,14 @@
-/* Busca en TODO el ciclo del RNG (2^32) encuentros salvajes Method H-1 shiny
- * para una partida, con naturaleza e IVs minimos, y que caigan en un hueco
- * (slot) de la tabla de encuentros que sea la especie buscada.
- * Imprime: estado_inicial PID naturaleza PS At Df AtE DfE Vel slot k
- * (estado_inicial = estado del RNG justo antes de la llamada del slot;
- *  k = pares de PID rechazados por no coincidir con la naturaleza).
- * Luego usa seeds_near_target.py con estado_inicial para sacar semillas.
- * Compilar:  gcc -O2 -o wild wild_h1_search.c -DTID=<tu TID> -DSID=<tu SID> [-DNAT1=.. -DNAT2=.. -DMASK=..]
- * Naturalezas: indice = PID % 25 (3 Adamant, 10 Timid, 13 Jolly, 15 Modest, 23 Careful...)
- * MASK: bit N = slot N valido (Torre Pokemon 3F-6F: todos menos 7 y 9 = 0xD7F;
- *       Tunel Roca: slots 0 y 4 = 0x011; Cueva Alterada: 0xFFF). */
+/* Searches the WHOLE RNG cycle (2^32) for shiny Method H-1 wild encounters
+ * for a save, with minimum nature and IVs, that land on an encounter-table
+ * slot holding the wanted species.
+ * Prints: initial_state PID nature HP Atk Def SpA SpD Spe slot k
+ * (initial_state = RNG state right before the slot call;
+ *  k = PID pairs rejected for not matching the nature).
+ * Then use seeds_near_target.py with initial_state to get seeds.
+ * Build:  gcc -O2 -o wild wild_h1_search.c -DTID=<your TID> -DSID=<your SID> [-DNAT1=.. -DNAT2=.. -DMASK=..]
+ * Natures: index = PID % 25 (3 Adamant, 10 Timid, 13 Jolly, 15 Modest, 23 Careful...)
+ * MASK: bit N = slot N valid (Pokemon Tower 3F-6F: all but 7 and 9 = 0xD7F;
+ *       Rock Tunnel: slots 0 and 4 = 0x011; Altering Cave: 0xFFF). */
 #include <stdio.h>
 #if !defined(TID) || !defined(SID)
 #error "Compila con -DTID=<tu TID> -DSID=<tu SID>"
@@ -22,7 +22,7 @@
 #ifndef MASK
 #define MASK 0xD7F
 #endif
-/* filtro de IVs: editar a gusto */
+/* IV filter: edit as you like */
 #define IV_OK(hp,at,df,sa,sd,sp) ((hp)>=26 && (sa)>=29 && (sp)>=29)
 #include <stdint.h>
 #define NX(s) ((s)*0x41C64E6Du+0x6073u)

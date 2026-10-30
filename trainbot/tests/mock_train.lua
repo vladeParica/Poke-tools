@@ -1,4 +1,4 @@
--- Simulador de VBA-rr + FRLG para probar FRLG_TrainBot (mapa, combate, Centro Pokemon)
+-- VBA-rr + FRLG simulator to test FRLG_TrainBot (map, battle, Pokemon Center)
 local SCEN = ...
 SCEN = SCEN or "evs"
 math.randomseed(12345)
@@ -31,7 +31,7 @@ local function w16(a, v) v = v % 65536; w8(a, v % 256); w8(a + 1, math.floor(v /
 local function w32(a, v) v = tou(v); for i = 0, 3 do w8(a + i, v % 256); v = math.floor(v / 256) end end
 memory = { readdwordunsigned = r32, readwordunsigned = r16, readbyte = r8, writedword = w32, writebyte = w8 }
 
--- direcciones (USA)
+-- addresses (USA)
 local ENEMY, PARTY, PCNT = 0x0202402C, 0x02024284, 0x02024029
 local SB1P, SB2P, SB1, SB2 = 0x03005008, 0x0300500C, 0x0202552C, 0x02024588
 local GMAIN = 0x030030F0
@@ -52,7 +52,7 @@ w32(SB2 + 0xA, TID + SID * 65536)
 w8(AVATAR + 5, 0)
 w32(CB2, CB_OW)
 
--- ---------------- codificar un Pokemon ----------------
+-- ---------------- encode a Pokemon ----------------
 local ORDER = { "GAEM", "GAME", "GEAM", "GEMA", "GMAE", "GMEA", "AGEM", "AGME", "AEGM", "AEMG", "AMGE", "AMEG",
                 "EGAM", "EGMA", "EAGM", "EAMG", "EMGA", "EMAG", "MGAE", "MGEA", "MAGE", "MAEG", "MEGA", "MEAG" }
 local function encodeMon(addr, m)
@@ -172,7 +172,7 @@ local function battleFrame()
       if b.ehp <= 0 then
         stats.fought = stats.fought + 1
         textPhase(2, function()
-          -- EVs como MonGainEVs
+          -- EVs like MonGainEVs
           local y = SPECIES[b.sp]
           local mult = (leadM.pokerus ~= 0) and 2 or 1
           local total = 0
@@ -357,10 +357,10 @@ local printed = {}
 _G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end
   printed[#printed + 1] = table.concat(t, " ") end
 
--- Grabacion de la ruta (simula al jugador) o inicio directo
+-- Route recording (simulates the player) or direct start
 local script = {}
 if SCEN == "record" then
-  -- el "jugador" camina: 6, ida hasta la enfermera, 6, vuelta, 6
+  -- the "player" walks: 6, there to the nurse, 6, back, 6
   local f = 100
   local function key(k) hotkeys[f] = { [k] = true }; f = f + 5 end
   local function walk(dir, n) for _ = 1, n do script[#script + 1] = { at = f, dir = dir }; f = f + 20 end end

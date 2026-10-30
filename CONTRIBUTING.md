@@ -8,7 +8,7 @@ Thanks for wanting to improve the bots. Before you start, read the
 - **Don't break what already works.** A change in one mode must not affect the others.
 - **The Shiny Bot only searches.** Other kinds of features go in a separate bot ([ADR-0003](docs/00-project/adr/0003-separate-bots.md)).
 - **Everything the player sees in the game is in Spanish** (panel, console, logs, JSON comments).
-  Repository documentation and commit messages are in English.
+  Repository documentation, code comments and commit messages are in English.
 - **The repo is generic:** nothing from a specific save file (TID/SID, seeds computed for it).
   Use neutral values in examples (TID 12345 / SID 54321).
 - **Never commit ROMs, save files, savestates or a JSON with a real `notify`.**

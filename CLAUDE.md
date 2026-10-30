@@ -8,7 +8,8 @@ losing what was learned.
 
 - **Languages:** the user plays in Spanish, so everything the player sees **in the game**
   (panel, console, log, JSON comments) is **in Spanish**. Repository documentation
-  (README, `docs/`, CONTRIBUTING…) and commit messages are **in English**. Talk to the user
+  (README, `docs/`, CONTRIBUTING…), **code comments** (Lua, Python, C, JS, tests and mocks)
+  and commit messages are **in English**. Talk to the user
   in Spanish.
 - **Don't break what already works.** A change in one mode must not touch the others.
   The user asked for it explicitly: "estamos calibrando todos, la idea es mejorarlos, no
