@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poke-tools · Configurador</title>
+  <meta name="description" content="Configurador visual de los bots de Poke-tools para Pokémon Rojo Fuego y Verde Hoja.">
+  <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="mascot" id="mascot" aria-hidden="true"></span>
+      <div>
+        <h1>Configurador</h1>
+        <small>Poke-tools · Rojo Fuego / Verde Hoja</small>
+      </div>
+    </div>
+
+    <nav class="bot-tabs" role="tablist" aria-label="Bot">
+      <button role="tab" id="tab-shinybot" data-bot="shinybot" aria-selected="true"></button>
+      <button role="tab" id="tab-trainbot" data-bot="trainbot" aria-selected="false"></button>
+    </nav>
+
+    <label class="skin-picker">
+      <span id="skin-icon"></span>
+      <span class="sr-only">Skin</span>
+      <select id="skin-select" title="Skin de la interfaz"></select>
+    </label>
+
+    <div class="actions">
+      <button class="btn ghost" id="btn-skins" title="Gestionar skins"><span data-icon="palette"></span><span class="lbl">Skins</span></button>
+      <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" hidden><span data-icon="folder"></span><span class="lbl">Abrir carpeta</span></button>
+      <button class="btn ghost" id="btn-open" title="Abrir un JSON existente"><span data-icon="upload"></span><span class="lbl">Abrir JSON</span></button>
+      <button class="btn primary" id="btn-save" title="Guardar (Ctrl+S)"><span data-icon="save"></span><span class="lbl">Guardar</span></button>
+    </div>
+    <input type="file" id="file-open" accept=".json,application/json" hidden>
+  </header>
+
+  <div class="layout">
+    <main id="form" aria-live="polite"></main>
+
+    <aside>
+      <section class="card status" aria-labelledby="status-title">
+        <h3 id="status-title"><span data-icon="check"></span>Estado</h3>
+        <div class="summary" id="status-summary"></div>
+        <ul class="issues" id="issues"></ul>
+        <p class="target-file" id="target-file"></p>
+      </section>
+      <section class="card preview" aria-labelledby="preview-title">
+        <h3 id="preview-title"><span data-icon="copy"></span><span id="preview-name">JSON</span>
+          <span class="ptools"><button class="btn small" id="btn-copy" type="button">Copiar</button></span></h3>
+        <pre id="preview" tabindex="0"></pre>
+      </section>
+    </aside>
+  </div>
+
+  <footer>
+    Guarda el JSON en la misma carpeta que el <code>.lua</code> del bot; en el juego pulsa <b>0</b> para recargarlo.
+    · <a href="../README.md">Poke-tools</a> · <a href="skins/README.md">Crear tu propio skin</a>
+  </footer>
+
+  <dialog id="skins-dialog" class="card">
+    <form method="dialog">
+      <header><span data-icon="palette" class="sec-icon"></span>Skins</header>
+      <div class="body">
+        <p class="help">Un skin cambia colores, fuentes y sprites de esta página. Puedes importar uno (archivo <code>.json</code>) o exportar el actual como punto de partida para el tuyo.</p>
+        <ul class="issues" id="skin-list"></ul>
+        <div class="row">
+          <button class="btn" type="button" id="btn-skin-import"><span data-icon="upload"></span>Importar skin</button>
+          <button class="btn" type="button" id="btn-skin-export"><span data-icon="download"></span>Exportar el actual</button>
+          <button class="btn primary" value="close">Cerrar</button>
+        </div>
+        <input type="file" id="skin-file" accept=".json,application/json" hidden>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/schema.js"></script>
+  <script src="js/core.js"></script>
+  <script src="js/sprites.js"></script>
+  <script src="js/skin.js"></script>
+  <script src="skins/pokeball.js"></script>
+  <script src="skins/noche.js"></script>
+  <script src="skins/hoja.js"></script>
+  <script src="skins/shiny.js"></script>
+  <script src="skins/gameboy.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

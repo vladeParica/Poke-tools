@@ -1,0 +1,28 @@
+{
+  "id": "mi-skin",
+  "name": "Mi skin",
+  "author": "",
+  "dark": false,
+  "pixelated": false,
+  "vars": {
+    "--bg": "#f3f0ff",
+    "--bg-pattern": "radial-gradient(circle at 1px 1px, rgba(123, 92, 255, .12) 1px, transparent 0)",
+    "--surface": "#ffffff",
+    "--surface-2": "#f7f5ff",
+    "--border": "#ddd6fe",
+    "--text": "#1e1638",
+    "--muted": "#5f5680",
+    "--accent": "#7b5cff",
+    "--accent-ink": "#ffffff",
+    "--accent-2": "#ffcb05",
+    "--accent-soft": "rgba(123, 92, 255, .12)",
+    "--header-bg": "#2a1d5c",
+    "--header-ink": "#ffffff",
+    "--radius": "14px",
+    "--radius-sm": "9px"
+  },
+  "sprites": {
+    "mascot": "mascot-shiny"
+  },
+  "fonts": []
+}
