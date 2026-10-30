@@ -1,5 +1,11 @@
 # Farm Bot — `FRLG_FarmBot.lua`
 
+> [!WARNING]
+> **Experimental.** The Farm Bot is new and has only been tested in the simulator, not in the
+> real game. It is not stable yet and may fail: menus may be navigated wrongly, items may not
+> be taken, or the bot may stop mid-run. Save your game before using it and keep an eye on it.
+> Please report what you find in an [issue](https://github.com/vladeParica/Poke-tools/issues).
+
 Farms **items, levels or money** in FireRed / LeafGreen. It's a separate script: it doesn't
 change the Shiny Bot or the Train Bot (it starts from a copy of the Train Bot's battle engine,
 see [ADR-0011](../docs/00-project/adr/0011-farm-bot-forked-from-train-bot.md)).
@@ -18,7 +24,7 @@ Pokémon → ITEM → TAKE and checks every step in memory. This automatic menu 
 the **USA** versions (FireRed/LeafGreen 1.0 and 1.1); on other versions, or with
 `"takeItems": "pause"`, the bot pauses and notifies you so you take them yourself.
 
-> Menu automation, trainer battles and the VS Seeker are tested in the simulator. Tell us how
+> Menu automation, trainer battles and the VS Seeker are the least proven parts: tell us how
 > they behave in your game.
 
 ## Usage

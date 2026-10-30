@@ -22,7 +22,7 @@ EVs and levels automatically in **Pokémon FireRed and LeafGreen** (GBA).
 |---|---|
 | [**Shiny Bot**](shinybot/) | Shiny and perfect-IV Pokémon: blind or frame-exact RNG (statics, gifts, roamers, wild), initial seed and SID on a new game |
 | [**Train Bot**](trainbot/) | Exact EVs and levels: picks opponents and moves, learns moves, walks back to the Pokémon Center on its own |
-| [**Farm Bot**](farmbot/) | Farms items (Pickup, Thief), levels or money (trainer rematches with the VS Seeker) |
+| [**Farm Bot**](farmbot/) *(experimental)* | Farms items (Pickup, Thief), levels or money (trainer rematches with the VS Seeker) |
 | [**Configurator**](configurator/) | Visual editor for the bots' settings, with live validation and skins. Open `configurator/index.html` |
 
 > The bots' in-game text (panel, console, logs, JSON comments) is in **Spanish**.
