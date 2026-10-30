@@ -431,7 +431,12 @@ end
 -- ---------------- API ----------------
 local MAXF = 400000
 local pendingPad = {}
-joypad = { set = function(_, t) for k, v in pairs(t or {}) do pendingPad[k] = v end end }
+joypad = { set = function(_, t)
+  if SCEN == "diag" and next(t or {}) then error("BOT PRESSED A BUTTON IN DIAGNOSTIC MODE") end
+  for k, v in pairs(t or {}) do pendingPad[k] = v end
+end }
+-- "diag": the player opens the menus by hand (START, up to POKEMON, picks the first one)
+local userPads = { [400] = "start", [440] = "up", [460] = "up", [480] = "up", [520] = "A", [600] = "A" }
 gui = { text = function() end }
 savestate = { create = function() return {} end, save = function() end, load = function() end }
 local hotkeys = {}
@@ -442,6 +447,7 @@ emu = {
   pause = function() error("PAUSED") end,
   frameadvance = function()
     prevHeld = held; held = pendingPad; pendingPad = {}
+    if SCEN == "diag" and userPads[frame] then held[userPads[frame]] = true end
     if next(held) then lastInput = frame end
     if frame - lastInput > 20000 then error("IDLE") end
     worldFrame()
@@ -454,7 +460,7 @@ local printed = {}
 _G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end
   printed[#printed + 1] = table.concat(t, " ") end
 
-hotkeys[300] = { ["7"] = true }
+hotkeys[300] = { [(SCEN == "diag") and "4" or "7"] = true }
 
 return function(chunk)
   local ok, err = pcall(chunk)

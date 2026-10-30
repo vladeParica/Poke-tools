@@ -10,6 +10,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - **Farm Bot 1.0** (`farmbot/`): farms levels, items with Pickup, items stolen with Thief/Covet,
   and money from trainer rematches with the VS Seeker; takes held items through the party menu
   on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.
+- Farm Bot: key **4**, a read-only diagnostic that shows the menu state the bot reads and logs
+  each change, to check a game before letting the bot press buttons.
 - Configurator: *Farm Bot* tab.
 - Configurator: *Aventura* skin with its own 16x16 pixel sprites for the mascot, bots, stats and modes.
 - **Configurator** (`configurator/index.html`): visual editor for both bots' JSON with live

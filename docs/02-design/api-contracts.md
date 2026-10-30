@@ -115,6 +115,7 @@ BACK group map x y dir;...
 
 | Key | Shiny Bot | Train Bot |
 |---|---|---|
+| 4 | — | — (Farm Bot: read-only menu diagnostic) |
 | 5 | — | — (Farm Bot: record the trainer route) |
 | 6 | — | Record route (there, heal, back) (Farm Bot: same) |
 | 7 | Start / stop | Start / stop |

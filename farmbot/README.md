@@ -41,6 +41,7 @@ the **USA** versions (FireRed/LeafGreen 1.0 and 1.1); on other versions, or with
 
 | Key | Action |
 |---|---|
+| **4** | Diagnostic: shows what the bot reads from the menus, never presses a button |
 | **5** | Record the trainer route (`dinero`) |
 | **6** | Record the route to the Center |
 | **7** | Start / stop |
@@ -68,6 +69,22 @@ Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contra
 | [`FRLG_FarmBot_Recogida.json`](examples/FRLG_FarmBot_Recogida.json) | Collect 20 items with Pickup |
 | [`FRLG_FarmBot_Robar_MtMoon.json`](examples/FRLG_FarmBot_Robar_MtMoon.json) | Steal mushrooms (Paras) and Moon Stones (Clefairy) in Mt. Moon |
 | [`FRLG_FarmBot_Dinero.json`](examples/FRLG_FarmBot_Dinero.json) | Trainer rematches up to $500,000 |
+
+## Checking it in your game (key 4)
+
+Before the first run, use the diagnostic to check that the bot reads your game correctly.
+It only reads memory and never presses a button:
+
+1. With the bot stopped, press **4**.
+2. Open START by hand and move the cursor: the panel must name the option you're on
+   (POKEMON, MOCHILA…).
+3. Enter POKéMON and pick a Pokémon: the panel must show the right Pokémon and its item,
+   and then the action list (DATOS, MOVER, OBJETO…) with the cursor on the right option.
+4. Check that SELECT shows the VS Seeker (`dinero`), and that money and Pickup Pokémon match.
+5. Press **4** again to leave.
+
+Every change is written to `logs/farm_log.txt` as a `DIAG` line. If something doesn't match
+the screen, attach those lines to an [issue](https://github.com/vladeParica/Poke-tools/issues).
 
 ## Good to know
 

@@ -1853,6 +1853,78 @@ end
 
 -- ------------------------------ Teclas -------------------------------
 local reportConfig
+
+-- --------------------- Diagnostic (key 4) ---------------------
+-- Read-only: never presses a button. The player opens the menus by hand and compares the
+-- panel with the screen; every change is written to the log so it can be reported.
+local DG = {
+  on = false, last = nil,
+  START = { [0] = "POKEDEX", "POKEMON", "MOCHILA", "JUGADOR", "GUARDAR", "OPCIONES", "SALIR", "RETIRARSE", "JUGADOR" },
+  ACT = { [0] = "DATOS", "MOVER", "SALIR", "OBJETO", "DAR", "QUITAR", "CARTA", "QUITAR CARTA", "LEER", "SALIR",
+    "CAMBIAR", "ENVIAR", "ENTRAR", "NO ENTRAR", "GUARDAR", "REGISTRAR", "CAMBIAR", "CAMBIAR" },
+}
+function DG.actName(id) return DG.ACT[id] or (id >= 18 and "MOV. CAMPO" or ("#" .. id)) end
+-- Returns the diagnostic lines and a one-line summary for the log.
+function DG.read()
+  local L, sum = {}, {}
+  local function add(text, short) L[#L + 1] = text; if short then sum[#sum + 1] = short end end
+  add(string.format("Juego: %s  menus: %s", GAME_LABEL, MENU and "verificados (USA)" or "NO verificados: quitar objetos pausara"))
+  if MENU then
+    local n, c = read8(MENU.startCount), read8(MENU.startCursor)
+    local open = taskActive(MENU.taskStartMenu)
+    local names = {}
+    for k = 0, math.min(n, 9) - 1 do names[#names + 1] = DG.START[read8(MENU.startOrder + k)] or "?" end
+    local cur = (n > 0 and n <= 9 and c < n) and (DG.START[read8(MENU.startOrder + c)] or "?") or "?"
+    add(string.format("Menu START: %s  cursor %d/%d -> %s", open and "ABIERTO" or "cerrado", c + 1, n, cur),
+      "START " .. (open and cur or "cerrado"))
+    add("  opciones: " .. table.concat(names, " "))
+    local pOpen = read32(A.callback2) == MENU.cbParty
+    local slot = s8(read8(MENU.partyMenu + 9))
+    local pm = (slot >= 0 and slot < 6) and partyMon(slot) or nil
+    local who = (slot == 7) and "SALIR" or (pm and (speciesName(pm.species) .. (pm.item ~= 0 and (" lleva " .. itemName(pm.item)) or "")) or "?")
+    add(string.format("Equipo: %s  elegido %d -> %s", pOpen and "ABIERTO" or "cerrado", slot + 1, who),
+      "equipo " .. (pOpen and (slot + 1 .. " " .. who) or "cerrado"))
+    if pOpen and taskActive(MENU.taskSelection) then
+      local acts, names2 = menuActions(), {}
+      for _, a in ipairs(acts) do names2[#names2 + 1] = DG.actName(a) end
+      local mc = read8(MENU.menuCursor)
+      local sel = acts[mc + 1] and DG.actName(acts[mc + 1]) or "?"
+      add(string.format("Acciones: [%s]  cursor -> %s", table.concat(names2, ", "), sel), "acciones " .. sel)
+    else
+      add("Acciones: cerrado")
+    end
+  end
+  local reg = registeredItem()
+  add(string.format("SELECT: %s  Buscapelea %d/100", reg ~= 0 and itemName(reg) or "nada", vsSeekerCharge()),
+    "SELECT " .. (reg ~= 0 and itemName(reg) or "nada"))
+  local bt = "no"
+  if inBattle() then
+    local f = read32(A.battleType)
+    bt = (band(f, K.BT_TRAINER) ~= 0 and "entrenador" or "salvaje") .. (band(f, K.BT_DOUBLE) ~= 0 and " doble" or "")
+  end
+  local mn = money()
+  add(string.format("Dinero $%s  Combate: %s", mn and tostring(mn) or "?", bt), "combate " .. bt)
+  local slots = pickupSlots()
+  local held = {}
+  for _, h in ipairs(holdingSlots(slots)) do held[#held + 1] = itemName(h.item) end
+  add(string.format("Recogida: %d en el equipo  llevan objeto: %s", #slots, #held > 0 and table.concat(held, ", ") or "ninguno"))
+  return L, table.concat(sum, " | ")
+end
+function DG.toggle()
+  DG.on = not DG.on
+  DG.last = nil
+  bot.msg = DG.on and "Diagnostico: abre los menus a mano y compara (4 = salir)" or ""
+  if DG.on then logLine("Diagnostico activado (" .. GAME_LABEL .. ")") end
+end
+function DG.draw()
+  local lines, sum = DG.read()
+  if sum ~= DG.last then DG.last = sum; logLine("DIAG " .. sum) end
+  local y = 1
+  gui.text(1, y, "DIAGNOSTICO (solo lee, no pulsa nada)  4 = salir", "green"); y = y + 9
+  for _, t in ipairs(lines) do gui.text(1, y, t); y = y + 9 end
+  gui.text(1, y + 2, "Compara con la pantalla; los cambios van al log.", "orange")
+end
+
 local prevKeys = {}
 local function pressed(k, keys)
   return (keys[k] or keys["numpad" .. k]) and not (prevKeys[k] or prevKeys["numpad" .. k])
@@ -1865,6 +1937,8 @@ local function handleHotkeys()
     recHotkey("heal")
   elseif pressed("5", keys) then
     recHotkey("trainer")
+  elseif pressed("4", keys) then
+    DG.toggle()
   elseif pressed("8", keys) then
     -- Modo inspeccion: equipo 1..6, luego el rival (si hay combate), luego apagado
     local n = partyCount()
@@ -1977,6 +2051,7 @@ local function rate(n)
 end
 
 local function draw()
+  if DG.on then DG.draw(); return end
   if bot.inspect and bot.inspect > 0 then drawInspect(); return end
   if bot.panel == 0 then return end
   local y = 1
@@ -2014,7 +2089,7 @@ local function draw()
   end
   if bot.panel == 2 or not bot.running then
     if not bot.running and not rec then
-      line(string.format("7 iniciar  6 ruta Centro  5 ruta entrenadores  8 ver  9 panel  0 config   Centro: %s",
+      line(string.format("7 iniciar  6 ruta Centro  5 ruta entrenadores  4 diagnostico  8 ver  9 panel  0 config   Centro: %s",
         route.go and string.format("%d/%d pasos", #route.go, #route.back) or "no grabada"))
     end
     line(string.format("Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
@@ -2046,7 +2121,7 @@ if not gameName then
   return
 end
 print(string.format("Juego: %s", GAME_LABEL))
-print("7 = iniciar/detener   6 = ruta al Centro   5 = ruta de entrenadores   8 = ver Pokemon   9 = panel   0 = recargar " .. CONFIG_FILE)
+print("7 = iniciar/detener   6 = ruta al Centro   5 = ruta de entrenadores   4 = diagnostico   8 = ver Pokemon   9 = panel   0 = recargar " .. CONFIG_FILE)
 print(string.format("Modo: %s", MODE_LABEL[tcfg.mode] or "?"))
 if not MENU then print("Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara") end
 reportConfig(cfgOk, cfgMsg, cfgProblems)

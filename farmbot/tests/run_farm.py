@@ -88,6 +88,10 @@ CASES = [
      lambda r: 'mode debe ser' in r['printed'] and 'targetLevel debe ser' in r['printed'] and r['battles'] == 0),
     ('robar', 'robar', {'mode': 'robar', 'wantedItems': ['Nugget'], 'itemTarget': 2},
      lambda r: 'PAUSED' in r['err'] and r['steals'] >= 2 and r['taken'] >= 2 and 'FARMEO COMPLETO' in r['log']),
+    ('diagnostico', 'diag', {'mode': 'objetos'},
+     # read-only: the player opens the menus, the log records each step, the bot presses nothing
+     lambda r: 'IDLE' in r['err'] and 'DIAG START POKEMON' in r['log'] and 'equipo 1 Charmander' in r['log']
+     and 'acciones DATOS' in r['log'] and r['battles'] == 0),
     ('dinero', 'dinero', {'mode': 'dinero', 'moneyTarget': 3000 + 480 * 4},
      lambda r: 'PAUSED' in r['err'] and r['money'] >= 4920 and r['trainer'] >= 4 and r['vsuses'] >= 2
      and 'FARMEO COMPLETO' in r['log']),
