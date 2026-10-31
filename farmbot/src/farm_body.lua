@@ -651,8 +651,8 @@ end
 
 -- Best move against the opponent: the one with the most expected damage, without going
 -- over its remaining HP (so it doesn't waste a strong move when a weak one is enough).
-local function bestMove(blocked)
-  local me, foe = battleMon(0), battleMon(1)
+local function bestMove(blocked, meIdx, foeIdx)
+  local me, foe = battleMon(meIdx or 0), battleMon(foeIdx or 1)
   local best, bestScore, bestPP = nil, 0, -1
   for i = 1, 4 do
     local id = me.moves[i]
@@ -1314,6 +1314,39 @@ local function enterBattle(returnTo)
   bot.battles = bot.battles + 1
 end
 
+-- Double battles (trainers only): both of your Pokemon attack. The game asks battler 0 and
+-- then battler 2, each with its own command buffer (gBattleBufferA, 0x200 per battler),
+-- waiting bit in gBattleControllerExecFlags and cursors. After a single-target move it asks
+-- for the target with the same CHOOSEMOVE command: A confirms the default foe.
+local function stepDouble()
+  local D = bot.dbl
+  local flags, who, cmd = read32(A.execFlags), nil, nil
+  for i, bitv in pairs({ [0] = 1, [2] = 4 }) do       -- battler -> its waiting bit
+    local c = read8(A.bufferA + i * 0x200)
+    if band(flags, bitv) ~= 0 and (c == CMD_CHOOSEACTION or c == CMD_CHOOSEMOVE) and (not who or i < who) then who, cmd = i, c end
+  end
+  if not who then tap("B", 10); return end      -- battle texts
+  if cmd == CMD_CHOOSEACTION then
+    bot.cbBattle = read32(A.callback2)
+    D.picked, D.confirmed = nil, nil
+    local c = band(read8(A.actionCursor + who), 3)   -- always FIGHT: trainers can't be fled
+    if c == 0 then tap("A", 16) elseif band(c, 1) == 1 then tap("left", 4) else tap("up", 4) end
+    return
+  end
+  if D.picked == who then
+    if D.confirmed ~= who then tap("A", 16); D.confirmed = who; return end   -- target screen
+    D.blocked[who][D.slot] = true                       -- asked again: that move could not be used
+    D.picked, D.confirmed = nil, nil
+  end
+  local foe = (battleMon(1).hp > 0) and 1 or 3
+  local slot = bestMove(D.blocked[who], who, foe)
+  if not slot then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
+  local want, c = slot - 1, band(read8(A.moveCursor + who), 3)
+  if c == want then tap("A", 20); D.picked, D.slot, D.confirmed = who, slot, nil
+  elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
+  else tap(band(want, 2) == 2 and "down" or "up", 4) end
+end
+
 local function stepBattle()
   bot.t = bot.t + 1
   local ib = inBattle()
@@ -1341,10 +1374,8 @@ local function stepBattle()
       local bt = read32(A.battleType)
       bot.trainer = band(bt, K.BT_TRAINER) ~= 0
       bot.steal = nil
-      if bot.trainer and band(bt, K.BT_DOUBLE) ~= 0 then
-        halt(TX"Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu")
-        return
-      end
+      bot.double = bot.trainer and band(bt, K.BT_DOUBLE) ~= 0
+      bot.dbl = bot.double and { blocked = { [0] = {}, [2] = {} } } or nil
       if bot.trainer then
         bot.fight, bot.forceRun, bot.lastWhy = true, false, TX"entrenador (no se puede huir)"
         bot.trainers = (bot.trainers or 0) + 1
@@ -1360,7 +1391,7 @@ local function stepBattle()
   end
   if #queue > 0 then return end
 
-  if bot.trainer and battleMon(0).hp == 0 then
+  if bot.trainer and (battleMon(0).hp == 0 or (bot.double and battleMon(2).hp == 0)) then
     halt(TX"Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
     return
   end
@@ -1425,6 +1456,7 @@ local function stepBattle()
   end
   bot.learnForce = nil
 
+  if bot.double then stepDouble(); return end
   local waiting = band(read32(A.execFlags), 1) ~= 0
   local cmd = read8(A.bufferA)
   if waiting and cmd == CMD_CHOOSEACTION then

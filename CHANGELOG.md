@@ -22,6 +22,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   `?lang=`), including
   validation messages and the JSON comments it writes; a test checks nothing is untranslated
   (ADR-0014).
+- Farm Bot: **double trainer battles** in `dinero` (both Pokémon attack, the default target is
+  confirmed) instead of stopping; single battles are unchanged.
 - **Bots in English and Japanese:** new `language` option (`"es"`, `"en"`, `"ja"`) in the three
   bots' JSON for the panel, console and log; Japanese is written in romaji because VBA-rr can't
   draw kana. Game logic is unchanged (every simulator scenario gives the same numbers in the three

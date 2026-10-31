@@ -365,7 +365,6 @@
   "Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)": "Battle Searcher wo SELECT ni touroku shite (Bag > Battle Searcher > Touroku)",
   "Aviso: en esta version el bot no quita los objetos solo; pausara para que lo hagas tu": "Chui: kono version de wa bot ga dougu wo hazusenai; ichiji teishi suru node jibun de hazushite",
   "Farmeo iniciado (modo %s): %s Nv.%d": "Farm kaishi (%s mode): %s Lv.%d",
-  "Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu": "Trainer to no DOUBLE battle: bot wa taiou shinai node jibun de owarasete",
   "entrenador (no se puede huir)": "trainer (nigerarenai)",
   "de camino": "idou chuu",
   "Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate": "Trainer sen de Pokemon ga hinshi: tsugi wo erande battle wo owarasete",

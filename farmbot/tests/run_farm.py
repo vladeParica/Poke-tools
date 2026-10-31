@@ -92,6 +92,10 @@ CASES = [
      # read-only: the player opens the menus, the log records each step, the bot presses nothing
      lambda r: 'IDLE' in r['err'] and 'DIAG START POKEMON' in r['log'] and 'equipo 1 Charmander' in r['log']
      and 'acciones DATOS' in r['log'] and r['battles'] == 0),
+    ('dobles', 'doble', {'mode': 'dinero', 'moneyTarget': 3000 + 480 * 3},
+     # every trainer battle is a double: both Pokemon attack and the target is confirmed
+     lambda r: 'PAUSED' in r['err'] and r['events'].count('double win') >= 3 and r['money'] >= 4440
+     and 'FARMEO COMPLETO' in r['log']),
     ('dinero', 'dinero', {'mode': 'dinero', 'moneyTarget': 3000 + 480 * 4},
      lambda r: 'PAUSED' in r['err'] and r['money'] >= 4920 and r['trainer'] >= 4 and r['vsuses'] >= 2
      and 'FARMEO COMPLETO' in r['log']),

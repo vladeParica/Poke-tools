@@ -80,7 +80,8 @@ local function syncBag()
     w16(SB1 + 0x310 + i * 4, id); w16(SB1 + 0x310 + i * 4 + 2, bit.bxor(q, KEY % 65536)); i = i + 1
   end
 end
-if SCEN == "dinero" then w16(SB1 + 0x296, 362) end         -- VS Seeker registered on SELECT
+local DOUBLE = SCEN == "doble"
+if SCEN == "dinero" or DOUBLE then w16(SB1 + 0x296, 362) end         -- VS Seeker registered on SELECT
 local charge = 0
 local function syncCharge() w8(SB1 + 0x638, charge) end
 syncCharge()
@@ -117,6 +118,11 @@ local party = {
     ivword = 0x3FFFFFFF, level = 12, hp = 40, maxHP = 40 },
 }
 if SCEN == "robar" then party[1].moves = { 10, 168, 0, 0 }; party[1].pp = { 35, 10, 0, 0 } end
+-- doubles need a second Pokemon: it fights alongside the lead
+if SCEN == "doble" then
+  party[2] = { pid = 0x0BADBE11, species = 7, item = 0, friendship = 70, moves = { 33, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
+    ivword = 0, level = 12, hp = 40, maxHP = 40 }
+end
 if SCEN == "objetos" or SCEN == "bagfull" or SCEN == "pausa" or SCEN == "campo" then
   party[2] = { pid = 0x0BADBEEF, species = 52, item = 0, friendship = 70, moves = { 10, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
     ivword = 0, level = 10, hp = 30, maxHP = 30 }
@@ -172,6 +178,14 @@ local function startBattle(trainer)
   W.battle = { phase = "intro", t = 0, texts = 2, sp = sp, ehp = lvl * 4, lvl = lvl, trainer = trainer, foeItem = item }
   w8(INB, 2); w32(CB2, CB_BATTLE); w32(SPTR, OP_TEXT); w32(FLAGS, 0); w8(BUFA, 0); w8(OUTC, 0)
   w32(BTYPE, trainer and 0x08 or 0x04)
+  if trainer and DOUBLE then
+    -- gBattleBufferA is 0x200 per battler; the player's second battler is index 2
+    W.battle.double = true; W.battle.ehp2 = lvl * 4; W.battle.picks = {}
+    w32(BTYPE, 0x08 + 0x01); w8(BUFA + 0x400, 0); w8(ACUR + 2, 0); w8(MCUR + 2, 0)
+    local p2 = party[2]
+    setBattleMon(2, p2.species, p2.level, p2.hp, p2.maxHP, p2.moves, p2.pp, { 11, 11 }, 0)
+    setBattleMon(3, sp, lvl, lvl * 4, lvl * 4, { 33, 0, 0, 0 }, { 35, 0, 0, 0 }, { 0, 0 }, 0)
+  end
   setBattleMon(0, leadM.species, leadM.level, leadM.hp, leadM.maxHP, leadM.moves, leadM.pp, { 10, 10 }, leadM.item)
   setBattleMon(1, sp, lvl, lvl * 4, lvl * 4, { 33, 0, 0, 0 }, { 35, 0, 0, 0 }, { 0, 0 }, item)
   ev((trainer and "trainer " or "battle ") .. sp .. (item ~= 0 and (" holds " .. item) or ""))
@@ -194,8 +208,75 @@ local function winBattle(b)
   syncParty()
 end
 
+local function doubleFrame(b)
+  local adv = (edge("A") or edge("B"))
+  local function buf(i) return BUFA + i * 0x200 end
+  local function ask(i, cmd) b.who = i; w8(buf(i), cmd); w32(FLAGS, bit.lshift(1, i)); b.ready = b.t + 8 end
+  local function mon(i) return i == 0 and leadM or party[2] end
+  if b.phase == "intro" or b.phase == "text" then
+    if b.t >= (b.ready or 30) and adv then
+      b.texts = b.texts - 1
+      if b.texts <= 0 then if b.after then b.after() else b.phase = "action"; ask(0, 18) end end
+    end
+    return
+  end
+  if b.phase == "ending" then
+    if b.t - b.endT == 20 then w8(INB, 0); w32(CB2, CB_TRANS) end
+    if b.t - b.endT == 50 then w32(CB2, CB_OW); W.battle = nil; W.cool = 10 end
+    return
+  end
+  if b.t < (b.ready or 0) then return end
+  local i = b.who
+  if b.phase == "action" then
+    local c = r8(ACUR + i)
+    if edge("A") then
+      if c == 3 then error("RAN FROM TRAINER") elseif c ~= 0 then error("BOT OPENED BAG/POKEMON") end
+      w32(FLAGS, 0); b.phase = "move"; b.ready = b.t + 10; b.pendingAsk = function() ask(i, 20) end
+    elseif edge("right") and c % 2 == 0 then w8(ACUR + i, c + 1)
+    elseif edge("left") and c % 2 == 1 then w8(ACUR + i, c - 1)
+    elseif edge("down") and c < 2 then w8(ACUR + i, c + 2)
+    elseif edge("up") and c >= 2 then w8(ACUR + i, c - 2) end
+  elseif b.phase == "move" then
+    if b.pendingAsk then b.pendingAsk(); b.pendingAsk = nil; return end
+    local c = r8(MCUR + i)
+    if edge("A") then
+      local m = mon(i)
+      if m.moves[c + 1] == 0 then error("PICKED AN EMPTY MOVE SLOT") end
+      b.picks[i] = m.moves[c + 1]
+      -- single-target move: the game asks for the target with the same CHOOSEMOVE command
+      b.phase = "target"; ask(i, 20)
+    elseif edge("B") then error("BACKED OUT OF THE MOVE MENU")
+    elseif edge("right") and c % 2 == 0 and mon(i).moves[c + 2] ~= 0 then w8(MCUR + i, c + 1)
+    elseif edge("left") and c % 2 == 1 then w8(MCUR + i, c - 1) end
+  elseif b.phase == "target" then
+    if edge("A") then
+      w32(FLAGS, 0); stats.targets = (stats.targets or 0) + 1
+      if i == 0 then b.phase = "action"; b.ready = b.t + 10; b.pendingAsk = nil; ask(2, 18)
+      else
+        -- turn: each pick hits the first foe still standing, then the foes hit back
+        for _, k in ipairs({ 0, 2 }) do
+          local dmg = DMG[b.picks[k]] or 5
+          if b.ehp > 0 then b.ehp = b.ehp - dmg; w16(BMONS + 0x58 + 0x28, math.max(b.ehp, 0))
+          else b.ehp2 = b.ehp2 - dmg; w16(BMONS + 3 * 0x58 + 0x28, math.max(b.ehp2, 0)) end
+        end
+        if b.ehp <= 0 and b.ehp2 <= 0 then
+          stats.fought = stats.fought + 1; stats.doubles = (stats.doubles or 0) + 1
+          ev("double win")
+          b.phase = "text"; b.texts = 2; b.ready = b.t + 10
+          b.after = function() winBattle(b); b.phase = "ending"; b.endT = b.t end
+        else
+          leadM.hp = math.max(leadM.hp - 1, 0); syncParty(); w16(BMONS + 0x28, leadM.hp)
+          b.phase = "text"; b.texts = 1; b.ready = b.t + 10
+          b.after = function() b.phase = "action"; ask(0, 18) end
+        end
+      end
+    elseif edge("B") then error("BACKED OUT OF THE TARGET SCREEN") end
+  end
+end
+
 local function battleFrame()
   local b = W.battle
+  if b.double then b.t = b.t + 1; doubleFrame(b); return end
   b.t = b.t + 1
   local function toAction() b.phase = "action"; w8(BUFA, 18); w32(FLAGS, 1); b.ready = b.t + 8 end
   local function textPhase(n, nextf) b.phase = "text"; b.texts = n; b.after = nextf; b.ready = b.t + 10; w32(SPTR, OP_TEXT) end
@@ -390,7 +471,7 @@ local function worldFrame()
     W.walkT = W.walkT - 1
     if W.walkT == 0 then
       if charge < 100 then charge = charge + 1; syncCharge() end
-      if SCEN == "dinero" and W.ready and W.g == 3 then
+      if (SCEN == "dinero" or DOUBLE) and W.ready and W.g == 3 then
         for i, t in ipairs(TRAINERS) do
           if W.x == t.x and W.y == t.y and not W.beaten[i] then W.menu = { kind = "trainer", t = 0, who = i }; return end
         end

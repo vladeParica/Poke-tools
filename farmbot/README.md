@@ -92,7 +92,10 @@ the screen, attach those lines to an [issue](https://github.com/vladeParica/Poke
 - Pickup gives an item 10% of the time per Pickup Pokémon per **won** battle; the item table is fixed in FRLG.
 - Wild Pokémon hold their common item 50% of the time and the rare one 5% of the time.
 - The VS Seeker needs 100 steps to recharge; the bot walks back and forth at the start until it's charged.
-- Trainer battles can't be fled: keep `healBelow` high in `dinero`. If the lead faints against a
-  trainer, or a double battle starts, the bot stops and lets you finish it.
+- Trainer battles can't be fled: keep `healBelow` high in `dinero`. If one of your Pokémon faints
+  against a trainer, the bot stops and lets you finish it.
+- **Double battles** (rematches with trainer pairs): both of your first two Pokémon attack with
+  their most damaging move against the first foe still standing. Keep two healthy Pokémon at the
+  front of the party. Tested in the simulator only.
 - Don't run the Farm Bot and the Train Bot at the same time: the Farm Bot refuses to start if it
   sees the Train Bot running.

@@ -164,7 +164,8 @@ Guards against two instances (`train_running.lock`).
 
 Separate script forked from the Train Bot (ADR-0011): never edit the Train Bot for farm work.
 Modes: `nivel`, `objetos` (Pickup: only after a WIN), `robar` (Thief/Covet when the wild mon
-holds a wanted item, then run), `dinero` (VS Seeker + trainer route, key 5). Takes held items
+holds a wanted item, then run), `dinero` (VS Seeker + trainer route, key 5; double battles via
+`stepDouble`: battlers 0 and 2, gBattleBufferA stride 0x200, exec-flag bits 1/4, target = A). Takes held items
 via START > POKEMON > ITEM > TAKE, checking each step in memory. Tests:
 `python farmbot/tests/run_farm.py` (fails on its own). Lua 5.1 local limit: constants live in `K`.
 

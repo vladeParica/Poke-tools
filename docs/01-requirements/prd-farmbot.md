@@ -63,11 +63,11 @@ confirmed by the held item disappearing from the party data.
 - [ ] Thief is only used on wanted held items, then the bot runs.
 - [ ] Trainer battles are never fled; the VS Seeker is used only when charged.
 - [ ] The Shiny Bot and Train Bot tests give the same results as before (nothing shared changed).
+- [x] Double trainer battles in `dinero`: both Pokémon attack and the target is confirmed (simulator).
 - [ ] Every mode tried by the owner in the real game.
 
 ## 7. Out of scope
 - Catching Pokémon, Pay Day money, berries (FRLG has no berry planting).
-- Double battles with rematch trainer pairs (stops with a message if one starts).
 - Healing with items or buying items.
 
 ## 8. Open decisions

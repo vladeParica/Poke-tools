@@ -365,7 +365,6 @@
   "Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)": "Register the VS Seeker on SELECT (Bag > VS Seeker > Register)",
   "Aviso: en esta version el bot no quita los objetos solo; pausara para que lo hagas tu": "Warning: in this version the bot doesn't take the items by itself; it will pause so you do it",
   "Farmeo iniciado (modo %s): %s Nv.%d": "Farming started (%s mode): %s Lv.%d",
-  "Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu": "DOUBLE battle against trainers: the bot doesn't handle them, finish it yourself",
   "entrenador (no se puede huir)": "trainer (can't run)",
   "de camino": "on the way",
   "Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate": "Your Pokemon fainted against a trainer: pick the next one yourself and finish the battle",
