@@ -114,7 +114,7 @@ jobs:
             exit 1
           fi
       - name: Unit tests
-        run: node --test configurator/tests/core.test.js
+        run: node --test configurator/tests/core.test.js configurator/tests/i18n.test.js
       - name: The real bots accept the exported configs
         run: python configurator/tests/test_bots_accept.py
       - name: UI smoke test (headless Chrome)

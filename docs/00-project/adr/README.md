@@ -19,6 +19,7 @@ Template: [`.ai-dlc/templates/adr.md`](../../../.ai-dlc/templates/adr.md).
 | [ADR-0011](0011-farm-bot-forked-from-train-bot.md) | Farm Bot is a separate script forked from the Train Bot | accepted | 2026-10-29 |
 | [ADR-0012](0012-release-zips-per-bot.md) | Release zips per bot, published from a tag | accepted | 2026-10-30 |
 | [ADR-0013](0013-official-artwork-behind-the-configurator-forms.md) | Pokémon sprites behind the configurator forms, loaded at runtime | accepted | 2026-10-30 |
+| [ADR-0014](0014-interface-in-spanish-english-and-japanese.md) | Interface in Spanish, English and Japanese | accepted | 2026-10-31 |
 
 ADRs 0001–0007 were recorded after the decision was made (retroactive documentation):
 they describe how the code is built today.

@@ -2,7 +2,8 @@
 
 A visual editor for the bots' JSON files. Open `index.html` with a double click: it runs
 locally in the browser, with no install and no internet connection. The interface is in
-Spanish, like everything the player sees. When online, it also shows a Pokémon behind each
+Spanish, English or Japanese (*Apariencia* → *Idioma · Language · 言語*, or `?lang=en`); it
+starts in your browser's language. When online, it also shows a Pokémon behind each
 form (FireRed/LeafGreen sprites from Pokémon Database, loaded at runtime)
 ([ADR-0013](../docs/00-project/adr/0013-official-artwork-behind-the-configurator-forms.md)).
 Change it in *Apariencia* (gear button, or *Fondo* when the pointer is over the form): another
@@ -52,6 +53,8 @@ Deep links: `index.html#trainbot` opens the Train Bot tab, `index.html?skin=gba`
 | `css/app.css` | Styles; every color, font and radius is a CSS variable that skins override |
 | `js/data.js` | **Generated** game data (natures, species, moves, EV yields, presets) |
 | `js/schema.js` | Every bot option: type, default, Spanish label and help |
+| `js/i18n.js`, `js/lang/*.js` | Translation: Spanish source text → English / Japanese ([ADR-0014](../docs/00-project/adr/0014-interface-in-spanish-english-and-japanese.md)) |
+| `tools/i18n_keys.js` | Lists every text to translate; `tests/i18n.test.js` checks they all are |
 | `js/core.js` | Parse, normalize, validate and serialize configs (no DOM; tested in Node) |
 | `js/sprites.js` | Our original icons and the pixel-art mascot |
 | `js/skin.js` | Skin registry, sanitizer and import/export |

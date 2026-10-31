@@ -13,8 +13,8 @@
     <div class="brand">
       <span class="mascot" id="mascot" aria-hidden="true"></span>
       <div>
-        <h1>Configurador</h1>
-        <small>Poke-tools · Rojo Fuego / Verde Hoja</small>
+        <h1 data-i18n>Configurador</h1>
+        <small data-i18n>Poke-tools · Rojo Fuego / Verde Hoja</small>
       </div>
     </div>
 
@@ -25,27 +25,27 @@
     </nav>
 
     <div class="actions">
-      <label class="skin-picker" title="Skin de la interfaz">
+      <label class="skin-picker" title="Skin de la interfaz" data-i18n-attr="title">
         <span class="sr-only">Skin</span>
         <select id="skin-select"></select>
       </label>
-      <button class="btn ghost icon" id="btn-stats" title="Estadísticas de los logs" aria-label="Estadísticas de los logs"><span data-icon="chart"></span></button>
-      <button class="btn ghost icon" id="btn-skins" title="Apariencia: skins y fondo" aria-label="Apariencia: skins y fondo"><span data-icon="gear"></span></button>
-      <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" hidden><span data-icon="folder"></span><span class="lbl">Abrir carpeta</span></button>
-      <button class="btn ghost" id="btn-open" title="Abrir un JSON existente"><span data-icon="upload"></span><span class="lbl">Abrir JSON</span></button>
-      <button class="btn primary" id="btn-save" title="Guardar (Ctrl+S)"><span data-icon="save"></span><span class="lbl">Guardar</span></button>
+      <button class="btn ghost icon" id="btn-stats" title="Estadísticas de los logs" aria-label="Estadísticas de los logs" data-i18n-attr="title,aria-label"><span data-icon="chart"></span></button>
+      <button class="btn ghost icon" id="btn-skins" title="Apariencia: idioma, skins y fondo" aria-label="Apariencia: idioma, skins y fondo" data-i18n-attr="title,aria-label"><span data-icon="gear"></span></button>
+      <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" data-i18n-attr="title" hidden><span data-icon="folder"></span><span class="lbl" data-i18n>Abrir carpeta</span></button>
+      <button class="btn ghost" id="btn-open" title="Abrir un JSON existente" data-i18n-attr="title"><span data-icon="upload"></span><span class="lbl" data-i18n>Abrir JSON</span></button>
+      <button class="btn primary" id="btn-save" title="Guardar (Ctrl+S)" data-i18n-attr="title"><span data-icon="save"></span><span class="lbl" data-i18n>Guardar</span></button>
     </div>
     <input type="file" id="file-open" accept=".json,application/json" hidden>
   </header>
 
   <div class="workspace">
-    <nav class="sections" id="sections" aria-label="Secciones"></nav>
+    <nav class="sections" id="sections" aria-label="Secciones" data-i18n-attr="aria-label"></nav>
 
     <main class="stage" id="form" aria-live="polite"></main>
 
     <aside class="side">
       <div class="side-tabs" role="tablist" aria-label="Panel">
-        <button role="tab" id="side-status" aria-selected="true" aria-controls="panel-status"><span data-icon="check"></span><span>Estado</span><span class="count" id="issue-count" hidden></span></button>
+        <button role="tab" id="side-status" aria-selected="true" aria-controls="panel-status"><span data-icon="check"></span><span data-i18n>Estado</span><span class="count" id="issue-count" hidden></span></button>
         <button role="tab" id="side-json" aria-selected="false" aria-controls="panel-json"><span data-icon="copy"></span><span>JSON</span></button>
       </div>
       <section class="side-panel" id="panel-status" role="tabpanel" aria-labelledby="side-status">
@@ -54,7 +54,7 @@
         <p class="target-file" id="target-file"></p>
       </section>
       <section class="side-panel" id="panel-json" role="tabpanel" aria-labelledby="side-json" hidden>
-        <div class="row between"><b id="preview-name">JSON</b><button class="btn small" id="btn-copy" type="button">Copiar</button></div>
+        <div class="row between"><b id="preview-name">JSON</b><button class="btn small" id="btn-copy" type="button" data-i18n>Copiar</button></div>
         <pre id="preview" tabindex="0"></pre>
       </section>
     </aside>
@@ -62,42 +62,44 @@
 
   <dialog id="skins-dialog" class="card">
     <form method="dialog">
-      <header><span data-icon="palette" class="sec-icon"></span>Apariencia</header>
+      <header><span data-icon="palette" class="sec-icon"></span><span data-i18n>Apariencia</span></header>
       <div class="body">
-        <h3 class="dlg-sub">Skin</h3>
-        <p class="help">Un skin cambia colores, fuentes y sprites de esta página. Puedes importar uno (archivo <code>.json</code>) o exportar el actual como punto de partida para el tuyo. Guía: <code>configurator/skins/README.md</code>.</p>
+        <h3 class="dlg-sub"><label for="lang-select">Idioma · Language · 言語</label></h3>
+        <select id="lang-select"></select>
+        <h3 class="dlg-sub" data-i18n>Skin</h3>
+        <p class="help" data-i18n-html>Un skin cambia colores, fuentes y sprites de esta página. Puedes importar uno (archivo <code>.json</code>) o exportar el actual como punto de partida para el tuyo. Guía: <code>configurator/skins/README.md</code>.</p>
         <ul class="issues" id="skin-list"></ul>
         <div class="row">
-          <button class="btn" type="button" id="btn-skin-import"><span data-icon="upload"></span>Importar skin</button>
-          <button class="btn" type="button" id="btn-skin-export"><span data-icon="download"></span>Exportar el actual</button>
+          <button class="btn" type="button" id="btn-skin-import"><span data-icon="upload"></span><span data-i18n>Importar skin</span></button>
+          <button class="btn" type="button" id="btn-skin-export"><span data-icon="download"></span><span data-i18n>Exportar el actual</span></button>
         </div>
         <input type="file" id="skin-file" accept=".json,application/json" hidden>
 
-        <h3 class="dlg-sub" id="bg-section">Fondo del <span id="bg-bot">bot</span></h3>
+        <h3 class="dlg-sub" id="bg-section" data-i18n-html>Fondo del <span id="bg-bot">bot</span></h3>
         <div class="bg-edit">
           <div class="bg-preview" id="bg-preview" aria-hidden="true"></div>
           <div class="bg-controls">
-            <label class="help" for="bg-species">Pokémon (Gen 1–3), o sube tu imagen. Sprites de <a href="https://pokemondb.net/sprites" target="_blank" rel="noopener">Pokémon Database</a></label>
+            <label class="help" for="bg-species" data-i18n-html>Pokémon (Gen 1–3), o sube tu imagen. Sprites de <a href="https://pokemondb.net/sprites" target="_blank" rel="noopener">Pokémon Database</a></label>
             <input type="text" id="bg-species" list="bg-species-list" autocomplete="off" spellcheck="false">
             <datalist id="bg-species-list"></datalist>
             <div class="row">
-              <select id="bg-style" aria-label="Estilo del fondo">
-                <option value="frlg">Sprite de Rojo Fuego / Verde Hoja</option>
-                <option value="home">Pokémon HOME (3D)</option>
-                <option value="artwork">Ilustración oficial</option>
+              <select id="bg-style" aria-label="Estilo del fondo" data-i18n-attr="aria-label">
+                <option value="frlg" data-i18n>Sprite de Rojo Fuego / Verde Hoja</option>
+                <option value="home" data-i18n>Pokémon HOME (3D)</option>
+                <option value="artwork" data-i18n>Ilustración oficial</option>
               </select>
-              <label class="check"><input type="checkbox" id="bg-shiny"> Shiny</label>
+              <label class="check"><input type="checkbox" id="bg-shiny"> <span data-i18n>Shiny</span></label>
             </div>
             <div class="row">
-              <button class="btn small" type="button" id="btn-bg-upload"><span data-icon="upload"></span>Subir imagen</button>
-              <button class="btn small" type="button" id="btn-bg-none"><span data-icon="x"></span>Sin fondo</button>
-              <button class="btn small" type="button" id="btn-bg-reset"><span data-icon="refresh"></span>Restaurar</button>
+              <button class="btn small" type="button" id="btn-bg-upload"><span data-icon="upload"></span><span data-i18n>Subir imagen</span></button>
+              <button class="btn small" type="button" id="btn-bg-none"><span data-icon="x"></span><span data-i18n>Sin fondo</span></button>
+              <button class="btn small" type="button" id="btn-bg-reset"><span data-icon="refresh"></span><span data-i18n>Restaurar</span></button>
             </div>
-            <label class="help bg-range">Intensidad <input type="range" id="bg-opacity" min="0" max="40" step="1"> <span id="bg-opacity-val"></span></label>
+            <label class="help bg-range"><span data-i18n>Intensidad</span> <input type="range" id="bg-opacity" min="0" max="40" step="1"> <span id="bg-opacity-val"></span></label>
           </div>
         </div>
         <input type="file" id="bg-file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
-        <div class="row end"><button class="btn primary" value="close">Cerrar</button></div>
+        <div class="row end"><button class="btn primary" value="close" data-i18n>Cerrar</button></div>
       </div>
     </form>
   </dialog>
@@ -109,13 +111,13 @@
         <p class="help" id="route-summary"></p>
         <ul class="route-issues" id="route-issues"></ul>
         <div class="route-legend help">
-          <span><i class="sw go"></i>Ida (GO)</span><span><i class="sw back"></i>Vuelta (BACK)</span>
-          <span><i class="dot spot"></i>Punto de entreno</span><span><i class="dot heal"></i>Fin de la ida (curación)</span>
+          <span><i class="sw go"></i><span data-i18n>Ida (GO)</span></span><span><i class="sw back"></i><span data-i18n>Vuelta (BACK)</span></span>
+          <span><i class="dot spot"></i><span data-i18n>Punto de entreno</span></span><span><i class="dot heal"></i><span data-i18n>Fin de la ida (curación)</span></span>
         </div>
         <div class="route-maps" id="route-maps"></div>
         <div class="row end">
-          <button class="btn" type="button" id="btn-route-file"><span data-icon="folder"></span>Abrir otro archivo</button>
-          <button class="btn primary" value="close">Cerrar</button>
+          <button class="btn" type="button" id="btn-route-file"><span data-icon="folder"></span><span data-i18n>Abrir otro archivo</span></button>
+          <button class="btn primary" value="close" data-i18n>Cerrar</button>
         </div>
       </div>
     </form>
@@ -127,15 +129,15 @@
       <header><span data-icon="chart" class="sec-icon"></span><span id="stats-title">Estadísticas</span></header>
       <div class="body">
         <div class="stats-drop" id="stats-drop">
-          <p class="help">Arrastra aquí un log de los bots (<code>shiny_log.txt</code>, <code>train_log.txt</code> o <code>farm_log.txt</code>, en la carpeta <code>logs</code>) o elígelo.</p>
+          <p class="help" data-i18n-html>Arrastra aquí un log de los bots (<code>shiny_log.txt</code>, <code>train_log.txt</code> o <code>farm_log.txt</code>, en la carpeta <code>logs</code>) o elígelo.</p>
           <div class="row">
-            <button class="btn small" type="button" id="btn-stats-file"><span data-icon="upload"></span>Elegir log</button>
-            <button class="btn small" type="button" id="btn-stats-dir" hidden><span data-icon="folder"></span>Leer de la carpeta</button>
-            <select id="stats-session" aria-label="Sesión" hidden></select>
+            <button class="btn small" type="button" id="btn-stats-file"><span data-icon="upload"></span><span data-i18n>Elegir log</span></button>
+            <button class="btn small" type="button" id="btn-stats-dir" hidden><span data-icon="folder"></span><span data-i18n>Leer de la carpeta</span></button>
+            <select id="stats-session" aria-label="Sesión" data-i18n-attr="aria-label" hidden></select>
           </div>
         </div>
         <div id="stats-out"></div>
-        <div class="row end"><button class="btn primary" value="close">Cerrar</button></div>
+        <div class="row end"><button class="btn primary" value="close" data-i18n>Cerrar</button></div>
       </div>
     </form>
   </dialog>
@@ -144,6 +146,9 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="js/data.js"></script>
+  <script src="js/i18n.js"></script>
+  <script src="js/lang/en.js"></script>
+  <script src="js/lang/ja.js"></script>
   <script src="js/schema.js"></script>
   <script src="js/core.js"></script>
   <script src="js/sprites.js"></script>

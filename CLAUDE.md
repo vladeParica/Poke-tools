@@ -33,7 +33,8 @@ losing what was learned.
   `CHANGELOG.md`.
 - **Configurator:** when a bot option is added/renamed, update `configurator/js/schema.js`;
   when tables or examples change, run `python configurator/tools/build_data.py`. Its UI text is
-  Spanish. No third-party Pokémon art in the repo: sprites are our own (ADR-0010); the form
+  written in Spanish through `tr()` and translated in `js/lang/en.js` / `ja.js` (ADR-0014): every
+  new text needs both entries, `node --test configurator/tests/i18n.test.js` checks it. No third-party Pokémon art in the repo: sprites are our own (ADR-0010); the form
   backgrounds load Pokémon Database sprites at runtime and are never stored (ADR-0013).
 
 ## Structure

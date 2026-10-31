@@ -11,7 +11,7 @@
 const R = [];
 // Start from a clean page: put aside the saved draft and skin (file:// pages share storage),
 // and give them back when the test ends so running it in a normal browser loses nothing.
-const KEYS = ['pt-configurator-draft-v1', 'pt-configurator-skin', 'pt-configurator-custom-skins', 'pt-configurator-backdrop'];
+const KEYS = ['pt-configurator-draft-v1', 'pt-configurator-skin', 'pt-configurator-custom-skins', 'pt-configurator-backdrop', 'pt-configurator-lang'];
 const saved = {};
 try { KEYS.forEach(k => { saved[k] = localStorage.getItem(k); localStorage.removeItem(k); }); } catch (e) { /* no storage */ }
 function restore() {
@@ -125,6 +125,16 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('log stats: tiles, money line and item bars', d.getElementById('stats-dialog').open && d.querySelectorAll('#stats-out .stat-tile').length >= 4
       && d.querySelectorAll('#stats-out svg .series').length === 2 && d.querySelector('#stats-out .bar-row') && /\$960/.test(d.getElementById('stats-out').textContent));
     d.getElementById('stats-dialog').close();
+    // language: English and Japanese replace the interface text, Spanish comes back
+    const lang = d.getElementById('lang-select');
+    lang.value = 'en'; fire(lang, 'change');
+    ok('language: English', d.querySelector('.brand h1').textContent === 'Configurator' && nav('mode').textContent.includes('Mode')
+      && d.querySelector('#btn-save .lbl').textContent === 'Save' && /Settings for FRLG_ShinyBot/.test(pv()));
+    lang.value = 'ja'; fire(lang, 'change');
+    ok('language: Japanese', d.querySelector('.brand h1').textContent === '設定ツール' && d.documentElement.lang === 'ja'
+      && d.getElementById('btn-skins').getAttribute('title') === '外観: 言語・スキン・背景');
+    lang.value = 'es'; fire(lang, 'change');
+    ok('language: back to Spanish', d.querySelector('.brand h1').textContent === 'Configurador' && nav('mode').textContent.includes('Modo'));
     // 8. skins
     const bd = d.querySelector('.panel > .backdrop');
     ok('artwork behind the form', bd && /firered-leafgreen\/normal\/pikachu\.png$/.test((bd.querySelector('img') || {}).src || '') &&
@@ -143,5 +153,5 @@ document.getElementById('f').onload = () => setTimeout(() => {
   restore();
   document.getElementById('r').textContent = R.join('\n');
 }, 800);
-document.getElementById('f').src = '../index.html#shinybot';
+document.getElementById('f').src = '../index.html?lang=es#shinybot';
 </script></body></html>

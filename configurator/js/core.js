@@ -1,6 +1,6 @@
 // Pure logic of the configurator: parse, normalize, validate and serialize bot configs.
 // No DOM access, so it runs in the browser and in Node (configurator/tests).
-// Messages are player-facing: Spanish.
+// Messages are player-facing Spanish templates; tr() shows them in the page's language.
 (function (root) {
   'use strict';
 
@@ -12,6 +12,13 @@
     spe: 'spe', speed: 'spe', vel: 'spe', velocidad: 'spe'
   };
   var STAT_ORDER = ['hp', 'atk', 'def', 'spa', 'spd', 'spe'];
+  // "{name}" placeholders are filled from v. With the page's i18n loaded the text is translated;
+  // in Node (tests) it stays Spanish.
+  function tr(s, v) {
+    var i = root.PT && root.PT.i18n;
+    if (i) return i.t(s, v);
+    return v ? s.replace(/\{(\w+)\}/g, function (m, k) { return v[k] !== undefined ? v[k] : m; }) : s;
+  }
   var UNSAFE_PATH = /["%$`]/;
   var NTFY_TOPIC = /^[A-Za-z0-9_-]+$/;
   var DISCORD_URL = /^https:\/\/[A-Za-z0-9./_-]+$/;
@@ -39,10 +46,10 @@
   function parseConfig(text) {
     try {
       var v = JSON.parse(stripComments(String(text).replace(/^﻿/, '')));
-      if (!v || typeof v !== 'object' || Array.isArray(v)) return { ok: false, error: 'El archivo debe ser un objeto { ... }' };
+      if (!v || typeof v !== 'object' || Array.isArray(v)) return { ok: false, error: tr('El archivo debe ser un objeto { ... }') };
       return { ok: true, value: v };
     } catch (e) {
-      return { ok: false, error: 'JSON inválido: ' + e.message };
+      return { ok: false, error: tr('JSON inválido: {msg}', { msg: e.message }) };
     }
   }
 
@@ -119,38 +126,38 @@
   // won't do what the player expects. Returns [{level: 'error'|'warn'|'info', key, msg}].
   function validate(bot, cfg, data, schema) {
     var lk = lookups(data), out = [];
-    function err(key, msg) { out.push({ level: 'error', key: key, msg: msg }); }
-    function warn(key, msg) { out.push({ level: 'warn', key: key, msg: msg }); }
-    function info(key, msg) { out.push({ level: 'info', key: key, msg: msg }); }
+    function err(key, msg, v) { out.push({ level: 'error', key: key, msg: tr(msg, v) }); }
+    function warn(key, msg, v) { out.push({ level: 'warn', key: key, msg: tr(msg, v) }); }
+    function info(key, msg, v) { out.push({ level: 'info', key: key, msg: tr(msg, v) }); }
+    function label(f) { return f.label ? tr(f.label) : f.key; }
     var fields = schema.fields(bot), known = {};
     fields.forEach(function (f) { known[f.key] = f; });
 
     Object.keys(cfg).forEach(function (k) {
-      if (!known[k]) err(k, 'Opción desconocida: "' + k + '" (el bot no arrancaría)');
+      if (!known[k]) err(k, 'Opción desconocida: "{key}" (el bot no arrancaría)', { key: k });
     });
 
     fields.forEach(function (f) {
       var v = cfg[f.key];
       if (v === undefined || v === null) return;
-      if (f.type === 'bool' && typeof v !== 'boolean') err(f.key, f.label + ': debe ser sí o no');
+      if (f.type === 'bool' && typeof v !== 'boolean') err(f.key, '{label}: debe ser sí o no', { label: label(f) });
       if (f.type === 'int') {
-        if (!isInt(v)) err(f.key, (f.label || f.key) + ': debe ser un número entero');
-        else if ((f.min !== undefined && v < f.min) || (f.max !== undefined && v > f.max)) err(f.key, (f.label || f.key) + ': debe estar entre ' + f.min + ' y ' + f.max);
+        if (!isInt(v)) err(f.key, '{label}: debe ser un número entero', { label: label(f) });
+        else if ((f.min !== undefined && v < f.min) || (f.max !== undefined && v > f.max)) err(f.key, '{label}: debe estar entre {min} y {max}', { label: label(f), min: f.min, max: f.max });
       }
       if (f.type === 'text' || f.type === 'route') {
-        if (typeof v !== 'string' || !v.trim()) err(f.key, (f.label || f.key) + ': no puede estar vacío');
+        if (typeof v !== 'string' || !v.trim()) err(f.key, '{label}: no puede estar vacío', { label: label(f) });
       }
       if (f.type === 'enum') {
         var opts = f.options.map(function (o) { return typeof o === 'string' ? o : o.value; });
-        if (opts.indexOf(v) === -1) err(f.key, (f.label || f.key) + ': valor no válido "' + v + '"');
+        if (opts.indexOf(v) === -1) err(f.key, '{label}: valor no válido "{value}"', { label: label(f), value: v });
       }
     });
 
-    function checkNames(key, table, what) {
+    function checkNames(key, table, msg) {
       var l = asList(cfg[key]);
       if (!l) return;
-      var adj = /a$/.test(what) ? ' desconocida: "' : ' desconocido: "';
-      l.forEach(function (n) { if (!table[simplify(n)]) err(key, what + adj + n + '"'); });
+      l.forEach(function (n) { if (!table[simplify(n)]) err(key, msg, { name: n }); });
     }
 
     ['logDir', 'sharedDir'].forEach(function (k) {
@@ -158,9 +165,9 @@
     });
 
     if (bot === 'shinybot') {
-      if (cfg.mode !== undefined && cfg.mode !== null && !lk.modes[simplify(cfg.mode)]) err('mode', 'Modo desconocido: "' + cfg.mode + '"');
-      checkNames('natures', lk.natures, 'Naturaleza');
-      checkNames('species', lk.species, 'Especie');
+      if (cfg.mode !== undefined && cfg.mode !== null && !lk.modes[simplify(cfg.mode)]) err('mode', 'Modo desconocido: "{name}"', { name: cfg.mode });
+      checkNames('natures', lk.natures, 'Naturaleza desconocida: "{name}"');
+      checkNames('species', lk.species, 'Especie desconocida: "{name}"');
       var iv = { minIVs: {}, maxIVs: {} };
       ['minIVs', 'maxIVs'].forEach(function (k) {
         var o = cfg[k];
@@ -168,25 +175,25 @@
         if (typeof o !== 'object' || Array.isArray(o)) { err(k, 'IVs: formato no válido'); return; }
         Object.keys(o).forEach(function (s) {
           var c = STAT_ALIASES[simplify(s)];
-          if (!c) err(k, 'Estadística desconocida en IVs: "' + s + '"');
-          else if (!isInt(o[s]) || o[s] < 0 || o[s] > 31) err(k, 'IV de ' + s + ' debe estar entre 0 y 31');
+          if (!c) err(k, 'Estadística desconocida en IVs: "{name}"', { name: s });
+          else if (!isInt(o[s]) || o[s] < 0 || o[s] > 31) err(k, 'IV de {stat} debe estar entre 0 y 31', { stat: s });
           else iv[k][c] = o[s];
         });
       });
       STAT_ORDER.forEach(function (s) {
-        if (iv.minIVs[s] !== undefined && iv.maxIVs[s] !== undefined && iv.minIVs[s] > iv.maxIVs[s]) err('minIVs', 'IV de ' + s + ': el mínimo es mayor que el máximo');
+        if (iv.minIVs[s] !== undefined && iv.maxIVs[s] !== undefined && iv.minIVs[s] > iv.maxIVs[s]) err('minIVs', 'IV de {stat}: el mínimo es mayor que el máximo', { stat: s });
       });
       var hp = cfg.hiddenPower;
       if (hp !== undefined && hp !== null) {
         if (typeof hp !== 'object') err('hiddenPower', 'Poder Oculto: formato no válido');
         else {
-          if (hp.type && !lk.hpTypes[simplify(hp.type)]) err('hiddenPower', 'Tipo de Poder Oculto desconocido: "' + hp.type + '"');
+          if (hp.type && !lk.hpTypes[simplify(hp.type)]) err('hiddenPower', 'Tipo de Poder Oculto desconocido: "{name}"', { name: hp.type });
           if (hp.minPower !== undefined && hp.minPower !== null && (!isInt(hp.minPower) || hp.minPower < 30 || hp.minPower > 70)) err('hiddenPower', 'La potencia del Poder Oculto va de 30 a 70');
         }
       }
       ['initialSeeds', 'newGameTSV'].forEach(function (k) {
         var l = asList(cfg[k]);
-        if (l) l.forEach(function (s) { if (!/^[0-9A-Fa-f]{1,4}$/.test(String(s))) err(k, 'Valor hex no válido: "' + s + '" (hasta 4 cifras 0-9 A-F)'); });
+        if (l) l.forEach(function (s) { if (!/^[0-9A-Fa-f]{1,4}$/.test(String(s))) err(k, 'Valor hex no válido: "{value}" (hasta 4 cifras 0-9 A-F)', { value: s }); });
       });
       if (cfg.mode === 'Semilla inicial') {
         if (!asList(cfg.initialSeeds)) err('initialSeeds', 'El modo Semilla inicial necesita al menos una semilla');
@@ -204,23 +211,23 @@
         if (typeof evs !== 'object' || Array.isArray(evs)) err('evs', 'EVs: formato no válido');
         else Object.keys(evs).forEach(function (s) {
           var c = STAT_ALIASES[simplify(s)];
-          if (!c) err('evs', 'EV desconocido: "' + s + '"');
-          else if (!isInt(evs[s]) || evs[s] < 0) err('evs', 'EVs de ' + s + ' deben ser un entero ≥ 0');
+          if (!c) err('evs', 'EV desconocido: "{name}"', { name: s });
+          else if (!isInt(evs[s]) || evs[s] < 0) err('evs', 'EVs de {stat} deben ser un entero ≥ 0', { stat: s });
           else {
-            if (evs[s] > 255) warn('evs', 'EVs de ' + s + ' se recortan a 255');
+            if (evs[s] > 255) warn('evs', 'EVs de {stat} se recortan a 255', { stat: s });
             total += Math.min(evs[s], 255);
-            if (evs[s] > 252 && evs[s] <= 255) info('evs', 'EVs de ' + s + ': a nivel 100 solo cuentan de 4 en 4; 252 rinde igual que 255');
+            if (evs[s] > 252 && evs[s] <= 255) info('evs', 'EVs de {stat}: a nivel 100 solo cuentan de 4 en 4; 252 rinde igual que 255', { stat: s });
           }
         });
-        if (total > 510) err('evs', 'Los EVs suman ' + total + ' (máximo 510)');
+        if (total > 510) err('evs', 'Los EVs suman {n} (máximo 510)', { n: total });
       }
       if (isInt(cfg.targetLevel) && isInt(cfg.maxLevel) && cfg.maxLevel < cfg.targetLevel) warn('maxLevel', 'El nivel máximo es menor que el objetivo: nunca llegará al objetivo');
       if (bot === 'trainbot' && (evs === null || evs === undefined || total === 0) && !cfg.targetLevel && !cfg.maxLevel) warn('evs', 'Sin EVs ni nivel objetivo el bot no sabe cuándo parar');
       if (bot === 'farmbot') {
         var fm = cfg.mode === undefined ? 'nivel' : cfg.mode;
-        if (['nivel', 'objetos', 'robar', 'dinero'].indexOf(fm) === -1) err('mode', 'Modo desconocido: "' + fm + '"');
+        if (['nivel', 'objetos', 'robar', 'dinero'].indexOf(fm) === -1) err('mode', 'Modo desconocido: "{name}"', { name: fm });
         if (fm === 'nivel' && !cfg.targetLevel && !cfg.maxBattles) err('targetLevel', 'El modo nivel necesita un nivel objetivo (o un máximo de combates)');
-        checkNames('wantedItems', lk.items, 'Objeto');
+        checkNames('wantedItems', lk.items, 'Objeto desconocido: "{name}"');
         if (fm === 'robar' && !asList(cfg.wantedItems)) info('wantedItems', 'Sin lista, robará cualquier objeto que lleve el salvaje');
         if (fm === 'dinero' && !cfg.moneyTarget && !cfg.maxBattles) info('moneyTarget', 'Sin dinero objetivo, seguirá hasta que lo detengas con 7');
         if ((fm === 'objetos' || fm === 'robar') && cfg.takeItems === 'pause') info('takeItems', 'El bot pausará cada vez que haya objetos para que los quites tú');
@@ -228,14 +235,14 @@
         if (fm === 'robar') info('mode', 'El primero del equipo necesita Ladrón o Antojo y no llevar objeto');
         if (fm === 'dinero') info('mode', 'Registra el Buscapelea en SELECT y graba la ruta de entrenadores con la tecla 5');
       }
-      checkNames('species', lk.species, 'Especie');
-      checkNames('avoidSpecies', lk.species, 'Especie');
-      checkNames('wantedMoves', lk.moves, 'Ataque');
-      checkNames('keepMoves', lk.moves, 'Ataque');
+      checkNames('species', lk.species, 'Especie desconocida: "{name}"');
+      checkNames('avoidSpecies', lk.species, 'Especie desconocida: "{name}"');
+      checkNames('wantedMoves', lk.moves, 'Ataque desconocido: "{name}"');
+      checkNames('keepMoves', lk.moves, 'Ataque desconocido: "{name}"');
       if ((asList(cfg.wantedMoves) || []).length > 4) err('wantedMoves', 'Máximo 4 ataques deseados');
       var only = asList(cfg.species) || [], avoid = asList(cfg.avoidSpecies) || [];
       only.forEach(function (n) {
-        if (avoid.map(simplify).indexOf(simplify(n)) !== -1) warn('species', n + ' está en las dos listas: el bot la evitará');
+        if (avoid.map(simplify).indexOf(simplify(n)) !== -1) warn('species', '{name} está en las dos listas: el bot la evitará', { name: n });
       });
       if (evs && typeof evs === 'object' && total > 0) {
         var wanted = {};
@@ -244,7 +251,7 @@
           var y = data.evYield[lk.species[simplify(n)]];
           if (!y) return;
           var extra = Object.keys(y).filter(function (s) { return !wanted[s]; });
-          if (extra.length && !cfg.allowOvershoot) warn('species', n + ' da EVs de ' + extra.join(', ') + ', que no están en tu objetivo: el bot huirá de ella');
+          if (extra.length && !cfg.allowOvershoot) warn('species', '{name} da EVs de {stats}, que no están en tu objetivo: el bot huirá de ella', { name: n, stats: extra.join(', ') });
         });
       }
       if (isInt(cfg.healBelow) && isInt(cfg.fleeBelow) && cfg.fleeBelow > cfg.healBelow) warn('fleeBelow', 'Huye con más PS de los que necesita para curarse: revisa los porcentajes');
@@ -252,7 +259,7 @@
       if (n !== undefined && n !== null) {
         if (typeof n !== 'object' || Array.isArray(n)) err('notify', 'Avisos: formato no válido');
         else {
-          Object.keys(n).forEach(function (k) { if (k !== 'ntfy' && k !== 'discord') warn('notify', 'Clave de aviso desconocida: "' + k + '"'); });
+          Object.keys(n).forEach(function (k) { if (k !== 'ntfy' && k !== 'discord') warn('notify', 'Clave de aviso desconocida: "{key}"', { key: k }); });
           if (n.ntfy !== undefined && n.ntfy !== null && !NTFY_TOPIC.test(String(n.ntfy))) err('notify', 'El tema de ntfy solo puede tener letras, números, - y _');
           if (n.ntfy && String(n.ntfy).length < 10) warn('notify', 'Tema de ntfy corto: cualquiera que lo adivine leerá tus avisos');
           if (n.discord !== undefined && n.discord !== null && !DISCORD_URL.test(String(n.discord))) err('notify', 'La URL de Discord debe empezar por https:// y no llevar caracteres raros');
@@ -290,7 +297,7 @@
   // integer numbers, which is what both bots' parsers accept.
   function serialize(bot, cfg, schema) {
     var def = schema.bots[bot], lines = ['{'];
-    def.header.forEach(function (h) { lines.push('  // ' + h); });
+    def.header.forEach(function (h) { lines.push('  // ' + tr(h)); });
     var all = [];
     def.sections.forEach(function (s) {
       var group = [];
@@ -299,9 +306,9 @@
         if (v === undefined) v = f.def;
         if (f.type === 'ivRange' || f.type === 'evs' || f.key === 'maxIVs') v = orderStats(v);
         if (Array.isArray(v) && !v.length) v = null;
-        group.push({ key: f.key, text: q(f.key) + ': ' + valueText(v), comment: f.comment });
+        group.push({ key: f.key, text: q(f.key) + ': ' + valueText(v), comment: f.comment && tr(f.comment) });
       });
-      all.push({ title: s.title, items: group });
+      all.push({ title: tr(s.title), items: group });
     });
     var count = all.reduce(function (n, g) { return n + g.items.length; }, 0), i = 0;
     all.forEach(function (g) {
@@ -395,19 +402,21 @@
     var go = cleanRoute(routePoints(goLine || '')), back = cleanRoute(routePoints(backLine || ''));
     var issues = [];
     if (goLine === null && backLine === null) {
-      issues.push({ level: 'error', msg: 'No parece un archivo de ruta: faltan las líneas GO y BACK' });
+      issues.push({ level: 'error', msg: tr('No parece un archivo de ruta: faltan las líneas GO y BACK') });
     } else {
-      if (!go.points.length) issues.push({ level: 'error', msg: 'La ida (GO) está vacía: graba la ruta otra vez' });
-      if (!back.points.length) issues.push({ level: 'error', msg: 'La vuelta (BACK) está vacía: graba la ruta otra vez' });
+      if (!go.points.length) issues.push({ level: 'error', msg: tr('La ida (GO) está vacía: graba la ruta otra vez') });
+      if (!back.points.length) issues.push({ level: 'error', msg: tr('La vuelta (BACK) está vacía: graba la ruta otra vez') });
     }
     var spot = back.points[back.points.length - 1] || null, start = go.points[0] || null;
     if (spot && start && !samePos(spot, start)) {
-      issues.push({ level: 'warn', msg: 'La vuelta no termina donde empieza la ida: el bot entrena donde acaba la vuelta' });
+      issues.push({ level: 'warn', msg: tr('La vuelta no termina donde empieza la ida: el bot entrena donde acaba la vuelta') });
     }
     var j = jumps(go.points) + jumps(back.points);
-    if (j) issues.push({ level: 'warn', msg: j + (j === 1 ? ' salto' : ' saltos') + ' de más de una casilla en el mismo mapa: el bot puede atascarse ahí' });
+    if (j) issues.push({ level: 'warn', msg: tr(j === 1 ? '{n} salto de más de una casilla en el mismo mapa: el bot puede atascarse ahí'
+      : '{n} saltos de más de una casilla en el mismo mapa: el bot puede atascarse ahí', { n: j }) });
     var dropped = go.dropped + back.dropped;
-    if (dropped) issues.push({ level: 'info', msg: dropped + (dropped === 1 ? ' punto repetido o' : ' puntos repetidos o') + ' de cruzar una puerta: el bot los ignora' });
+    if (dropped) issues.push({ level: 'info', msg: tr(dropped === 1 ? '{n} punto repetido o de cruzar una puerta: el bot los ignora'
+      : '{n} puntos repetidos o de cruzar una puerta: el bot los ignora', { n: dropped }) });
     var maps = [], byKey = {};
     [['go', go.points], ['back', back.points]].forEach(function (pair) {
       mapRuns(pair[1]).forEach(function (run) {

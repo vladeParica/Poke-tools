@@ -18,6 +18,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   sprites from Pokémon Database loaded when online and never stored in the repo (ADR-0013).
   The *Apariencia* dialog changes it: any Gen 1–3 Pokémon per bot, style (game sprite, HOME,
   official artwork), shiny, your own image or none, and its intensity.
+- Configurator in **English and Japanese** besides Spanish (*Apariencia* or `?lang=`), including
+  validation messages and the JSON comments it writes; a test checks nothing is untranslated
+  (ADR-0014). The bots' own text comes next.
 - Configurator: log stats (chart button): Shiny Bot finds with attempts, Train Bot runs, and Farm
   Bot money and level over time, items per type and rates per hour.
 - Configurator: route viewer (*Ver ruta*): draws a route file map by map and flags empty halves,

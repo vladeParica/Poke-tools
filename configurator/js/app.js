@@ -1,11 +1,12 @@
 // Configurator UI. Renders the schema as forms, keeps one config per bot, validates on
 // every change and saves the commented JSON next to the bot (File System Access API in
-// Edge/Chrome; download elsewhere). All player-facing text is Spanish.
+// Edge/Chrome; download elsewhere). Player-facing text is written in Spanish and goes
+// through tr() (js/i18n.js), which shows it in the chosen language.
 (function () {
   'use strict';
 
-  var PT = window.PT, schema = PT.schema, core = PT.core, data = PT.data, skins = PT.skins;
-  var DRAFT = 'pt-configurator-draft-v1', SKIN = 'pt-configurator-skin', BG = 'pt-configurator-backdrop';
+  var PT = window.PT, schema = PT.schema, core = PT.core, data = PT.data, skins = PT.skins, i18n = PT.i18n, tr = i18n.t;
+  var DRAFT = 'pt-configurator-draft-v1', SKIN = 'pt-configurator-skin', BG = 'pt-configurator-backdrop', LANG = 'pt-configurator-lang';
   var lk = null;
 
   var S = {
@@ -74,9 +75,14 @@
   function cfg() { return S.cfg[S.bot]; }
   function def() { return schema.bots[S.bot]; }
   function fieldDef(key) { return schema.fields(S.bot).filter(function (f) { return f.key === key; })[0]; }
-  function natLabel(n) { return n + ' · ' + (schema.NATURES_ES_DISPLAY[n] || ''); }
-  function typeLabel(t) { return (schema.TYPES_ES_DISPLAY[t] || t) + ' (' + t + ')'; }
-  function modeLabel(m) { var x = schema.MODES.filter(function (o) { return o.value === m; })[0]; return x ? x.label : m; }
+  // Nature and type names in the interface language (the JSON keeps the English ones).
+  function natDisplay(n) { return i18n.lang() === 'es' ? schema.NATURES_ES_DISPLAY[n] : (i18n.extra().natures || {})[n] || ''; }
+  function natLabel(n) { var d = natDisplay(n); return d ? n + ' · ' + d : n; }
+  function typeLabel(t) {
+    var d = i18n.lang() === 'es' ? schema.TYPES_ES_DISPLAY[t] : (i18n.extra().types || {})[t];
+    return d ? d + ' (' + t + ')' : t;
+  }
+  function modeLabel(m) { var x = schema.MODES.filter(function (o) { return o.value === m; })[0]; return x ? tr(x.label) : m; }
 
   var toastTimer;
   function toast(msg, ic) {
@@ -133,13 +139,13 @@
     var input = h('input', { type: 'checkbox', id: 'f-' + f.key });
     input.checked = cfg()[f.key] === undefined ? !!f.def : !!cfg()[f.key];
     input.addEventListener('change', function () { setVal(f.key, input.checked); });
-    return h('label', { class: 'switch', for: 'f-' + f.key }, input, h('span', { class: 'track' }), h('span', { text: f.label }));
+    return h('label', { class: 'switch', for: 'f-' + f.key }, input, h('span', { class: 'track' }), h('span', { text: tr(f.label) }));
   }
 
   function intCtl(f) {
     var v = cfg()[f.key];
     var num = h('input', { type: 'number', id: 'f-' + f.key, min: f.min, max: f.max, step: 1, inputmode: 'numeric',
-      placeholder: f.nullable ? 'vacío' : String(f.def) });
+      placeholder: f.nullable ? tr('vacío') : String(f.def) });
     if (v !== undefined && v !== null) num.value = v;
     else if (!f.nullable && f.def !== null) num.value = f.def;
     function commit() {
@@ -147,27 +153,27 @@
       setVal(f.key, Math.round(Number(num.value)));
     }
     num.addEventListener('input', commit);
-    if (!f.slider) return h('div', { class: 'row' }, num, f.unit ? h('span', { class: 'unit', text: f.unit }) : null);
-    var range = h('input', { type: 'range', min: f.min, max: f.max, step: 1, 'aria-label': f.label });
+    if (!f.slider) return h('div', { class: 'row' }, num, f.unit ? h('span', { class: 'unit', text: tr(f.unit) }) : null);
+    var range = h('input', { type: 'range', min: f.min, max: f.max, step: 1, 'aria-label': tr(f.label) });
     range.value = num.value || f.def;
     range.addEventListener('input', function () { num.value = range.value; commit(); });
     num.addEventListener('input', function () { range.value = num.value; });
-    return h('div', { class: 'slider-row' }, range, h('div', { class: 'row' }, num, f.unit ? h('span', { class: 'unit', text: f.unit }) : null));
+    return h('div', { class: 'slider-row' }, range, h('div', { class: 'row' }, num, f.unit ? h('span', { class: 'unit', text: tr(f.unit) }) : null));
   }
 
   function textCtl(f) {
     var v = cfg()[f.key];
-    var inp = h('input', { type: 'text', id: 'f-' + f.key, placeholder: f.nullable ? 'vacío = por defecto' : String(f.def), spellcheck: 'false' });
+    var inp = h('input', { type: 'text', id: 'f-' + f.key, placeholder: f.nullable ? tr('vacío = por defecto') : String(f.def), spellcheck: 'false' });
     inp.value = v === undefined || v === null ? (f.nullable ? '' : f.def) : v;
     inp.addEventListener('input', function () { setVal(f.key, inp.value.trim() === '' ? (f.nullable ? null : f.def) : inp.value.trim()); });
     return inp;
   }
 
   function enumCtl(f) {
-    var opts = f.options.map(function (o) { return typeof o === 'string' ? { value: o, label: modeLabel(o) } : o; });
+    var opts = f.options.map(function (o) { return typeof o === 'string' ? { value: o, label: modeLabel(o) } : { value: o.value, label: tr(o.label) }; });
     var cur = cfg()[f.key] === undefined ? f.def : cfg()[f.key];
     if (f.segmented) {
-      var wrap = h('div', { class: 'segmented', role: 'group', 'aria-label': f.label });
+      var wrap = h('div', { class: 'segmented', role: 'group', 'aria-label': tr(f.label) });
       opts.forEach(function (o) {
         var b = h('button', { type: 'button', 'aria-pressed': String(cur === o.value), text: o.label });
         b.addEventListener('click', function () {
@@ -180,7 +186,7 @@
       return wrap;
     }
     var sel = h('select', { id: 'f-' + f.key });
-    if (f.nullable) sel.appendChild(h('option', { value: '', text: '— ninguno —' }));
+    if (f.nullable) sel.appendChild(h('option', { value: '', text: tr('— ninguno —') }));
     opts.forEach(function (o) { sel.appendChild(h('option', { value: o.value, text: o.label })); });
     sel.value = cur === null || cur === undefined ? '' : cur;
     sel.addEventListener('change', function () { setVal(f.key, sel.value || null); });
@@ -188,12 +194,12 @@
   }
 
   function modeCtl(f) {
-    var grid = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': f.label });
+    var grid = h('div', { class: 'modes', role: 'radiogroup', 'aria-label': tr(f.label) });
     var cur = cfg().mode === undefined || cfg().mode === null ? f.def : cfg().mode;
     (f.cards || schema.MODES).forEach(function (m) {
       var b = h('button', { type: 'button', class: 'mode', role: 'radio', 'aria-checked': String(cur === m.value) },
-        h('span', { class: 'm-head' }, icon(m.icon), h('span', { text: m.label })),
-        h('span', { class: 'm-desc', text: m.desc }),
+        h('span', { class: 'm-head' }, icon(m.icon), h('span', { text: tr(m.label) })),
+        h('span', { class: 'm-desc', text: tr(m.desc) }),
         m.rng ? h('span', { class: 'rng', text: 'RNG' }) : null);
       b.addEventListener('click', function () {
         grid.querySelectorAll('.mode').forEach(function (x) { x.setAttribute('aria-checked', 'false'); });
@@ -224,7 +230,7 @@
     if (!y) return null;
     var t = evTargets(), out = h('span', { class: 'yield' });
     schema.STATS.forEach(function (s) {
-      if (y[s.key]) out.appendChild(h('span', { class: 'badge' + (t[s.key] ? ' hit' : ''), title: s.label, text: '+' + y[s.key] + ' ' + s.short }));
+      if (y[s.key]) out.appendChild(h('span', { class: 'badge' + (t[s.key] ? ' hit' : ''), title: tr(s.label), text: '+' + y[s.key] + ' ' + tr(s.short) }));
     });
     return out;
   }
@@ -232,15 +238,15 @@
   // Chip list editor for natures, species, moves and hex values.
   function chipsCtl(f) {
     var kind = f.type, table, options;
-    if (kind === 'natures') { table = lk.natures; options = data.natures.map(function (n) { return { value: n, label: schema.NATURES_ES_DISPLAY[n] }; }); }
+    if (kind === 'natures') { table = lk.natures; options = data.natures.map(function (n) { return { value: n, label: natDisplay(n) }; }); }
     if (kind === 'species') { table = lk.species; options = data.species.map(function (n) { return { value: n }; }); }
     if (kind === 'moves') { table = lk.moves; options = data.moves.map(function (n) { return { value: n }; }); }
     if (kind === 'items') { table = lk.items; options = data.items.map(function (n) { return { value: n }; }); }
     var box = h('div', { class: 'chips' });
     var dl = options ? datalist(options) : null;
-    var basePh = kind === 'hexlist' ? 'Ej. BC75 (Enter para añadir)' : kind === 'natures' ? 'Escribe una naturaleza…' : kind === 'moves' ? 'Escribe un ataque en inglés…' : kind === 'items' ? 'Escribe un objeto en inglés…' : 'Escribe una especie…';
+    var basePh = tr(kind === 'hexlist' ? 'Ej. BC75 (Enter para añadir)' : kind === 'natures' ? 'Escribe una naturaleza…' : kind === 'moves' ? 'Escribe un ataque en inglés…' : kind === 'items' ? 'Escribe un objeto en inglés…' : 'Escribe una especie…');
     var input = h('input', { type: 'text', id: 'f-' + f.key, list: dl ? dl.id : null, spellcheck: 'false', autocomplete: 'off', placeholder: basePh });
-    var addBtn = h('button', { type: 'button', class: 'btn icon', title: 'Añadir', 'aria-label': 'Añadir' }, icon('plus'));
+    var addBtn = h('button', { type: 'button', class: 'btn icon', title: tr('Añadir'), 'aria-label': tr('Añadir') }, icon('plus'));
     var msg = h('p', { class: 'help', hidden: true });
 
     function list() { return (cfg()[f.key] || []).slice(); }
@@ -250,14 +256,14 @@
       l.forEach(function (item, i) {
         var ok = kind === 'hexlist' ? /^[0-9A-F]{1,4}$/.test(item) : !!table[core.simplify(item)];
         var label = kind === 'natures' && ok ? natLabel(table[core.simplify(item)]) : item;
-        var rm = h('button', { type: 'button', title: 'Quitar', 'aria-label': 'Quitar ' + item }, icon('x'));
+        var rm = h('button', { type: 'button', title: tr('Quitar'), 'aria-label': tr('Quitar {item}', { item: item }) }, icon('x'));
         rm.addEventListener('click', function () { var n = list(); n.splice(i, 1); setVal(f.key, n); draw(); });
         box.appendChild(h('span', { class: 'chip' + (ok ? '' : ' bad') }, h('span', { text: label }),
           f.showYield && ok ? yieldBadges(table[core.simplify(item)]) : null, rm));
       });
       var full = f.max && l.length >= f.max;
       input.disabled = full; addBtn.disabled = full;
-      input.placeholder = full ? 'Máximo ' + f.max : basePh;
+      input.placeholder = full ? tr('Máximo {n}', { n: f.max }) : basePh;
       box.appendChild(h('span', { class: 'chip-input' }, input, addBtn));
     }
     function add(raw) {
@@ -272,7 +278,7 @@
         if (l.map(core.simplify).indexOf(core.simplify(v)) === -1 && !(f.max && l.length >= f.max)) l.push(v);
       });
       msg.hidden = !bad.length;
-      msg.textContent = bad.length ? 'No reconozco: ' + bad.join(', ') : '';
+      msg.textContent = bad.length ? tr('No reconozco: {list}', { list: bad.join(', ') }) : '';
       if (!bad.length) input.value = '';
       setVal(f.key, l);
       draw();
@@ -289,8 +295,8 @@
     var grid = h('div', { class: 'statgrid' });
     function get(k) { return cfg()[k] || {}; }
     schema.STATS.forEach(function (s) {
-      var mn = h('input', { type: 'number', min: 0, max: 31, placeholder: '0', 'aria-label': 'IV mínimo ' + s.label });
-      var mx = h('input', { type: 'number', min: 0, max: 31, placeholder: '31', 'aria-label': 'IV máximo ' + s.label });
+      var mn = h('input', { type: 'number', min: 0, max: 31, placeholder: '0', 'aria-label': tr('IV mínimo de {stat}', { stat: tr(s.label) }) });
+      var mx = h('input', { type: 'number', min: 0, max: 31, placeholder: '31', 'aria-label': tr('IV máximo de {stat}', { stat: tr(s.label) }) });
       if (get('minIVs')[s.key] !== undefined) mn.value = get('minIVs')[s.key];
       if (get('maxIVs')[s.key] !== undefined) mx.value = get('maxIVs')[s.key];
       function commit(which, input) {
@@ -306,16 +312,16 @@
         q.addEventListener('click', function () { mn.value = a; mx.value = b; commit('minIVs', mn); commit('maxIVs', mx); });
         return q;
       }
-      grid.appendChild(h('div', { class: 'statrow' }, icon(s.icon), h('span', { class: 'sname', text: s.label }),
-        h('span', { class: 'iv-pair' }, mn, h('span', { text: 'a' }), mx),
-        h('span', { class: 'quick' }, quick('31', 31, '', 'Mínimo 31'), quick('0', '', 0, 'Máximo 0 (ej. Ataque en especiales)'), quick('Libre', '', '', 'Sin filtro'))));
+      grid.appendChild(h('div', { class: 'statrow' }, icon(s.icon), h('span', { class: 'sname', text: tr(s.label) }),
+        h('span', { class: 'iv-pair' }, mn, h('span', { text: tr('a') }), mx),
+        h('span', { class: 'quick' }, quick('31', 31, '', tr('Mínimo 31')), quick('0', '', 0, tr('Máximo 0 (ej. Ataque en especiales)')), quick(tr('Libre'), '', '', tr('Sin filtro')))));
     });
     return grid;
   }
 
   function evCtl(f) {
     var wrap = h('div', { class: 'statgrid' });
-    var total = h('div', { class: 'total' }, h('div', { class: 'tline' }, h('span', { text: 'Total' }), h('span', { class: 'tval' })),
+    var total = h('div', { class: 'total' }, h('div', { class: 'tline' }, h('span', { text: tr('Total') }), h('span', { class: 'tval' })),
       h('div', { class: 'bar' }, h('span')));
     function get() { return cfg().evs || {}; }
     function drawTotal() {
@@ -326,8 +332,8 @@
       total.classList.toggle('over', t > 510);
     }
     schema.STATS.forEach(function (s) {
-      var range = h('input', { type: 'range', min: 0, max: 255, step: 1, 'aria-label': 'EVs de ' + s.label });
-      var num = h('input', { type: 'number', min: 0, max: 255, step: 1, 'aria-label': 'EVs de ' + s.label });
+      var range = h('input', { type: 'range', min: 0, max: 255, step: 1, 'aria-label': tr('EVs de {stat}', { stat: tr(s.label) }) });
+      var num = h('input', { type: 'number', min: 0, max: 255, step: 1, 'aria-label': tr('EVs de {stat}', { stat: tr(s.label) }) });
       var v = get()[s.key] || 0;
       range.value = v; num.value = v;
       function commit(val) {
@@ -345,7 +351,7 @@
         b.addEventListener('click', function () { commit(n); });
         return b;
       }
-      wrap.appendChild(h('div', { class: 'statrow' }, icon(s.icon), h('span', { class: 'sname', text: s.label }),
+      wrap.appendChild(h('div', { class: 'statrow' }, icon(s.icon), h('span', { class: 'sname', text: tr(s.label) }),
         h('div', { class: 'slider-row' }, range, num), h('span', { class: 'quick' }, quick(0), quick(4), quick(252))));
     });
     drawTotal();
@@ -358,10 +364,10 @@
 
   function hpCtl() {
     var cur = cfg().hiddenPower || {};
-    var sel = h('select', { 'aria-label': 'Tipo de Poder Oculto' }, h('option', { value: '', text: '— sin filtro —' }));
+    var sel = h('select', { 'aria-label': tr('Tipo de Poder Oculto') }, h('option', { value: '', text: tr('— sin filtro —') }));
     data.hpTypes.forEach(function (t) { sel.appendChild(h('option', { value: t, text: typeLabel(t) })); });
     sel.value = cur.type || '';
-    var pow = h('input', { type: 'number', min: 30, max: 70, placeholder: '30–70', 'aria-label': 'Potencia mínima' });
+    var pow = h('input', { type: 'number', min: 30, max: 70, placeholder: '30–70', 'aria-label': tr('Potencia mínima') });
     if (cur.minPower) pow.value = cur.minPower;
     function commit() {
       var o = {};
@@ -370,13 +376,13 @@
       setVal('hiddenPower', o);
     }
     sel.addEventListener('change', commit); pow.addEventListener('input', commit);
-    return h('div', { class: 'row' }, h('div', { style: 'flex:1 1 200px' }, sel), pow, h('span', { class: 'unit', text: 'potencia mínima' }));
+    return h('div', { class: 'row' }, h('div', { style: 'flex:1 1 200px' }, sel), pow, h('span', { class: 'unit', text: tr('potencia mínima') }));
   }
 
   function notifyCtl() {
     var cur = cfg().notify || {};
-    var topic = h('input', { type: 'text', spellcheck: 'false', autocomplete: 'off', placeholder: 'frlg-xxxxxxxxxxxxxx', 'aria-label': 'Tema de ntfy' });
-    var url = h('input', { type: 'url', spellcheck: 'false', autocomplete: 'off', placeholder: 'https://discord.com/api/webhooks/…', 'aria-label': 'Webhook de Discord' });
+    var topic = h('input', { type: 'text', spellcheck: 'false', autocomplete: 'off', placeholder: 'frlg-xxxxxxxxxxxxxx', 'aria-label': tr('Tema de ntfy') });
+    var url = h('input', { type: 'url', spellcheck: 'false', autocomplete: 'off', placeholder: 'https://discord.com/api/webhooks/…', 'aria-label': tr('Webhook de Discord') });
     topic.value = cur.ntfy || ''; url.value = cur.discord || '';
     function commit() {
       var o = {};
@@ -385,19 +391,19 @@
       setVal('notify', o);
     }
     topic.addEventListener('input', commit); url.addEventListener('input', commit);
-    var gen = h('button', { type: 'button', class: 'btn', title: 'Crear un tema difícil de adivinar' }, icon('wand'), 'Generar');
-    gen.addEventListener('click', function () { topic.value = core.randomTopic(); commit(); toast('Tema nuevo: suscríbete a él en la app ntfy'); });
+    var gen = h('button', { type: 'button', class: 'btn', title: tr('Crear un tema difícil de adivinar') }, icon('wand'), tr('Generar'));
+    gen.addEventListener('click', function () { topic.value = core.randomTopic(); commit(); toast(tr('Tema nuevo: suscríbete a él en la app ntfy')); });
     return h('div', { class: 'statgrid' },
-      h('div', null, h('div', { class: 'help', text: 'ntfy (tema)' }), h('div', { class: 'row' }, h('div', { style: 'flex:1 1 220px' }, topic), gen)),
-      h('div', null, h('div', { class: 'help', text: 'Discord (webhook)' }), url));
+      h('div', null, h('div', { class: 'help', text: tr('ntfy (tema)') }), h('div', { class: 'row' }, h('div', { style: 'flex:1 1 220px' }, topic), gen)),
+      h('div', null, h('div', { class: 'help', text: tr('Discord (webhook)') }), url));
   }
 
   function routeCtl(f) {
     var cur = cfg().routeFile || f.def;
     var known = [f.def].concat(data.routes);
     var sel = h('select', { id: 'f-routeFile' });
-    known.forEach(function (r) { sel.appendChild(h('option', { value: r, text: r === f.def ? r + ' (grabada con la tecla 6)' : r + ' (lista para usar)' })); });
-    sel.appendChild(h('option', { value: '__other', text: 'Otro nombre…' }));
+    known.forEach(function (r) { sel.appendChild(h('option', { value: r, text: tr(r === f.def ? '{file} (grabada con la tecla 6)' : '{file} (lista para usar)', { file: r }) })); });
+    sel.appendChild(h('option', { value: '__other', text: tr('Otro nombre…') }));
     var other = h('input', { type: 'text', spellcheck: 'false', placeholder: 'FRLG_TrainRoute_Lugar.txt', hidden: true });
     if (known.indexOf(cur) === -1) { sel.value = '__other'; other.hidden = false; other.value = cur; } else sel.value = cur;
     sel.addEventListener('change', function () {
@@ -408,7 +414,7 @@
       if (data.routes.indexOf(sel.value) !== -1 && cfg().healMode !== (tile ? 'tile' : 'nurse')) {
         cfg().healMode = tile ? 'tile' : 'nurse';
         renderForm();
-        toast('Curación ajustada a "' + (tile ? 'Casilla que cura' : 'Enfermera') + '" para esa ruta');
+        toast(tr('Curación ajustada a "{mode}" para esa ruta', { mode: tr(tile ? 'Casilla que cura' : 'Enfermera') }));
       }
     });
     other.addEventListener('input', function () { setVal('routeFile', other.value.trim() || f.def); });
@@ -426,11 +432,11 @@
     var ctl = BUILDERS[f.type](f);
     var isBool = f.type === 'bool';
     var view = f.viewer ? h('button', { type: 'button', class: 'btn small route-view', onclick: function () { viewRoute(f); } },
-      icon('route'), h('span', { text: 'Ver ruta' })) : null;
+      icon('route'), h('span', { text: tr('Ver ruta') })) : null;
     return h('div', { class: 'field' + (f.half ? ' half' : ''), 'data-key': f.key },
-      isBool ? null : h('label', { class: 'label', for: 'f-' + f.key }, h('span', { text: f.label }), h('code', { text: f.key })),
+      isBool ? null : h('label', { class: 'label', for: 'f-' + f.key }, h('span', { text: tr(f.label) }), h('code', { text: f.key })),
       h('div', { class: 'control-wrap' }, ctl, view),
-      f.help ? h('p', { class: 'help', text: f.help }) : null);
+      f.help ? h('p', { class: 'help', text: tr(f.help) }) : null);
   }
 
   // ---------------------------------------------------------------- render
@@ -465,29 +471,29 @@
   function renderNav() {
     var nav = $('sections'), d = def(), cur = currentSection();
     nav.innerHTML = '';
-    var presetSel = h('select', { 'aria-label': 'Ejemplos', title: 'Cargar un ejemplo' });
-    presetSel.appendChild(h('option', { value: '', text: 'Cargar ejemplo…' }));
-    data.presets[S.bot].forEach(function (p, i) { presetSel.appendChild(h('option', { value: i, text: p.name.replace(/\.$/, '') })); });
+    var presetSel = h('select', { 'aria-label': tr('Ejemplos'), title: tr('Cargar un ejemplo') });
+    presetSel.appendChild(h('option', { value: '', text: tr('Cargar ejemplo…') }));
+    data.presets[S.bot].forEach(function (p, i) { presetSel.appendChild(h('option', { value: i, text: tr(p.name.replace(/\.$/, '')) })); });
     presetSel.addEventListener('change', function () {
       if (presetSel.value === '') return;
       var p = data.presets[S.bot][Number(presetSel.value)];
-      if (!confirm('Esto reemplaza la configuración actual de ' + d.name + ' por "' + p.name.replace(/\.$/, '') + '". ¿Seguir?')) { presetSel.value = ''; return; }
+      if (!confirm(tr('Esto reemplaza la configuración actual de {bot} por "{name}". ¿Seguir?', { bot: d.name, name: tr(p.name.replace(/\.$/, '')) }))) { presetSel.value = ''; return; }
       S.cfg[S.bot] = presetConfig(S.bot, Number(presetSel.value));
       S.origin[S.bot] = p.name;
       renderForm();
-      toast('Ejemplo cargado: ' + p.name.replace(/\.$/, ''));
+      toast(tr('Ejemplo cargado: {name}', { name: tr(p.name.replace(/\.$/, '')) }));
     });
     nav.appendChild(h('div', { class: 'nav-head' },
       h('span', { class: 'bot-icon' }, icon(d.icon)),
-      h('div', null, h('b', { text: d.name }), h('small', { text: d.tagline }))));
+      h('div', null, h('b', { text: d.name }), h('small', { text: tr(d.tagline) }))));
     nav.appendChild(presetSel);
 
-    var list = h('div', { class: 'nav-list', role: 'tablist', 'aria-orientation': 'vertical', 'aria-label': 'Secciones' });
+    var list = h('div', { class: 'nav-list', role: 'tablist', 'aria-orientation': 'vertical', 'aria-label': tr('Secciones') });
     var shownAdvanced = false;
     def().sections.forEach(function (s) {
-      if (s.advanced && !shownAdvanced) { list.appendChild(h('div', { class: 'nav-sep', text: 'Avanzado' })); shownAdvanced = true; }
+      if (s.advanced && !shownAdvanced) { list.appendChild(h('div', { class: 'nav-sep', text: tr('Avanzado') })); shownAdvanced = true; }
       var b = h('button', { type: 'button', role: 'tab', class: 'nav-item', 'data-nav': s.id, 'aria-selected': String(cur && cur.id === s.id) },
-        h('span', { class: 'n-icon' }, icon(s.icon)), h('span', { class: 'n-title', text: s.title }), h('span', { class: 'n-badge', hidden: true }));
+        h('span', { class: 'n-icon' }, icon(s.icon)), h('span', { class: 'n-title', text: tr(s.title) }), h('span', { class: 'n-badge', hidden: true }));
       b.addEventListener('click', function () { goSection(s.id); });
       list.appendChild(b);
     });
@@ -515,17 +521,17 @@
       if (!target) return h('span');
       var b = h('button', { type: 'button', class: 'btn' + (dir > 0 ? ' primary' : '') },
         dir < 0 ? h('span', { class: 'flip' }, icon('chevron')) : null,
-        h('span', { text: (dir < 0 ? 'Anterior: ' : 'Siguiente: ') + target.title }),
+        h('span', { text: tr(dir < 0 ? 'Anterior: {s}' : 'Siguiente: {s}', { s: tr(target.title) }) }),
         dir > 0 ? h('span', { class: 'turn' }, icon('chevron')) : null);
       b.addEventListener('click', function () { goSection(target.id); });
       return b;
     }
     main.appendChild(h('section', { class: 'card panel', 'data-section': s.id, role: 'tabpanel' },
       h('div', { class: 'backdrop', 'aria-hidden': 'true', style: bgOpacity() === null ? null : 'opacity:' + bgOpacity() }, backdrop()),
-      h('button', { type: 'button', class: 'btn small bg-btn', title: 'Cambiar el fondo', onclick: function () { openAppearance(true); } },
-        icon('palette'), h('span', { text: 'Fondo' })),
+      h('button', { type: 'button', class: 'btn small bg-btn', title: tr('Cambiar el fondo'), onclick: function () { openAppearance(true); } },
+        icon('palette'), h('span', { text: tr('Fondo') })),
       h('header', null, h('span', { class: 'sec-icon' }, icon(s.icon)),
-        h('div', null, h('h2', { text: s.title }), s.desc ? h('p', { text: s.desc }) : null),
+        h('div', null, h('h2', { text: tr(s.title) }), s.desc ? h('p', { text: tr(s.desc) }) : null),
         h('span', { class: 'step', text: (i + 1) + ' / ' + vis.length })),
       h('div', { class: 'scroll' }, body),
       h('footer', null, stepBtn(prev, -1), stepBtn(next, 1))));
@@ -576,8 +582,8 @@
     sum.className = 'summary ' + (errs.length ? 'error' : warns.length ? 'warn' : 'ok');
     sum.innerHTML = '';
     sum.appendChild(icon(errs.length ? 'error' : warns.length ? 'warn' : 'check'));
-    sum.appendChild(h('span', { text: errs.length ? errs.length + (errs.length === 1 ? ' error: el bot no arrancaría' : ' errores: el bot no arrancaría')
-      : warns.length ? 'Lista, con ' + warns.length + (warns.length === 1 ? ' aviso' : ' avisos') : 'Lista para usar' }));
+    sum.appendChild(h('span', { text: errs.length ? tr(errs.length === 1 ? '{n} error: el bot no arrancaría' : '{n} errores: el bot no arrancaría', { n: errs.length })
+      : warns.length ? tr(warns.length === 1 ? 'Lista, con {n} aviso' : 'Lista, con {n} avisos', { n: warns.length }) : tr('Lista para usar') }));
     var cnt = $('issue-count');
     cnt.hidden = !(errs.length || warns.length);
     cnt.textContent = errs.length || warns.length;
@@ -596,17 +602,17 @@
       if (p) {
         badge.className = 'n-badge ' + (p.error ? 'error' : 'warn');
         badge.textContent = p.error || p.warn;
-        badge.title = p.error ? p.error + ' error(es)' : p.warn + ' aviso(s)';
+        badge.title = p.error ? tr('{n} error(es)', { n: p.error }) : tr('{n} aviso(s)', { n: p.warn });
       }
     });
     var ul = $('issues');
     ul.innerHTML = '';
     document.querySelectorAll('.field.has-error').forEach(function (el) { el.classList.remove('has-error'); });
-    if (!issues.length) ul.appendChild(h('li', { class: 'empty', text: 'Sin problemas. Guarda y, en el juego, pulsa 0 para recargar.' }));
+    if (!issues.length) ul.appendChild(h('li', { class: 'empty', text: tr('Sin problemas. Guarda y, en el juego, pulsa 0 para recargar.') }));
     issues.forEach(function (i) {
       var s = def().sections.filter(function (x) { return x.id === sectionOf(i.key); })[0];
       var b = h('button', { type: 'button' }, icon(i.level === 'error' ? 'error' : i.level === 'warn' ? 'warn' : 'info'),
-        h('span', null, h('span', { text: i.msg }), s ? h('small', { text: s.title }) : null));
+        h('span', null, h('span', { text: i.msg }), s ? h('small', { text: tr(s.title) }) : null));
       b.addEventListener('click', function () { focusField(i.key); });
       ul.appendChild(h('li', { class: i.level }, b));
       if (i.level === 'error') {
@@ -618,8 +624,8 @@
     var tf = $('target-file');
     tf.innerHTML = '';
     tf.appendChild(icon('folder'));
-    tf.appendChild(h('span', { text: S.dir ? 'Se guardará en la carpeta "' + S.dir.name + '" como ' + def().file
-      : 'Se descargará como ' + def().file + '. Ponlo junto a ' + def().script + '.' }));
+    tf.appendChild(h('span', { text: S.dir ? tr('Se guardará en la carpeta "{dir}" como {file}', { dir: S.dir.name, file: def().file })
+      : tr('Se descargará como {file}. Ponlo junto a {script}.', { file: def().file, script: def().script }) }));
     $('preview-name').textContent = def().file;
     $('preview').innerHTML = highlight(core.serialize(S.bot, c, schema));
     saveDraft();
@@ -655,7 +661,8 @@
     S.bot = bot;
     renderTabs(); renderForm();
     var unknown = core.unknownKeys(bot, p.value, schema);
-    toast('Cargado ' + (name || 'JSON') + ' (' + schema.bots[bot].name + ')' + (unknown.length ? ' · opciones desconocidas: ' + unknown.join(', ') : ''), unknown.length ? 'warn' : 'check');
+    toast(tr('Cargado {name} ({bot})', { name: name || 'JSON', bot: schema.bots[bot].name }) +
+      (unknown.length ? tr(' · opciones desconocidas: {list}', { list: unknown.join(', ') }) : ''), unknown.length ? 'warn' : 'check');
     return true;
   }
 
@@ -679,30 +686,30 @@
           return file.text().then(function (t) { loadText(t, dir.name + '/' + file.name); });
         }, function () {
           renderTabs(); renderForm();
-          toast(found.length ? 'Carpeta abierta: aún no tiene ' + schema.bots[S.bot].file + '; se creará al guardar'
-            : 'Carpeta abierta (no veo el .lua del bot aquí, revisa que sea la correcta)', found.length ? 'folder' : 'warn');
+          toast(found.length ? tr('Carpeta abierta: aún no tiene {file}; se creará al guardar', { file: schema.bots[S.bot].file })
+            : tr('Carpeta abierta (no veo el .lua del bot aquí, revisa que sea la correcta)'), found.length ? 'folder' : 'warn');
         });
       });
-    }).catch(function (e) { if (e && e.name !== 'AbortError') toast('No pude abrir la carpeta: ' + e.message, 'error'); });
+    }).catch(function (e) { if (e && e.name !== 'AbortError') toast(tr('No pude abrir la carpeta: {msg}', { msg: e.message }), 'error'); });
   }
 
   function save() {
     var c = cfg(), d = def();
     var errs = core.validate(S.bot, c, data, schema).filter(function (i) { return i.level === 'error'; });
-    if (errs.length && !confirm('Hay ' + errs.length + ' error(es): el bot no arrancará con este archivo. ¿Guardar igual?')) return;
+    if (errs.length && !confirm(tr('Hay {n} error(es): el bot no arrancará con este archivo. ¿Guardar igual?', { n: errs.length }))) return;
     var text = core.serialize(S.bot, c, schema);
     if (S.dir) {
       S.dir.getFileHandle(d.file, { create: true }).then(function (fh) { return fh.createWritable(); })
         .then(function (w) { return w.write(text).then(function () { return w.close(); }); })
-        .then(function () { toast('Guardado en ' + S.dir.name + '/' + d.file + '. En el juego pulsa 0 para recargarlo.'); })
-        .catch(function (e) { toast('No pude guardar: ' + e.message, 'error'); });
+        .then(function () { toast(tr('Guardado en {path}. En el juego pulsa 0 para recargarlo.', { path: S.dir.name + '/' + d.file })); })
+        .catch(function (e) { toast(tr('No pude guardar: {msg}', { msg: e.message }), 'error'); });
       return;
     }
     if (window.showSaveFilePicker) {
-      window.showSaveFilePicker({ suggestedName: d.file, types: [{ description: 'Configuración del bot', accept: { 'application/json': ['.json'] } }] })
+      window.showSaveFilePicker({ suggestedName: d.file, types: [{ description: tr('Configuración del bot'), accept: { 'application/json': ['.json'] } }] })
         .then(function (fh) { return fh.createWritable(); })
         .then(function (w) { return w.write(text).then(function () { return w.close(); }); })
-        .then(function () { toast('Guardado ' + d.file + '. Ponlo junto a ' + d.script + '.'); })
+        .then(function () { toast(tr('Guardado {file}. Ponlo junto a {script}.', { file: d.file, script: d.script })); })
         .catch(function (e) { if (e && e.name !== 'AbortError') download(text, d.file); });
       return;
     }
@@ -712,24 +719,24 @@
   function download(text, name) {
     var a = h('a', { href: URL.createObjectURL(new Blob([text], { type: 'application/json' })), download: name });
     document.body.appendChild(a); a.click(); a.remove();
-    toast('Descargado ' + name + '. Muévelo a la carpeta del bot.', 'download');
+    toast(tr('Descargado {name}. Muévelo a la carpeta del bot.', { name: name }), 'download');
   }
 
   // ---------------------------------------------------------------- skins
   function renderSkins() {
     var sel = $('skin-select');
     sel.innerHTML = '';
-    skins.list().forEach(function (s) { sel.appendChild(h('option', { value: s.id, text: s.name + (s.builtin ? '' : ' ★') })); });
+    skins.list().forEach(function (s) { sel.appendChild(h('option', { value: s.id, text: (s.builtin ? tr(s.name) : s.name + ' ★') })); });
     sel.value = S.skin;
     var ul = $('skin-list');
     ul.innerHTML = '';
     skins.list().forEach(function (s) {
       var row = h('button', { type: 'button' }, icon(s.id === S.skin ? 'check' : 'palette'),
-        h('span', { text: s.name + (s.author ? ' — ' + s.author : '') + (s.builtin ? '' : ' (importado)') }));
+        h('span', { text: (s.builtin ? tr(s.name) : s.name) + (s.author ? ' — ' + s.author : '') + (s.builtin ? '' : tr(' (importado)')) }));
       row.addEventListener('click', function () { applySkin(s.id); });
       var li = h('li', null, row);
       if (!s.builtin) {
-        var del = h('button', { type: 'button', class: 'btn small', text: 'Borrar' });
+        var del = h('button', { type: 'button', class: 'btn small', text: tr('Borrar') });
         del.addEventListener('click', function () { skins.remove(s.id); if (S.skin === s.id) applySkin('fuego'); else renderSkins(); });
         li.appendChild(del);
       }
@@ -764,11 +771,11 @@
     where.then(function (d) { return d.getFileHandle(file); }).then(function (fh) { return fh.getFile(); })
       .then(function (f) { return f.text(); })
       .then(function (t) { showLog(file, t); },
-        function () { toast('No encuentro ' + (dir ? dir + '/' : '') + file + ' en "' + S.dir.name + '": ¿ya corriste el bot?', 'warn'); });
+        function () { toast(tr('No encuentro {path} en "{dir}": ¿ya corriste el bot?', { path: (dir ? dir + '/' : '') + file, dir: S.dir.name }), 'warn'); });
   }
   function readLogFile(f) {
     if (!f) return;
-    if (f.size > 20000000) { toast('Ese archivo es demasiado grande para un log', 'warn'); return; }
+    if (f.size > 20000000) { toast(tr('Ese archivo es demasiado grande para un log'), 'warn'); return; }
     f.text().then(function (t) { showLog(f.name, t); });
   }
   function fmtDur(ms) {
@@ -777,7 +784,7 @@
   }
   function fmtTime(t) { var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
   function fmtDate(t) { var d = new Date(t); return d.getDate() + '/' + (d.getMonth() + 1) + ' ' + fmtTime(t); }
-  function fmtNum(n) { return Math.round(n).toLocaleString('es'); }
+  function fmtNum(n) { return Math.round(n).toLocaleString(i18n.lang()); }
   function perHour(n, ms) { return ms >= 600000 ? ' · ' + fmtNum(n * 3600000 / ms) + '/h' : ''; }
   function tile(label, value, sub) {
     return h('div', { class: 'stat-tile' }, h('span', { class: 'help', text: label }), h('b', { text: value }), sub ? h('span', { class: 'help', text: sub }) : null);
@@ -835,21 +842,21 @@
   function renderStats() {
     var rep = STATS.rep, out = $('stats-out');
     out.innerHTML = '';
-    $('stats-title').textContent = 'Estadísticas' + (rep && rep.bot ? ': ' + BOT_NAMES[rep.bot] + ' (' + STATS.name + ')' : '');
+    $('stats-title').textContent = tr('Estadísticas') + (rep && rep.bot ? ': ' + BOT_NAMES[rep.bot] + ' (' + STATS.name + ')' : '');
     if (!rep) return;
     if (!rep.bot) {
-      out.appendChild(h('p', { class: 'help', text: 'No reconozco "' + STATS.name + '": elige un log de los bots (shiny_log.txt, train_log.txt o farm_log.txt).' }));
+      out.appendChild(h('p', { class: 'help', text: tr('No reconozco "{name}": elige un log de los bots (shiny_log.txt, train_log.txt o farm_log.txt).', { name: STATS.name }) }));
       return;
     }
     if (rep.bot === 'shinybot') {
       out.appendChild(h('div', { class: 'stat-tiles' },
-        tile('Encontrados', fmtNum(rep.finds.length)), tile('Shinies', fmtNum(rep.shinies)),
-        tile('Intentos de media', rep.finds.length ? fmtNum(rep.avgTries) : '–'), tile('Shinies descartados', fmtNum(rep.discarded), 'no cumplían tus filtros'),
-        rep.sids ? tile('TID/SID conseguidos', fmtNum(rep.sids)) : null, rep.seeds ? tile('Semillas conseguidas', fmtNum(rep.seeds)) : null));
-      if (!rep.finds.length) { out.appendChild(h('p', { class: 'help', text: 'Este log aún no tiene hallazgos.' })); return; }
-      var head = h('tr', null, ['Fecha', 'Pokémon', 'Tipo', 'Naturaleza', 'IVs', 'Intentos', 'Modo'].map(function (c) { return h('th', { text: c }); }));
+        tile(tr('Encontrados'), fmtNum(rep.finds.length)), tile(tr('Shinies'), fmtNum(rep.shinies)),
+        tile(tr('Intentos de media'), rep.finds.length ? fmtNum(rep.avgTries) : '–'), tile(tr('Shinies descartados'), fmtNum(rep.discarded), tr('no cumplían tus filtros')),
+        rep.sids ? tile(tr('TID/SID conseguidos'), fmtNum(rep.sids)) : null, rep.seeds ? tile(tr('Semillas conseguidas'), fmtNum(rep.seeds)) : null));
+      if (!rep.finds.length) { out.appendChild(h('p', { class: 'help', text: tr('Este log aún no tiene hallazgos.') })); return; }
+      var head = h('tr', null, [tr('Fecha'), tr('Pokémon'), tr('Tipo'), tr('Naturaleza'), tr('IVs'), tr('Intentos'), tr('Modo')].map(function (c) { return h('th', { text: c }); }));
       var rows = rep.finds.slice().reverse().map(function (f) {
-        return h('tr', null, [fmtDate(f.t), f.species, f.kind === 'OBJETIVO' ? 'Objetivo' : f.kind.replace('SHINY', 'Shiny'), f.nature, f.ivs, fmtNum(f.tries), f.mode]
+        return h('tr', null, [fmtDate(f.t), f.species, f.kind === 'OBJETIVO' ? tr('Objetivo') : f.kind.replace('SHINY', 'Shiny'), f.nature, f.ivs, fmtNum(f.tries), f.mode]
           .map(function (c) { return h('td', { text: c }); }));
       });
       out.appendChild(h('div', { class: 'stat-table' }, h('table', null, h('thead', null, head), h('tbody', null, rows))));
@@ -859,22 +866,22 @@
     if (rep.bot === 'farmbot') {
       var lv = s.levels.length ? s.levels[s.levels.length - 1].v - s.levels[0].v : 0;
       out.appendChild(h('div', { class: 'stat-tiles' },
-        tile('Duración', fmtDur(dur), fmtDate(s.start) + (s.mode ? ' · modo ' + s.mode : '')),
-        s.earned || s.mode === 'dinero' ? tile('Dinero ganado', '$' + fmtNum(s.earned), perHour(s.earned, dur).replace(' · ', '')) : null,
-        s.found || s.mode === 'objetos' || s.mode === 'robar' ? tile('Objetos', fmtNum(s.found), (s.stored ? s.stored + ' guardados' : '') + perHour(s.found, dur)) : null,
-        tile('Niveles', '+' + lv, s.species ? s.species + (s.levels.length ? ' Nv.' + s.levels[s.levels.length - 1].v : '') : ''),
-        tile('Curas', fmtNum(s.heals)), s.laps ? tile('Vueltas', fmtNum(s.laps)) : null));
+        tile(tr('Duración'), fmtDur(dur), fmtDate(s.start) + (s.mode ? tr(' · modo {mode}', { mode: s.mode }) : '')),
+        s.earned || s.mode === 'dinero' ? tile(tr('Dinero ganado'), '$' + fmtNum(s.earned), perHour(s.earned, dur).replace(' · ', '')) : null,
+        s.found || s.mode === 'objetos' || s.mode === 'robar' ? tile(tr('Objetos'), fmtNum(s.found), (s.stored ? tr('{n} guardados', { n: s.stored }) : '') + perHour(s.found, dur)) : null,
+        tile(tr('Niveles'), '+' + lv, s.species ? s.species + (s.levels.length ? ' ' + tr('Nv.') + s.levels[s.levels.length - 1].v : '') : ''),
+        tile(tr('Curas'), fmtNum(s.heals)), s.laps ? tile(tr('Vueltas'), fmtNum(s.laps)) : null));
       if (s.done) out.appendChild(h('p', { class: 'stat-done' }, icon('check'), h('span', { text: s.done })));
       var charts = h('div', { class: 'stat-charts' });
-      if (s.money.length > 1) charts.appendChild(lineChart('Dinero', s.money, function (v) { return '$' + fmtNum(v); }));
-      if (s.levels.length > 1) charts.appendChild(lineChart('Nivel del primero del equipo', s.levels, function (v) { return 'Nv.' + Math.round(v); }));
-      if (Object.keys(s.items).length) charts.appendChild(barList('Objetos conseguidos', s.items));
+      if (s.money.length > 1) charts.appendChild(lineChart(tr('Dinero'), s.money, function (v) { return '$' + fmtNum(v); }));
+      if (s.levels.length > 1) charts.appendChild(lineChart(tr('Nivel del primero del equipo'), s.levels, function (v) { return tr('Nv.') + Math.round(v); }));
+      if (Object.keys(s.items).length) charts.appendChild(barList(tr('Objetos conseguidos'), s.items));
       if (charts.children.length) out.appendChild(charts);
-      else out.appendChild(h('p', { class: 'help', text: 'En esta sesión no hubo cambios de dinero, nivel ni objetos todavía.' }));
+      else out.appendChild(h('p', { class: 'help', text: tr('En esta sesión no hubo cambios de dinero, nivel ni objetos todavía.') }));
     } else {
       out.appendChild(h('div', { class: 'stat-tiles' },
-        tile('Duración', fmtDur(dur), fmtDate(s.start)), tile('Pokémon', s.species || '?', s.level ? 'empezó en Nv.' + s.level : ''),
-        tile('Viajes al Centro', fmtNum(s.heals)), tile('Evoluciones', fmtNum(s.evolutions)), tile('Ataques aprendidos', fmtNum(s.learned))));
+        tile(tr('Duración'), fmtDur(dur), fmtDate(s.start)), tile(tr('Pokémon'), s.species || '?', s.level ? tr('empezó en Nv.{n}', { n: s.level }) : ''),
+        tile(tr('Viajes al Centro'), fmtNum(s.heals)), tile(tr('Evoluciones'), fmtNum(s.evolutions)), tile(tr('Ataques aprendidos'), fmtNum(s.learned))));
       if (s.events.length) {
         out.appendChild(h('ul', { class: 'stat-events' }, s.events.map(function (e) {
           return h('li', null, h('span', { class: 'help', text: fmtTime(e.t) }), h('span', { text: e.msg }));
@@ -906,7 +913,7 @@
     if (S.dir) {
       S.dir.getFileHandle(name).then(function (fh) { return fh.getFile(); }).then(function (file) { return file.text(); })
         .then(function (t) { showRoute(name, t); }, function () {
-          toast('No encuentro ' + name + ' en la carpeta "' + S.dir.name + '": elígelo a mano', 'warn');
+          toast(tr('No encuentro {name} en la carpeta "{dir}": elígelo a mano', { name: name, dir: S.dir.name }), 'warn');
           $('route-file').value = ''; $('route-file').click();
         });
       return;
@@ -916,7 +923,7 @@
   $('route-file').addEventListener('change', function () {
     var f = this.files[0];
     if (!f) return;
-    if (f.size > 500000) { toast('Ese archivo es demasiado grande para ser una ruta', 'warn'); return; }
+    if (f.size > 500000) { toast(tr('Ese archivo es demasiado grande para ser una ruta'), 'warn'); return; }
     f.text().then(function (t) { showRoute(f.name, t); });
   });
   $('btn-route-file').addEventListener('click', function () { $('route-file').value = ''; $('route-file').click(); });
@@ -933,7 +940,7 @@
     var x0 = Math.min.apply(null, xs) - 1, y0 = Math.min.apply(null, ys) - 1;
     var w = Math.max.apply(null, xs) - x0 + 2, hh = Math.max.apply(null, ys) - y0 + 2;
     var svg = svgEl('svg', { viewBox: (x0 - 0.5) + ' ' + (y0 - 0.5) + ' ' + w + ' ' + hh, width: w * 14, height: hh * 14,
-      role: 'img', 'aria-label': 'Mapa ' + m.g + '.' + m.n });
+      role: 'img', 'aria-label': tr('Mapa {id}', { id: m.g + '.' + m.n }) });
     var grid = '';
     for (var x = x0; x <= x0 + w; x++) grid += 'M' + (x - 0.5) + ' ' + (y0 - 0.5) + 'v' + hh;
     for (var y = y0; y <= y0 + hh; y++) grid += 'M' + (x0 - 0.5) + ' ' + (y - 0.5) + 'h' + w;
@@ -944,7 +951,7 @@
     }
     m.back.forEach(function (r) { line(r, 'back'); });
     m.go.forEach(function (r) { line(r, 'go'); });
-    [[rep.heal, 'heal', 'Fin de la ida'], [rep.spot, 'spot', 'Punto de entreno']].forEach(function (k) {
+    [[rep.heal, 'heal', tr('Fin de la ida')], [rep.spot, 'spot', tr('Punto de entreno')]].forEach(function (k) {
       var p = k[0];
       if (p && p.g === m.g && p.n === m.n) {
         var c = svgEl('circle', { cx: p.x, cy: p.y, r: 0.42, class: 'mark ' + k[1] });
@@ -954,21 +961,21 @@
     });
     var steps = function (runs) { return runs.reduce(function (n, r) { return n + r.length; }, 0); };
     return h('figure', { class: 'route-map' },
-      h('figcaption', null, h('b', { text: 'Mapa ' + m.g + '.' + m.n }),
-        h('span', { class: 'help', text: (m.go.length ? 'ida ' + steps(m.go) : '') + (m.go.length && m.back.length ? ' · ' : '') +
-          (m.back.length ? 'vuelta ' + steps(m.back) : '') })),
+      h('figcaption', null, h('b', { text: tr('Mapa {id}', { id: m.g + '.' + m.n }) }),
+        h('span', { class: 'help', text: (m.go.length ? tr('ida {n}', { n: steps(m.go) }) : '') + (m.go.length && m.back.length ? ' · ' : '') +
+          (m.back.length ? tr('vuelta {n}', { n: steps(m.back) }) : '') })),
       h('div', { class: 'route-svg' }, svg));
   }
   function showRoute(name, text) {
     var rep = core.routeReport(text);
-    $('route-title').textContent = 'Ruta: ' + name;
+    $('route-title').textContent = tr('Ruta: {name}', { name: name });
     $('route-summary').textContent = rep.go.length || rep.back.length
-      ? 'Ida ' + rep.go.length + ' pasos, vuelta ' + rep.back.length + ', ' + rep.maps.length + (rep.maps.length === 1 ? ' mapa' : ' mapas') +
-        '. Coordenadas de memoria (casilla + 7); pasa el cursor por los puntos para ver la casilla.'
+      ? tr(rep.maps.length === 1 ? 'Ida {go} pasos, vuelta {back}, {maps} mapa.' : 'Ida {go} pasos, vuelta {back}, {maps} mapas.', { go: rep.go.length, back: rep.back.length, maps: rep.maps.length }) +
+        ' ' + tr('Coordenadas de memoria (casilla + 7); pasa el cursor por los puntos para ver la casilla.')
       : '';
     var ul = $('route-issues');
     ul.innerHTML = '';
-    if (!rep.issues.length) ul.appendChild(h('li', { class: 'ok' }, icon('check'), h('span', { text: 'Sin problemas: el bot puede seguir esta ruta.' })));
+    if (!rep.issues.length) ul.appendChild(h('li', { class: 'ok' }, icon('check'), h('span', { text: tr('Sin problemas: el bot puede seguir esta ruta.') })));
     rep.issues.forEach(function (i) {
       ul.appendChild(h('li', { class: i.level }, icon(i.level === 'error' ? 'error' : i.level === 'warn' ? 'warn' : 'info'), h('span', { text: i.msg })));
     });
@@ -990,7 +997,7 @@
     var mine = bgPrefs()[S.bot] || {}, src = bgSource(S.bot), pv = $('bg-preview');
     $('bg-species').value = mine.species || '';
     var sk = skins.get(S.skin) || {};
-    $('bg-species').placeholder = mine.image ? 'Imagen propia' : mine.none ? 'Sin fondo'
+    $('bg-species').placeholder = mine.image ? tr('Imagen propia') : mine.none ? tr('Sin fondo')
       : (sk.backdrop && data.species.indexOf(sk.backdrop) !== -1 ? sk.backdrop : data.species[PT.art.backdrops[S.bot] - 1]);
     pv.innerHTML = '';
     if (src) pv.appendChild(bgImage(src));
@@ -1003,7 +1010,7 @@
   function setBg(choice) {
     var p = bgPrefs();
     if (choice) p[S.bot] = choice; else delete p[S.bot];
-    if (!bgSave(p)) toast('El navegador no deja guardar el fondo: solo durará esta sesión', 'warn');
+    if (!bgSave(p)) toast(tr('El navegador no deja guardar el fondo: solo durará esta sesión'), 'warn');
     renderBg(); renderSection();
   }
   if (data.species) $('bg-species-list').innerHTML = data.species.map(function (n) { return '<option value="' + n + '">'; }).join('');
@@ -1011,7 +1018,7 @@
   $('bg-species').addEventListener('change', function () {
     var name = this.value.trim(), hit = data.species.filter(function (n) { return n.toLowerCase() === name.toLowerCase(); })[0];
     if (!name) return;
-    if (!hit) { toast('No conozco ese Pokémon: elige uno de la lista (Gen 1–3)', 'warn'); this.value = ''; return; }
+    if (!hit) { toast(tr('No conozco ese Pokémon: elige uno de la lista (Gen 1–3)'), 'warn'); this.value = ''; return; }
     setBg({ species: hit });
   });
   function setBgOption(key, value) {
@@ -1028,8 +1035,8 @@
   $('bg-file').addEventListener('change', function () {
     var f = this.files[0];
     if (!f) return;
-    if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast('Usa una imagen PNG, JPG, WebP o GIF', 'warn'); return; }
-    if (f.size > 1500000) { toast('La imagen pesa más de 1,5 MB: usa una más pequeña', 'warn'); return; }
+    if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast(tr('Usa una imagen PNG, JPG, WebP o GIF'), 'warn'); return; }
+    if (f.size > 1500000) { toast(tr('La imagen pesa más de 1,5 MB: usa una más pequeña'), 'warn'); return; }
     var r = new FileReader();
     r.onload = function () { setBg({ image: String(r.result) }); };
     r.readAsDataURL(f);
@@ -1049,17 +1056,52 @@
     f.text().then(function (t) {
       try {
         var s = skins.register(JSON.parse(t), { custom: true });
-        if (!skins.saveCustom()) toast('Skin cargado solo para esta sesión (el navegador no deja guardarlo)', 'warn');
+        if (!skins.saveCustom()) toast(tr('Skin cargado solo para esta sesión (el navegador no deja guardarlo)'), 'warn');
         applySkin(s.id);
-        toast('Skin "' + s.name + '" importado');
-      } catch (e) { toast('Skin no válido: ' + e.message, 'error'); }
+        toast(tr('Skin "{name}" importado', { name: s.name }));
+      } catch (e) { toast(tr('Skin no válido: {msg}', { msg: tr(e.message) }), 'error'); }
     });
   });
   $('btn-skin-export').addEventListener('click', function () {
     var a = h('a', { href: URL.createObjectURL(new Blob([skins.exportable(S.skin)], { type: 'application/json' })), download: 'skin-' + S.skin + '.json' });
     document.body.appendChild(a); a.click(); a.remove();
-    toast('Skin exportado: edítalo y vuelve a importarlo', 'download');
+    toast(tr('Skin exportado: edítalo y vuelve a importarlo'), 'download');
   });
+
+  // ---------------------------------------------------------------- language
+  // Static text in index.html carries data-i18n (text), data-i18n-html (trusted markup from
+  // our own dictionaries) or data-i18n-attr="title,aria-label,…"; the Spanish original is kept
+  // so the page can switch language any number of times.
+  function translateStatic() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      if (el.dataset.src === undefined) el.dataset.src = el.textContent.trim();
+      el.textContent = tr(el.dataset.src);
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      if (el.dataset.src === undefined) el.dataset.src = el.innerHTML.trim();
+      el.innerHTML = tr(el.dataset.src);
+    });
+    document.querySelectorAll('[data-i18n-attr]').forEach(function (el) {
+      el.getAttribute('data-i18n-attr').split(',').forEach(function (a) {
+        var key = 'src' + a.replace(/(^|-)(\w)/g, function (m, d, c) { return c.toUpperCase(); });
+        if (el.dataset[key] === undefined) el.dataset[key] = el.getAttribute(a) || '';
+        el.setAttribute(a, tr(el.dataset[key]));
+      });
+    });
+    document.documentElement.lang = i18n.lang();
+    document.title = tr('Poke-tools · Configurador');
+  }
+  function setLang(l, remember) {
+    i18n.set(l);
+    if (remember) store(LANG, i18n.lang());
+    $('lang-select').value = i18n.lang();
+    translateStatic();
+    renderSkins(); renderTabs(); renderForm();
+    if ($('skins-dialog').open) renderBg();
+    if ($('stats-dialog').open) renderStats();
+  }
+  Object.keys(i18n.NAMES).forEach(function (l) { $('lang-select').appendChild(h('option', { value: l, text: i18n.NAMES[l] })); });
+  $('lang-select').addEventListener('change', function () { setLang(this.value, true); });
 
   // ---------------------------------------------------------------- wiring
   ['shinybot', 'trainbot', 'farmbot'].forEach(function (b) {
@@ -1076,10 +1118,10 @@
   $('btn-copy').addEventListener('click', function () {
     var text = core.serialize(S.bot, cfg(), schema);
     (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
-      .then(function () { toast('JSON copiado'); }, function () {
+      .then(function () { toast(tr('JSON copiado')); }, function () {
         var r = document.createRange(); r.selectNodeContents($('preview'));
         var sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
-        toast('Selecciónalo y cópialo con Ctrl+C', 'info');
+        toast(tr('Selecciónalo y cópialo con Ctrl+C'), 'info');
       });
   });
   document.addEventListener('keydown', function (e) {
@@ -1106,5 +1148,10 @@
   if (/^#(shinybot|trainbot|farmbot)$/.test(location.hash)) S.bot = location.hash.slice(1);
   var qs = /[?&]skin=([a-z0-9-]+)/.exec(location.search);
   var saved = qs ? qs[1] : store(SKIN);
+  // Language: ?lang=, then the saved choice, then the browser's language (Spanish fallback).
+  var ql = /[?&]lang=([a-z]{2})/.exec(location.search), nav = (navigator.language || 'es').slice(0, 2);
+  i18n.set(ql ? ql[1] : store(LANG) || (i18n.NAMES[nav] ? nav : 'es'));
+  $('lang-select').value = i18n.lang();
+  translateStatic();
   applySkin(saved && skins.get(saved) ? saved : 'fuego');
 })();
