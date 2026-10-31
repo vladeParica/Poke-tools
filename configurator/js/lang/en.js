@@ -455,8 +455,8 @@ PT.i18n.add('en', {
   // index.html
   'Configurador': 'Configurator',
   'Poke-tools · Rojo Fuego / Verde Hoja': 'Poke-tools · FireRed / LeafGreen',
-  'Abrir carpeta': 'Open folder',
-  'Abrir JSON': 'Open JSON',
+  'Carpeta': 'Folder',
+  'Abrir': 'Open',
   'Guardar': 'Save',
   'Estado': 'Status',
   'Copiar': 'Copy',

@@ -17,7 +17,7 @@ translation must not change a single decision they make.
   translation function; each language has a dictionary from the Spanish text to its own.
   A missing translation falls back to Spanish.
 - **Configurator:** `js/i18n.js` + `js/lang/en.js` + `js/lang/ja.js`, text through `tr()` with
-  `{name}` placeholders. The language is picked in *Apariencia* (or `?lang=`), remembered in the
+  `{name}` placeholders. The language is picked with the top-bar selector or in *Apariencia* (or `?lang=`), remembered in the
   browser, and defaults to the browser's language. Schema labels, validation messages, the JSON
   comments it writes and the static page text are translated. `tools/i18n_keys.js` collects
   every source text and `tests/i18n.test.js` fails if any is untranslated.

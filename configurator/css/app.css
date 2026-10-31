@@ -96,6 +96,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .08); color: var(--header-ink);
 }
 .skin-picker select option { color: #1f1f2e; }
+.lang-picker > .art { width: 18px; height: 18px; }
+.lang-picker select { max-width: 60px; padding-left: 8px; padding-right: 4px; }
 
 /* ---------- workspace ---------- */
 .workspace {

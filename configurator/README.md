@@ -2,8 +2,8 @@
 
 A visual editor for the bots' JSON files. Open `index.html` with a double click: it runs
 locally in the browser, with no install and no internet connection. The interface is in
-Spanish, English or Japanese (*Apariencia* → *Idioma · Language · 言語*, or `?lang=en`); it
-starts in your browser's language. When online, it also shows a Pokémon behind each
+Spanish, English or Japanese: pick it with the 🌐 selector in the top bar (also in *Apariencia*,
+or `?lang=en`); it starts in your browser's language. When online, it also shows a Pokémon behind each
 form (FireRed/LeafGreen sprites from Pokémon Database, loaded at runtime)
 ([ADR-0013](../docs/00-project/adr/0013-official-artwork-behind-the-configurator-forms.md)).
 Change it in *Apariencia* (gear button, or *Fondo* when the pointer is over the form): another

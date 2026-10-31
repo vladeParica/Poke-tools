@@ -134,6 +134,10 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('language: Japanese', d.querySelector('.brand h1').textContent === '設定ツール' && d.documentElement.lang === 'ja'
       && d.getElementById('btn-skins').getAttribute('title') === '外観: 言語・スキン・背景');
     lang.value = 'es'; fire(lang, 'change');
+    const quick = d.getElementById('lang-quick');
+    quick.value = 'en'; fire(quick, 'change');
+    ok('language: top-bar picker', d.querySelector('.brand h1').textContent === 'Configurator' && lang.value === 'en');
+    quick.value = 'es'; fire(quick, 'change');
     ok('language: back to Spanish', d.querySelector('.brand h1').textContent === 'Configurador' && nav('mode').textContent.includes('Modo'));
     // 8. skins
     const bd = d.querySelector('.panel > .backdrop');

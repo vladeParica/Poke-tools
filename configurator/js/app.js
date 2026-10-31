@@ -1095,13 +1095,20 @@
     i18n.set(l);
     if (remember) store(LANG, i18n.lang());
     $('lang-select').value = i18n.lang();
+    $('lang-quick').value = i18n.lang();
     translateStatic();
     renderSkins(); renderTabs(); renderForm();
     if ($('skins-dialog').open) renderBg();
     if ($('stats-dialog').open) renderStats();
   }
-  Object.keys(i18n.NAMES).forEach(function (l) { $('lang-select').appendChild(h('option', { value: l, text: i18n.NAMES[l] })); });
-  $('lang-select').addEventListener('change', function () { setLang(this.value, true); });
+  // Two pickers: one always visible in the top bar, one in Apariencia; they stay in sync.
+  ['lang-select', 'lang-quick'].forEach(function (id) {
+    Object.keys(i18n.NAMES).forEach(function (l) {
+      // the top-bar picker shows just the code to keep the bar on one line
+      $(id).appendChild(h('option', { value: l, text: id === 'lang-quick' ? l.toUpperCase() : i18n.NAMES[l], title: i18n.NAMES[l] }));
+    });
+    $(id).addEventListener('change', function () { setLang(this.value, true); });
+  });
 
   // ---------------------------------------------------------------- wiring
   ['shinybot', 'trainbot', 'farmbot'].forEach(function (b) {
@@ -1152,6 +1159,7 @@
   var ql = /[?&]lang=([a-z]{2})/.exec(location.search), nav = (navigator.language || 'es').slice(0, 2);
   i18n.set(ql ? ql[1] : store(LANG) || (i18n.NAMES[nav] ? nav : 'es'));
   $('lang-select').value = i18n.lang();
+  $('lang-quick').value = i18n.lang();
   translateStatic();
   applySkin(saved && skins.get(saved) ? saved : 'fuego');
 })();

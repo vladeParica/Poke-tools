@@ -456,8 +456,8 @@ PT.i18n.add('ja', {
   // index.html
   'Configurador': '設定ツール',
   'Poke-tools · Rojo Fuego / Verde Hoja': 'Poke-tools · FR/LG',
-  'Abrir carpeta': 'フォルダ',
-  'Abrir JSON': 'JSON 読込',
+  'Carpeta': 'フォルダ',
+  'Abrir': 'JSON 読込',
   'Guardar': '保存',
   'Estado': '状態',
   'Copiar': 'コピー',

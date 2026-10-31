@@ -25,14 +25,19 @@
     </nav>
 
     <div class="actions">
+      <label class="skin-picker lang-picker" title="Idioma · Language · 言語">
+        <span data-icon="globe"></span>
+        <span class="sr-only">Idioma · Language · 言語</span>
+        <select id="lang-quick"></select>
+      </label>
       <label class="skin-picker" title="Skin de la interfaz" data-i18n-attr="title">
         <span class="sr-only">Skin</span>
         <select id="skin-select"></select>
       </label>
       <button class="btn ghost icon" id="btn-stats" title="Estadísticas de los logs" aria-label="Estadísticas de los logs" data-i18n-attr="title,aria-label"><span data-icon="chart"></span></button>
       <button class="btn ghost icon" id="btn-skins" title="Apariencia: idioma, skins y fondo" aria-label="Apariencia: idioma, skins y fondo" data-i18n-attr="title,aria-label"><span data-icon="gear"></span></button>
-      <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" data-i18n-attr="title" hidden><span data-icon="folder"></span><span class="lbl" data-i18n>Abrir carpeta</span></button>
-      <button class="btn ghost" id="btn-open" title="Abrir un JSON existente" data-i18n-attr="title"><span data-icon="upload"></span><span class="lbl" data-i18n>Abrir JSON</span></button>
+      <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" data-i18n-attr="title" hidden><span data-icon="folder"></span><span class="lbl" data-i18n>Carpeta</span></button>
+      <button class="btn ghost" id="btn-open" title="Abrir un JSON existente" data-i18n-attr="title"><span data-icon="upload"></span><span class="lbl" data-i18n>Abrir</span></button>
       <button class="btn primary" id="btn-save" title="Guardar (Ctrl+S)" data-i18n-attr="title"><span data-icon="save"></span><span class="lbl" data-i18n>Guardar</span></button>
     </div>
     <input type="file" id="file-open" accept=".json,application/json" hidden>
