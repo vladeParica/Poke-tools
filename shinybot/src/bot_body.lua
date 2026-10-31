@@ -65,8 +65,10 @@ local CONFIG = {
   sharedDir     = nil,
   logDir        = "logs",       -- subfolder for the log and the working files
   resetOnLoad   = true,
+  language      = "es",         -- "es", "en" or "ja" (romaji): panel, console and log text
 }
 local CONFIG_FILE = "FRLG_ShinyBot.json"
+--@@LANG@@
 -- ====================================================================
 
 local read32  = memory.readdwordunsigned
@@ -136,7 +138,7 @@ end)
 -- Standard JSON that also accepts // comments up to the end of the line.
 local function jsonDecode(str)
   local pos = 1
-  local function err(msg) error(string.format("JSON: %s (caracter %d)", msg, pos), 0) end
+  local function err(msg) error(string.format(TX"JSON: %s (caracter %d)", msg, pos), 0) end
   local function skip()
     while true do
       local _, e = str:find("^[ \t\r\n]+", pos)
@@ -155,7 +157,7 @@ local function jsonDecode(str)
     local out = {}
     while true do
       local c = str:sub(pos, pos)
-      if c == "" then err("texto sin cerrar") end
+      if c == "" then err(TX"texto sin cerrar") end
       if c == '"' then pos = pos + 1; break end
       if c == "\\" then
         local n = str:sub(pos + 1, pos + 1)
@@ -178,17 +180,17 @@ local function jsonDecode(str)
       if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       while true do
         skip()
-        if str:sub(pos, pos) ~= '"' then err("se esperaba un nombre entre comillas") end
+        if str:sub(pos, pos) ~= '"' then err(TX"se esperaba un nombre entre comillas") end
         local k = parseString()
         skip()
-        if str:sub(pos, pos) ~= ":" then err("falta ':'") end
+        if str:sub(pos, pos) ~= ":" then err(TX"falta ':'") end
         pos = pos + 1
         obj[k] = value()
         skip()
         local d = str:sub(pos, pos)
         pos = pos + 1
         if d == "}" then return obj end
-        if d ~= "," then err("falta ',' o '}'") end
+        if d ~= "," then err(TX"falta ',' o '}'") end
         skip()
         if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       end
@@ -203,7 +205,7 @@ local function jsonDecode(str)
         local d = str:sub(pos, pos)
         pos = pos + 1
         if d == "]" then return arr end
-        if d ~= "," then err("falta ',' o ']'") end
+        if d ~= "," then err(TX"falta ',' o ']'") end
         skip()
         if str:sub(pos, pos) == "]" then pos = pos + 1; return arr end
       end
@@ -214,14 +216,14 @@ local function jsonDecode(str)
     elseif str:sub(pos, pos + 3) == "null" then pos = pos + 4; return nil
     else
       local num = str:match("^-?%d+%.?%d*[eE]?[-+]?%d*", pos)
-      if not num or num == "" then err("valor no valido") end
+      if not num or num == "" then err(TX"valor no valido") end
       pos = pos + #num
       return tonumber(num)
     end
   end
   local v = value()
   skip()
-  if pos <= #str then err("texto de mas al final") end
+  if pos <= #str then err(TX"texto de mas al final") end
   return v
 end
 
@@ -261,6 +263,13 @@ local function toList(v)
 end
 
 local function buildFilters(problems)
+  -- First, so the other messages already come out in the chosen language.
+  local lang = simplify(CONFIG.language or "es")
+  if lang ~= "es" and lang ~= "en" and lang ~= "ja" then
+    CONFIG.language = "es"
+    problems[#problems + 1] = TX"language debe ser \"es\", \"en\" o \"ja\""; lang = "es"
+  end
+  CONFIG.language = lang
   filt = { shiny = CONFIG.shiny ~= false }
   local nl = toList(CONFIG.natures)
   if nl then
@@ -269,7 +278,7 @@ local function buildFilters(problems)
       local sn, found = simplify(n), nil
       for _, en in ipairs(natureNamesList) do if simplify(en) == sn then found = en end end
       found = found or NATURES_ES[sn]
-      if found then filt.natures[found] = true else problems[#problems + 1] = "naturaleza desconocida: " .. tostring(n) end
+      if found then filt.natures[found] = true else problems[#problems + 1] = TX"naturaleza desconocida: " .. tostring(n) end
     end
   end
   local sl = toList(CONFIG.species)
@@ -278,7 +287,7 @@ local function buildFilters(problems)
     for _, n in ipairs(sl) do
       local sn, found = simplify(n), false
       for _, en in ipairs(speciesNamesList) do if simplify(en) == sn then filt.species[sn] = true; found = true end end
-      if not found then problems[#problems + 1] = "especie desconocida: " .. tostring(n) end
+      if not found then problems[#problems + 1] = TX"especie desconocida: " .. tostring(n) end
     end
   end
   filt.minIV, filt.maxIV = { 0, 0, 0, 0, 0, 0 }, { 31, 31, 31, 31, 31, 31 }
@@ -287,7 +296,7 @@ local function buildFilters(problems)
       for k, v in pairs(src) do
         local i = STAT_KEYS[simplify(k)]
         if i and tonumber(v) then filt[which][i] = tonumber(v)
-        else problems[#problems + 1] = "IV desconocido: " .. tostring(k) end
+        else problems[#problems + 1] = TX"IV desconocido: " .. tostring(k) end
       end
     end
   end
@@ -298,7 +307,7 @@ local function buildFilters(problems)
       local sn = simplify(hp.type)
       for i, t in ipairs(HP_TYPES) do if simplify(t) == sn then filt.hpType = i end end
       filt.hpType = filt.hpType or HP_TYPES_ES[sn]
-      if not filt.hpType then problems[#problems + 1] = "tipo de Poder Oculto desconocido: " .. tostring(hp.type) end
+      if not filt.hpType then problems[#problems + 1] = TX"tipo de Poder Oculto desconocido: " .. tostring(hp.type) end
     end
     filt.hpPower = tonumber(hp.minPower)
   end
@@ -311,12 +320,12 @@ local function loadConfig()
     if not f then return "no existe" end
     local data = f:read("*a"); f:close()
     local cfg = jsonDecode(data)
-    if type(cfg) ~= "table" then error("el archivo debe ser un objeto { ... }", 0) end
+    if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     for k, v in pairs(cfg) do
       local optional = { species = 1, natures = 1, minIVs = 1, maxIVs = 1, minIVTotal = 1, hiddenPower = 1,
         mode = 1, sharedDir = 1, savestateSlot = 1, newGameTSV = 1, initialSeeds = 1, afterSeedMode = 1, rngMaxSearch = 1, wildMaxSearch = 1, reseedBeyond = 1, teachyMargin = 1 }
       if CONFIG[k] == nil and not optional[k] then
-        problems[#problems + 1] = "opcion desconocida: " .. k
+        problems[#problems + 1] = TX"opcion desconocida: " .. k
       end
       CONFIG[k] = v
     end
@@ -544,8 +553,8 @@ local function readRoamer()
 end
 
 -- ------------------------------ Estado -------------------------------
-local MODES = { "Salvaje", "Estatico", "Regalo", "Roamer", "Estatico RNG", "Regalo RNG", "Roamer RNG", "Salvaje RNG",
-                "Partida nueva", "Semilla inicial" }
+local MODES = { "Salvaje", "Estatico", "Regalo", "Roamer", "Estatico RNG", "Regalo RNG", "Roamer RNG", "Salvaje RNG",  --@i18n
+                "Partida nueva", "Semilla inicial" }  --@i18n
 -- 1 = wild, 2 = static, 3 = gift, 4 = roamer (RNG modes use the same type)
 
 local bot = {
@@ -643,13 +652,13 @@ local function onShiny(mon)
   local ivs = mon.ivs and table.concat(mon.ivs, "/") or "?"
   local tag = (mon.sv < 8) and (mon.sv == 0 and "SHINY Square" or "SHINY Star") or "OBJETIVO"
   local since = ""
-  pcall(function() if bot.startTime then since = " | corrida iniciada " .. os.date("%Y-%m-%d %H:%M", bot.startTime) end end)
-  logLine(string.format("[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s",
-    tag, speciesName(mon.species), mon.pid, natureOf(mon.pid), ivs, bot.encounters, MODES[bot.mode], since))
+  pcall(function() if bot.startTime then since = TX" | corrida iniciada " .. os.date("%Y-%m-%d %H:%M", bot.startTime) end end)
+  logLine(string.format(TX"[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s",
+    tag, speciesName(mon.species), mon.pid, natureOf(mon.pid), ivs, bot.encounters, TX(MODES[bot.mode]), since))
   if CONFIG.savestateSlot then
     pcall(function() savestate.save(savestate.create(CONFIG.savestateSlot)) end)
   end
-  bot.msg = "ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo"
+  bot.msg = TX"ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo"
   print(bot.msg)
   if CONFIG.stopOthers then
     writeFile("shiny_stop.flag", string.format("%d %s %d %s", now_time(), TOKEN, INSTANCE, speciesName(mon.species)))
@@ -663,7 +672,7 @@ local function evaluate(mon)
   mon.shiny = mon.sv < 8
   bot.last = mon
   if isWanted(mon) then onShiny(mon); return true end
-  if mon.shiny then logLine(string.format("Shiny descartado por filtros: %s PID %08X", speciesName(mon.species), mon.pid)) end
+  if mon.shiny then logLine(string.format(TX"Shiny descartado por filtros: %s PID %08X", speciesName(mon.species), mon.pid)) end
   return false
 end
 
@@ -740,7 +749,7 @@ local function stepWild()
     end
 
     if bot.t > 3000 then               -- safety net: something odd, go back to walking
-      bot.msg = "Aviso: no se pudo confirmar la huida"
+      bot.msg = TX"Aviso: no se pudo confirmar la huida"
       print(bot.msg)
       queue = {}; zeroEnemy(); bot.st = bot.returnState or "walk"
       return
@@ -1230,7 +1239,7 @@ end
 local function startReseed(reason)
   bot.reseeds = (bot.reseeds or 0) + 1
   bot.seedsTried = (bot.seedsTried or 1) + 1
-  bot.msg = string.format("Nueva semilla (%s)", reason)
+  bot.msg = string.format(TX"Nueva semilla (%s)", reason)
   print(bot.msg)
   bot.selfReset = true
   queue = {}
@@ -1247,8 +1256,8 @@ local function stepReseed()
   bot.t = bot.t + 1
   if bot.st == "rboot" then
     if bot.t < 45 then return end
-    if bot.t > CONFIG.resetTimeout then startReseed("no volvio al mapa"); return end
-    if bot.t > 60 and decodeMon(A.enemy) then startReseed("encuentro inesperado"); return end
+    if bot.t > CONFIG.resetTimeout then startReseed(TX"no volvio al mapa"); return end
+    if bot.t > 60 and decodeMon(A.enemy) then startReseed(TX"encuentro inesperado"); return end
     if read8(A.avatar) ~= 0 and validPtr(read32(A.sb1)) then
       queue = {}; bot.st, bot.t = "rquest", 0; return
     end
@@ -1258,7 +1267,7 @@ local function stepReseed()
     end
   elseif bot.st == "rquest" then
     -- skip the "Previously on your quest..." recap with B
-    if decodeMon(A.enemy) then startReseed("encuentro inesperado"); return end
+    if decodeMon(A.enemy) then startReseed(TX"encuentro inesperado"); return end
     if bot.t >= 400 then queue = {}; bot.st, bot.t = "rsettle", 0; return end
     if #queue == 0 then wait(18); tap("B") end
   elseif bot.st == "rsettle" then
@@ -1296,14 +1305,14 @@ local function goToTarget(best)
     best.E, best.pid, best.ivs, best.sv, best.slot
   rng.pressAt, rng.tries, rng.tried = best.E - rng.delay, 0, {}
   local sp = (bot.mode == 8) and slotSpecies(best.slot) or nil
-  bot.msg = string.format("Objetivo: avance %d%s  PID %08X  %s", best.E,
+  bot.msg = string.format(TX"Objetivo: avance %d%s  PID %08X  %s", best.E,
             sp and ("  " .. speciesName(sp)) or "", best.pid, natureOf(best.pid))
   print(bot.msg)
   local useTv = CONFIG.teachy and (rng.pressAt - teachyMargin()) > CONFIG.teachyBeyond
   if useTv and not teachyRegistered() then
     if not rng.tvWarned then
-      print("Aviso: registra la Tele Pokemon en SELECT (Mochila > Obj. clave > Tele Pokemon > Registrar)")
-      print("        para avanzar millones de frames en minutos. Por ahora espero a velocidad normal.")
+      print(TX"Aviso: registra la Tele Pokemon en SELECT (Mochila > Obj. clave > Tele Pokemon > Registrar)")
+      print(TX"        para avanzar millones de frames en minutos. Por ahora espero a velocidad normal.")
       rng.tvWarned = true
     end
     useTv = false
@@ -1324,15 +1333,15 @@ end
 
 local function stepFar()
   local done, be = scanFarBlock()
-  bot.msg = string.format("Buscando objetivo... avance %d", be)
+  bot.msg = string.format(TX"Buscando objetivo... avance %d", be)
   if done then
     goToTarget(far.best)
   elseif be >= CONFIG.farSearch then
     if far.best then goToTarget(far.best); return end
     if CONFIG.reseed and not bot.noReseed and (bot.reseeds or 0) < CONFIG.maxReseeds then
-      startReseed(string.format("sin objetivo en %d avances", CONFIG.farSearch)); return
+      startReseed(string.format(TX"sin objetivo en %d avances", CONFIG.farSearch)); return
     end
-    bot.msg = "No hay objetivo con esos filtros: sube farSearch o quita filtros"
+    bot.msg = TX"No hay objetivo con esos filtros: sube farSearch o quita filtros"
     print(bot.msg); bot.running = false; bot.st = "idle"
   end
 end
@@ -1349,7 +1358,7 @@ local function stepTeachy()
     if rate > 30 then rng.tvFast = rng.tvFast + 1 else rng.tvFast = 0 end
     if rng.tvFast >= 5 then bot.st, bot.t = "tv_run", 0; return end
     if bot.t > 600 then
-      print("No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal.")
+      print(TX"No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal.")
       queue = {}; tap("B"); wait(20); tap("B")
       bot.st = "wait"
     end
@@ -1368,7 +1377,7 @@ local function stepTeachy()
       local lost = rng.adv > rng.pressAt - rng.preDelay
       rebaseHere()
       zeroEnemy()
-      if lost then print("La Tele se paso del objetivo: busco el siguiente") end
+      if lost then print(TX"La Tele se paso del objetivo: busco el siguiente") end
       startFar(rng.delay + rng.preDelay + 10)
     end
   end
@@ -1398,13 +1407,13 @@ end
 
 local function stopLostSeed()
   stopBot()
-  bot.msg = "La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."
+  bot.msg = TX"La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."
   print(bot.msg)
 end
 
 local function retryOrNext(hit)
   rng.tries = rng.tries + 1
-  print(string.format("Intento %d: cayo en %d (objetivo %d)", rng.tries, hit, rng.target))
+  print(string.format(TX"Intento %d: cayo en %d (objetivo %d)", rng.tries, hit, rng.target))
   rng.tried[rng.pressedAdv] = true
   local base = rng.pressedAdv + (rng.target - hit)
   local cand = base
@@ -1415,7 +1424,7 @@ local function retryOrNext(hit)
   if rng.tries >= CONFIG.triesPerTarget or rng.pressAt < rng.preDelay then
     rng.failedTargets = (rng.failedTargets or 0) + 1
     if CONFIG.reseed and not bot.noReseed and bot.mode ~= 9 and rng.failedTargets >= CONFIG.reseedAfterFailedTargets then
-      startReseed("objetivos inalcanzables"); return
+      startReseed(TX"objetivos inalcanzables"); return
     end
     if rng.nextSearch then rng.nextSearch(rng.target + 1) else startFar(rng.target + 1) end
   else
@@ -1446,13 +1455,13 @@ local function stepRng()
       local hit = findHit(mon.pid, limit)
       if evaluate(mon) then return end
       if not hit then
-        bot.msg = "El PID no es Metodo 1: usa el modo con soft reset"
+        bot.msg = TX"El PID no es Metodo 1: usa el modo con soft reset"
         print(bot.msg); bot.running = false; bot.st = "idle"; return
       end
       local d = hit - rng.pressedAdv
       if not rng.delay then
         rng.delay = d
-        print(string.format("Calibrado: retraso = %d avances", d))
+        print(string.format(TX"Calibrado: retraso = %d avances", d))
         startFar(d + rng.preDelay + 10)
         return
       end
@@ -1474,11 +1483,11 @@ rng.startFn = rngStart
 -- the frame that gives a SID such that TID xor SID falls in the chosen ranges
 -- (by default, the ones that make one of the 6x31 Ditto shiny).
 local NG_DEFAULT = { 0x9630, 0xB378, 0x79F8 }
-local NG_INFO = {
-  [0x9630] = "Ditto 6x31 shiny: Timid (sem. 448B) o Modest (BC75), Ruta 14 / Mansion S1",
-  [0xB378] = "Ditto 6x31 shiny: Modest (38F2) o Calm (BDD1), Ruta 14 / Mansion / Cueva Celeste",
-  [0x79F8] = "Ditto 6x31 shiny: Modest (5433), Cueva Celeste 1P/2P",
-}
+local NG_INFO = {  --@i18n
+  [0x9630] = "Ditto 6x31 shiny: Timid (sem. 448B) o Modest (BC75), Ruta 14 / Mansion S1",  --@i18n
+  [0xB378] = "Ditto 6x31 shiny: Modest (38F2) o Calm (BDD1), Ruta 14 / Mansion / Cueva Celeste",  --@i18n
+  [0x79F8] = "Ditto 6x31 shiny: Modest (5433), Cueva Celeste 1P/2P",  --@i18n
+}  --@i18n
 
 local function ngWindows()
   local list = toList(CONFIG.newGameTSV) or NG_DEFAULT
@@ -1538,14 +1547,14 @@ local function stepNewGame()
       s = nx; k = k + 1
     end
     rng.scanSeed, rng.scanK = s, k
-    bot.msg = string.format("Buscando SID... avance %d", k)
+    bot.msg = string.format(TX"Buscando SID... avance %d", k)
     if rng.target then
       rng.pressAt, rng.tries, rng.tried = rng.target - rng.delay, 0, {}
-      bot.msg = string.format("Objetivo: SID %d en el avance %d", rng.targetSid, rng.target)
+      bot.msg = string.format(TX"Objetivo: SID %d en el avance %d", rng.targetSid, rng.target)
       print(bot.msg)
       bot.st = "wait"; rngLoad()
     elseif k > 5000000 then
-      bot.msg = "No encontre un SID valido: revisa newGameTSV"
+      bot.msg = TX"No encontre un SID valido: revisa newGameTSV"
       print(bot.msg); bot.running = false; bot.st = "idle"
     end
     return
@@ -1577,22 +1586,22 @@ local function stepNewGame()
       if w then
         bot.found, bot.running, bot.st = true, false, "found"
         bot.tid, bot.sid = tid, sid
-        logLine(string.format("[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s", tid, sid, bxor(tid, sid),
-                NG_INFO[w] or "rango elegido"))
-        bot.msg = "LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"
+        logLine(string.format(TX"[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s", tid, sid, bxor(tid, sid),
+                TX(NG_INFO[w]) or TX"rango elegido"))
+        bot.msg = TX"LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"
         print(bot.msg)
         emu.pause()
         return
       end
-      if tid ~= bot.tid then print(string.format("Aviso: el TID salio %d, se esperaba %d", tid, bot.tid)) end
+      if tid ~= bot.tid then print(string.format(TX"Aviso: el TID salio %d, se esperaba %d", tid, bot.tid)) end
       if not hit then
-        bot.msg = "No ubique el SID en el RNG: empieza el modo justo despues de nombrar al rival"
+        bot.msg = TX"No ubique el SID en el RNG: empieza el modo justo despues de nombrar al rival"
         print(bot.msg); bot.running = false; bot.st = "idle"; return
       end
       local d = hit - rng.pressedAdv
       if not rng.delay then
         rng.delay = d
-        print(string.format("Calibrado: retraso = %d avances (TID %d)", d, bot.tid))
+        print(string.format(TX"Calibrado: retraso = %d avances (TID %d)", d, bot.tid))
         ngSearch(d + rng.preDelay + 10)
         return
       end
@@ -1651,7 +1660,7 @@ local function sbStart()
   sb.targets = sbTargetList()
   pcall(function() os.remove(LOGDIR .. "seed_debug.txt") end)
   if #sb.targets == 0 then
-    bot.msg = "Pon tus semillas en initialSeeds del .json (ej. [\"BC75\"])"
+    bot.msg = TX"Pon tus semillas en initialSeeds del .json (ej. [\"BC75\"])"
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   sb.w, sb.tries = 0, 0
@@ -1707,7 +1716,7 @@ local function sbNextW(reason)
   writeFile("seed_debug.txt", string.format("  siguiente arranque: %s\n", reason or "?"), "a")
   sb.w = sb.w + 1
   if sb.w > 400 then
-    bot.msg = "No pude caer en esa semilla. Prueba otras semillas o el Initial Seed Bot de FRLG_RNG_2.0"
+    bot.msg = TX"No pude caer en esa semilla. Prueba otras semillas o el Initial Seed Bot de FRLG_RNG_2.0"
     print(bot.msg); stopBot(); return
   end
   if sb.K then
@@ -1752,14 +1761,14 @@ local function stepSeedBot()
       sb.Kfix = 0
       sbBuildTitle()
     elseif bot.t > 3500 then
-      bot.msg = "No se escribio ninguna semilla: revisa que el juego llegue al titulo"
+      bot.msg = TX"No se escribio ninguna semilla: revisa que el juego llegue al titulo"
       print(bot.msg); stopBot()
     end
   elseif bot.st == "sb_title" then
     if sbSeedSeen() then
       -- it reached the title earlier than expected: one press fewer
       sb.K = sb.K - 1; sb.Kfix = sb.Kfix + 1
-      if sb.K < 1 or sb.Kfix > 40 then sbNextW("no ubico el titulo"); return end
+      if sb.K < 1 or sb.Kfix > 40 then sbNextW(TX"no ubico el titulo"); return end
       sbBuildTitle(); return
     end
     if #queue == 0 then
@@ -1774,11 +1783,11 @@ local function stepSeedBot()
       sb.tries = sb.tries + 1
       sb.last = seed
       writeFile("seed_debug.txt", string.format("w=%d K=%d d=%d fase=%d semilla=%04X\n", sb.w, sb.K or -1, sb.d, sb.phase or -1, seed), "a")
-      bot.msg = string.format("Probada por el bot: semilla %04X (arranque %d, frame %d)", seed, sb.w, sb.d)
+      bot.msg = string.format(TX"Probada por el bot: semilla %04X (arranque %d, frame %d)", seed, sb.w, sb.d)
       for _, t in ipairs(sb.targets) do
         if seed == t then
-          print(string.format("Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
-          logLine(string.format("[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
+          print(string.format(TX"Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
+          logLine(string.format(TX"[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
           local after = CONFIG.afterSeedMode
           local idx = nil
           if after then for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then idx = i end end end
@@ -1786,10 +1795,10 @@ local function stepSeedBot()
             bot.mode = idx
             bot.noReseed = true
             bot.st, bot.t = "rboot", 0
-            bot.msg = "Semilla lista: cargando la partida para " .. MODES[idx]
+            bot.msg = TX"Semilla lista: cargando la partida para " .. TX(MODES[idx])
           else
             bot.found, bot.running, bot.st, bot.selfReset = true, false, "found", false
-            bot.msg = string.format("Semilla %04X lista: continua la partida y usa el modo RNG", seed)
+            bot.msg = string.format(TX"Semilla %04X lista: continua la partida y usa el modo RNG", seed)
             emu.pause()
           end
           return
@@ -1802,14 +1811,14 @@ local function stepSeedBot()
           -- same seed pressing on different frames: an earlier press had already
           -- reached the title. Save the title one press earlier.
           sb.K = sb.K - 1; sb.Kfix = sb.Kfix + 1
-          if sb.K < 1 or sb.Kfix > 40 then sbNextW("no ubico el titulo"); return end
+          if sb.K < 1 or sb.Kfix > 40 then sbNextW(TX"no ubico el titulo"); return end
           sbBuildTitle(); return
         end
         local plan = sbPlan()
         writeFile("seed_debug.txt", string.format("  paso=%d plan=%s\n", (sb.s2 - sb.s1) % 65536,
-                  plan and string.format("d=%d -> %04X", plan.d, plan.seed) or "ninguno"), "a")
+                  plan and string.format("d=%d -> %04X", plan.d, plan.seed) or TX"ninguno"), "a")
         if plan then sb.phase, sb.plan = 3, plan; sbTry(plan.d); return end
-        sbNextW("sin objetivo con este arranque"); return
+        sbNextW(TX"sin objetivo con este arranque"); return
       end
       if sb.phase == 3 then sb.phase, sb.k = 4, 1 end
       if sb.phase == 4 then
@@ -1818,16 +1827,16 @@ local function stepSeedBot()
           local d = sb.plan.d + offs[sb.k]; sb.k = sb.k + 1
           if d >= 1 then sbTry(d); return end
         end
-        sbNextW("prediccion fallida")
+        sbNextW(TX"prediccion fallida")
       end
     elseif bot.t > 400 then
       if sb.phase == 1 then
         -- the title did not accept A yet: one more press before saving
         sb.K = sb.K + 1; sb.Kfix = sb.Kfix + 1
-        if sb.Kfix > 40 then sbNextW("no ubico el titulo"); return end
+        if sb.Kfix > 40 then sbNextW(TX"no ubico el titulo"); return end
         sbBuildTitle(); return
       end
-      sbNextW("el titulo no acepto la pulsacion")
+      sbNextW(TX"el titulo no acepto la pulsacion")
     end
   end
 end
@@ -1873,7 +1882,7 @@ local function startApproach()
 end
 
 local function oneStepFallback(reason)
-  print("Modo a un paso desactivado (" .. reason .. "): sigo caminando desde la base")
+  print(TX"Modo a un paso desactivado (" .. reason .. TX"): sigo caminando desde la base")
   rng.noOneStep, rng.oneStep = true, false
   rngState, rng.seed0 = rng.base0State, rng.base0Seed
   rng.seed, rng.adv = rng.seed0, 0
@@ -1897,12 +1906,12 @@ local function wildSetup()
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
-    bot.msg = "No pude leer la tabla de encuentros: quita el filtro 'species'"
+    bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   bot.st = "wbuild"
-  print(string.format("Savestate listo. Zona: %s%s", wr.water and "agua" or "hierba/cueva",
-        wr.info and string.format(" (tasa %d)", wr.info.rate) or " (tabla de encuentros no encontrada)"))
+  print(string.format(TX"Savestate listo. Zona: %s%s", wr.water and "agua" or "hierba/cueva",
+        wr.info and string.format(TX" (tasa %d)", wr.info.rate) or TX" (tabla de encuentros no encontrada)"))
 end
 
 local function stepWildRng()
@@ -1931,7 +1940,7 @@ local function stepWildRng()
         return
       end
     end
-    bot.msg = string.format("Preparando: pasos %d (contador %d)", bot.prepSteps or 0, read8(A.wildData + 8))
+    bot.msg = string.format(TX"Preparando: pasos %d (contador %d)", bot.prepSteps or 0, read8(A.wildData + 8))
     if #queue == 0 then pushWalk() end
     return
   end
@@ -1949,7 +1958,7 @@ local function stepWildRng()
     if decodeMon(A.enemy) then
       -- the encounter came earlier: one step fewer
       rng.approachK = rng.approachK - 1
-      if rng.approachK < 0 then oneStepFallback("el encuentro sale sin caminar"); return end
+      if rng.approachK < 0 then oneStepFallback(TX"el encuentro sale sin caminar"); return end
       startApproach(); return
     end
     if #queue == 0 then
@@ -1961,7 +1970,7 @@ local function stepWildRng()
       rng.oneStep, rng.oneDir = true, stepDir(rng.approachK + 1)
       rng.delay, rng.pressAt, rng.stepsToEnc = nil, rng.preDelay, 1
       rng.anchors, far = nil, nil
-      print(string.format("A un paso del encuentro (%d pasos caminados): calibro el paso final", rng.approachK))
+      print(string.format(TX"A un paso del encuentro (%d pasos caminados): calibro el paso final", rng.approachK))
       bot.st = "wbuild"
     end
     return
@@ -1969,7 +1978,7 @@ local function stepWildRng()
 
   if bot.st == "wbuild" or bot.st == "wbuild2" then
     local need = (bot.st == "wbuild") and 40000 or (rng.target + 3000)
-    bot.msg = string.format("Calculando avances... %d%%", floor(wr.built * 100 / need))
+    bot.msg = string.format(TX"Calculando avances... %d%%", floor(wr.built * 100 / need))
     if buildR(need, 100000) then
       if bot.st == "wbuild" then bot.msg = "Calibrando..." end
       bot.st = "wait"
@@ -1987,10 +1996,10 @@ local function stepWildRng()
     if early then
       -- an encounter came WITHOUT pressing: the base was not still. Redo it.
       rng.rebuilds = (rng.rebuilds or 0) + 1
-      print(string.format("Encuentro antes de dar el paso (%s PID %08X): rehago la base con el jugador quieto",
+      print(string.format(TX"Encuentro antes de dar el paso (%s PID %08X): rehago la base con el jugador quieto",
             speciesName(early.species), early.pid))
       if rng.rebuilds > 2 then
-        print("Se repite: dejo de revisar antes del paso")
+        print(TX"Se repite: dejo de revisar antes del paso")
         rng.noPrePressCheck = true
         zeroEnemy(); monWatch = {}
         return
@@ -2031,7 +2040,7 @@ local function stepWildRng()
         -- interrupted itself mid-generation). Try the neighboring frame.
         rng.tries = rng.tries + 1
         rng.tried[rng.pressedAdv] = true
-        print(string.format("Intento %d: encuentro fuera del calculo (%s), pruebo el frame vecino", rng.tries,
+        print(string.format(TX"Intento %d: encuentro fuera del calculo (%s), pruebo el frame vecino", rng.tries,
               speciesName(mon.species)))
         local base = rng.target - rng.delay
         local cand = nil
@@ -2046,34 +2055,34 @@ local function stepWildRng()
       end
       if not E then
         rng.calFails = (rng.calFails or 0) + 1
-        print(string.format("No ubique este encuentro en el RNG: %s Nv.%d PID %08X (%d)", speciesName(mon.species),
+        print(string.format(TX"No ubique este encuentro en el RNG: %s Nv.%d PID %08X (%d)", speciesName(mon.species),
               level, mon.pid, rng.calFails))
         if rng.calFails >= 6 then
-          bot.msg = "No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."
+          bot.msg = TX"No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."
           print(bot.msg); bot.running = false; bot.st = "idle"; return
         end
         rng.pressAt = rng.pressAt + 5      -- a different encounter
         bot.st = "wait"; rngLoad(); return
       end
       if loose then
-        print(string.format("Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d",
+        print(string.format(TX"Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d",
               speciesName(mon.species), level))
       end
       if not wr.layout or wr.layout ~= lay then
         wr.layout = lay
-        if lay ~= LAYOUTS[1] then print("Orden de llamadas detectado: " .. lay.name) end
+        if lay ~= LAYOUTS[1] then print(TX"Orden de llamadas detectado: " .. lay.name) end
       end
       local d = E - rng.pressedAdv
       if not rng.delay then
         if CONFIG.wildOneStep ~= false and not rng.oneStep and not rng.noOneStep and (rng.stepsToEnc or 0) >= 1 then
           rng.approachK = math.max(rng.stepsToEnc - 1, 0)
           rng.stepsMeasured = rng.stepsToEnc
-          print(string.format("El encuentro sale en el paso %d: me acerco a un paso", rng.stepsToEnc))
+          print(string.format(TX"El encuentro sale en el paso %d: me acerco a un paso", rng.stepsToEnc))
           startApproach()
           return
         end
         rng.delay = d
-        print(string.format("Calibrado: retraso = %d avances", d))
+        print(string.format(TX"Calibrado: retraso = %d avances", d))
         startFar(d + rng.preDelay + 10)
         return
       end
@@ -2083,7 +2092,7 @@ local function stepWildRng()
       if not rng.delay then
         -- the final step gave no encounter: one more step was needed
         rng.approachK = rng.approachK + 1
-        if rng.approachK > (rng.stepsMeasured or 0) + 3 then oneStepFallback("no encuentro el paso"); return end
+        if rng.approachK > (rng.stepsMeasured or 0) + 3 then oneStepFallback(TX"no encuentro el paso"); return end
         startApproach(); return
       end
       bot.timeouts = bot.timeouts + 1
@@ -2098,24 +2107,24 @@ end
 -- ------------------------------ Control ------------------------------
 local function startBot()
   if bot.cfgError then
-    bot.msg = "Corrige " .. CONFIG_FILE .. " (mira la consola) y pulsa 0"
+    bot.msg = TX"Corrige " .. CONFIG_FILE .. TX" (mira la consola) y pulsa 0"
     print(bot.msg); return
   end
   local tid, sid = playerIDs()
   if not tid and bot.mode ~= 9 then
-    bot.msg = "Carga tu partida (en el mapa) antes de iniciar"
+    bot.msg = TX"Carga tu partida (en el mapa) antes de iniciar"
     print(bot.msg); return
   end
   bot.tid, bot.sid = tid, sid
   bot.baseParty = read8(A.partyCnt)
   if kind() == 3 and bot.baseParty >= 6 then
-    bot.msg = "Equipo lleno: deja un espacio libre para el regalo"
+    bot.msg = TX"Equipo lleno: deja un espacio libre para el regalo"
     print(bot.msg); return
   end
   if kind() == 4 then
     local r = readRoamer()
     if r and r.active then
-      bot.msg = "El roamer ya esta activo: usa un save de ANTES del evento"
+      bot.msg = TX"El roamer ya esta activo: usa un save de ANTES del evento"
       print(bot.msg); return
     end
   end
@@ -2140,9 +2149,9 @@ local function startBot()
     bot.st = "reset"
   end
   if bot.mode == 9 then
-    print(string.format("Bot iniciado: Partida nueva  (TID nuevo %d)", bot.tid))
+    print(string.format(TX"Bot iniciado: Partida nueva  (TID nuevo %d)", bot.tid))
   else
-    print(string.format("Bot iniciado: %s  (TID %d / SID %d)", MODES[bot.mode], tid, sid))
+    print(string.format(TX"Bot iniciado: %s  (TID %d / SID %d)", TX(MODES[bot.mode]), tid, sid))
   end
 end
 
@@ -2159,7 +2168,7 @@ local function onGameReset()
   rng.seed0, rng.target, rng.delay, rng.pressAt = nil, nil, nil, nil
   rngState = nil
   wr.r, wr.built = {}, 0
-  bot.msg = "Juego reiniciado: carga tu partida y pulsa 7"
+  bot.msg = TX"Juego reiniciado: carga tu partida y pulsa 7"
   print(bot.msg)
 end
 
@@ -2184,16 +2193,16 @@ end
 local function reportConfig(ok, msg, problems)
   bot.cfgError = (not ok) or #problems > 0
   if not ok then
-    bot.msg = "Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
+    bot.msg = TX"Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
   elseif msg == "no existe" then
-    bot.msg = "No hay " .. CONFIG_FILE .. ": uso la configuracion por defecto"
+    bot.msg = TX"No hay " .. CONFIG_FILE .. TX": uso la configuracion por defecto"
   elseif #problems > 0 then
-    bot.msg = "Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
+    bot.msg = TX"Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
   else
-    bot.msg = "Config cargada"
+    bot.msg = TX"Config cargada"
   end
   print(bot.msg)
-  for i = 2, #problems do print("Config: " .. problems[i]) end
+  for i = 2, #problems do print(TX"Config: " .. problems[i]) end
 end
 
 reloadConfig = function()
@@ -2225,7 +2234,7 @@ end
 -- ------------------------------- Panel -------------------------------
 local function filterSummary()
   local parts = {}
-  parts[#parts + 1] = filt.shiny and "Shiny" or "Sin shiny"
+  parts[#parts + 1] = filt.shiny and "Shiny" or TX"Sin shiny"
   if filt.species and (bot.mode == 1 or bot.mode == 8) then
     local t = {}
     for _, n in ipairs(toList(CONFIG.species) or {}) do t[#t + 1] = tostring(n) end
@@ -2243,33 +2252,33 @@ local function filterSummary()
     elseif lo > 0 or hi < 31 then ivs[i] = lo .. "-" .. hi; any = true
     else ivs[i] = "x" end
   end
-  if any then parts[#parts + 1] = "IVs " .. table.concat(ivs, "/") end
+  if any then parts[#parts + 1] = TX"IVs " .. table.concat(ivs, "/") end
   if filt.minIVTotal then parts[#parts + 1] = "Total>=" .. filt.minIVTotal end
   if filt.hpType or filt.hpPower then
-    parts[#parts + 1] = "PO " .. (filt.hpType and HP_TYPES[filt.hpType] or "") .. (filt.hpPower and (">=" .. filt.hpPower) or "")
+    parts[#parts + 1] = TX"PO " .. (filt.hpType and HP_TYPES[filt.hpType] or "") .. (filt.hpPower and (">=" .. filt.hpPower) or "")
   end
   return table.concat(parts, ", ")
 end
 
 local function monLines(y, label, sp, pid, sv, ivs, color)
   local tag = ""
-  if sv and sv < 8 then tag = (sv == 0) and " (Square)" or " (Star)" end
-  gui.text(1, y, string.format("%s %sPID %08X%s  %s", label, sp and (speciesName(sp) .. "  ") or "", pid, tag,
+  if sv and sv < 8 then tag = (sv == 0) and TX" (Square)" or TX" (Star)" end
+  gui.text(1, y, string.format(TX"%s %sPID %08X%s  %s", label, sp and (speciesName(sp) .. "  ") or "", pid, tag,
            natureOf(pid)), color)
   if ivs then
     local t, pw = hiddenPowerOf(ivs)
-    gui.text(1, y + 9, string.format("   IVs %s   PO %s %d", table.concat(ivs, "/"), HP_TYPES[t], pw), color)
+    gui.text(1, y + 9, string.format(TX"   IVs %s   PO %s %d", table.concat(ivs, "/"), HP_TYPES[t], pw), color)
   end
 end
 
 -- Compact panel: only what matters at each moment (2-4 lines at the top)
-local PHASE_SHORT = { prep = "Preparando", settle = "Preparando", wbuild = "Calculando", wbuild2 = "Calculando",
-  far = "Buscando objetivo", wait = "Esperando", pressed = "Comprobando", walking = "Caminando",
-  flee = "Huyendo", tv_open = "Abriendo Tele", tv_run = "Tele", tv_exit = "Cerrando Tele",
-  tv_settle = "Cerrando Tele", rboot = "Nueva semilla", rquest = "Nueva semilla", rsettle = "Nueva semilla",
-  walk = "Caminando", reset = "Reset", boot = "Reset", idle = "Detenido", found = "ENCONTRADO",
-  sb_reset = "Reiniciando", sb_find = "Buscando el titulo", sb_title = "Preparando titulo",
-  sb_try = "Probando semilla", approach = "Acercandose a un paso" }
+local PHASE_SHORT = { prep = "Preparando", settle = "Preparando", wbuild = "Calculando", wbuild2 = "Calculando",  --@i18n
+  far = "Buscando objetivo", wait = "Esperando", pressed = "Comprobando", walking = "Caminando",  --@i18n
+  flee = "Huyendo", tv_open = "Abriendo Tele", tv_run = "Tele", tv_exit = "Cerrando Tele",  --@i18n
+  tv_settle = "Cerrando Tele", rboot = "Nueva semilla", rquest = "Nueva semilla", rsettle = "Nueva semilla",  --@i18n
+  walk = "Caminando", reset = "Reset", boot = "Reset", idle = "Detenido", found = "ENCONTRADO",  --@i18n
+  sb_reset = "Reiniciando", sb_find = "Buscando el titulo", sb_title = "Preparando titulo",  --@i18n
+  sb_try = "Probando semilla", approach = "Acercandose a un paso" }  --@i18n
 
 local function drawCompact()
   local y = 1
@@ -2279,47 +2288,47 @@ local function drawCompact()
   if bot.found then status = "ENCONTRADO"
   elseif not bot.running then status = "OFF"
   else
-    status = PHASE_SHORT[bot.st] or bot.st
+    status = TX(PHASE_SHORT[bot.st]) or bot.st
     if (m >= 5) and bot.st == "wait" and not rng.delay then status = "Calibrando" end
   end
-  line(string.format("#%d %s: %s", INSTANCE, MODES[m], status), bot.found and "green" or nil)
+  line(string.format("#%d %s: %s", INSTANCE, TX(MODES[m]), status), bot.found and "green" or nil)
 
   if not bot.running and not bot.found then
-    line("7 iniciar  8 modo  9 panel  0 config")
-    line("Busca: " .. filterSummary())
+    line(TX"7 iniciar  8 modo  9 panel  0 config")
+    line(TX"Busca: " .. filterSummary())
   elseif m == 10 then
-    line(string.format("Arranque %d   semillas probadas %d   ultima %s", sb.w or 0, sb.tries or 0,
+    line(string.format(TX"Arranque %d   semillas probadas %d   ultima %s", sb.w or 0, sb.tries or 0,
          sb.last and string.format("%04X", sb.last) or "-"))
   elseif m == 9 then
     if bot.found then
-      line(string.format("TID %d  SID %d  (xor %04X)", bot.tid or 0, bot.sid or 0, bxor(bot.tid or 0, bot.sid or 0)), "green")
+      line(string.format(TX"TID %d  SID %d  (xor %04X)", bot.tid or 0, bot.sid or 0, bxor(bot.tid or 0, bot.sid or 0)), "green")
     else
-      line(string.format("TID %d   SID objetivo: %s", bot.tid or 0, rng.targetSid and tostring(rng.targetSid) or "?"))
+      line(string.format(TX"TID %d   SID objetivo: %s", bot.tid or 0, rng.targetSid and tostring(rng.targetSid) or "?"))
       if bot.st == "wait" and rng.pressAt then
-        line(string.format("Pulsar A en %d frames   intento %d", math.max(rng.pressAt - (rng.adv or 0), 0), rng.tries or 0))
+        line(string.format(TX"Pulsar A en %d frames   intento %d", math.max(rng.pressAt - (rng.adv or 0), 0), rng.tries or 0))
       elseif bot.st == "ngsearch" then line(bot.msg) end
     end
   elseif m <= 4 then
     local label = (m == 1) and "Encuentros" or "Resets"
     local t = string.format("%s: %d", label, bot.encounters)
-    if filt.shiny then t = t .. string.format("   Prob: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100) end
+    if filt.shiny then t = t .. string.format(TX"   Prob: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100) end
     line(t)
   else
     if rng.target then
       local sp = (m == 8) and slotSpecies(rng.targetSlot) or nil
       local star = (rng.targetSv and rng.targetSv < 8) and " *" or ""
-      line(string.format("Objetivo: %s%s%s  avance %d", sp and (speciesName(sp) .. " ") or "",
+      line(string.format(TX"Objetivo: %s%s%s  avance %d", sp and (speciesName(sp) .. " ") or "",
            natureOf(rng.targetPid), star, rng.target), "green")
       if bot.st == "tv_run" or bot.st == "tv_open" then
         local left = math.max(rng.pressAt - teachyMargin() - rng.adv, 0)
-        line(string.format("Tele: faltan %d avances (~%d frames)", left, floor(left / 313)))
+        line(string.format(TX"Tele: faltan %d avances (~%d frames)", left, floor(left / 313)))
       elseif bot.st == "wait" and rng.pressAt then
-        line(string.format("%s en %d frames", (m == 8) and "Caminar" or "Pulsar A",
+        line(string.format(TX"%s en %d frames", (m == 8) and "Caminar" or TX"Pulsar A",
              math.max(rng.pressAt - (rng.adv or 0), 0)))
       elseif bot.st == "walking" and rng.stepsToEnc then
-        line(string.format("Paso %d de %d   intento %d", rng.walkSteps or 0, rng.stepsToEnc, rng.tries or 0))
+        line(string.format(TX"Paso %d de %d   intento %d", rng.walkSteps or 0, rng.stepsToEnc, rng.tries or 0))
       elseif bot.st == "pressed" then
-        line(string.format("Intento %d", rng.tries or 0))
+        line(string.format(TX"Intento %d", rng.tries or 0))
       end
     elseif bot.st == "far" or bot.st == "wbuild" or bot.st == "wbuild2" or bot.st == "prep" then
       line(bot.msg)
@@ -2327,7 +2336,7 @@ local function drawCompact()
   end
   if bot.found and bot.last and m ~= 9 then
     local l = bot.last
-    line(string.format("%s %s  IVs %s", speciesName(l.species), natureOf(l.pid), table.concat(l.ivs, "/")), "green")
+    line(string.format(TX"%s %s  IVs %s", speciesName(l.species), natureOf(l.pid), table.concat(l.ivs, "/")), "green")
   end
   -- important notices at the bottom (errors, found)
   if bot.msg ~= "" and (bot.found or not bot.running) then gui.text(1, 150, bot.msg, "orange") end
@@ -2339,19 +2348,19 @@ local function draw()
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
   local status = bot.found and "ENCONTRADO" or (bot.running and "ON" or "OFF")
-  line(string.format("#%d %s [%s]  7 on/off 8 modo 9 panel 0 config", INSTANCE, MODES[bot.mode], status),
+  line(string.format(TX"#%d %s [%s]  7 on/off 8 modo 9 panel 0 config", INSTANCE, TX(MODES[bot.mode]), status),
        bot.found and "green" or nil)
-  line("Busca: " .. filterSummary())
-  if bot.tid then line(string.format("TID %d  SID %d", bot.tid, bot.sid)) end
+  line(TX"Busca: " .. filterSummary())
+  if bot.tid then line(string.format(TX"TID %d  SID %d", bot.tid, bot.sid)) end
   -- Initial seed (the one set by the title; same address as FRLG_RNG_2.0) and current seed
-  local seedLine = string.format("Semilla inicial: %04X   Actual: %08X", read16(0x02020000), read32(A.currSeed))
-  if (bot.mode >= 5) and rng.seed0 then seedLine = seedLine .. string.format("   Base: %08X", rng.seed0) end
+  local seedLine = string.format(TX"Semilla inicial: %04X   Actual: %08X", read16(0x02020000), read32(A.currSeed))
+  if (bot.mode >= 5) and rng.seed0 then seedLine = seedLine .. string.format(TX"   Base: %08X", rng.seed0) end
   line(seedLine)
   local frameText
   if ft.frame then frameText = tostring(ft.frame)
-  elseif ft.sSeed then frameText = string.format("calculando... (%d)", ft.sK)
+  elseif ft.sSeed then frameText = string.format(TX"calculando... (%d)", ft.sK)
   else frameText = "?" end
-  line(string.format("Frame: %s   (frame del emulador: %d)", frameText, emu.framecount()))
+  line(string.format(TX"Frame: %s   (frame del emulador: %d)", frameText, emu.framecount()))
 
   local m = bot.mode
   if m <= 4 then
@@ -2360,63 +2369,63 @@ local function draw()
     local perHour = 0
     if bot.encounters > 0 and frames > 0 then perHour = floor(bot.encounters * 216000 / frames) end
     local label = (m == 1) and "Encuentros" or "Resets"
-    line(string.format("%s: %d   (%d por hora de juego)", label, bot.encounters, perHour))
+    line(string.format(TX"%s: %d   (%d por hora de juego)", label, bot.encounters, perHour))
     if filt.shiny then
-      line(string.format("Prob. de haber visto un shiny: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100))
+      line(string.format(TX"Prob. de haber visto un shiny: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100))
     end
     if m == 1 then
-      line(string.format("Combate:%s Cursor:%d Res:%d%s", inBattle() and "1" or "0",
+      line(string.format(TX"Combate:%s Cursor:%d Res:%d%s", inBattle() and "1" or "0",
            band(read8(A.actionCursor), 3), read8(A.battleOutcome), gMainVerified and "" or " (?)"))
     elseif bot.timeouts > 0 then
-      line("Timeouts: " .. bot.timeouts)
+      line(TX"Timeouts: " .. bot.timeouts)
     end
   else
     -- RNG: what matters is the target and how far it is
     local phase = ({ prep = "Preparando", settle = "Preparando", wbuild = "Calculando", search = "Buscando",
-      wsearch = "Buscando", wait = rng.delay and "Esperando el frame" or "Calibrando",
-      pressed = "Comprobando", walking = "Caminando", flee = "Huyendo", idle = "Detenido",
-      found = "Encontrado", rboot = "Nueva semilla (reset)", rquest = "Nueva semilla (cargando)",
-      rsettle = "Nueva semilla (cargando)", far = "Buscando objetivo", wbuild2 = "Calculando",
-      tv_open = "Abriendo la Tele", tv_run = "Tele Pokemon (avance rapido)", tv_exit = "Cerrando la Tele",
-      tv_settle = "Cerrando la Tele", sb_reset = "Reiniciando", sb_find = "Buscando el titulo",
-      sb_title = "Preparando titulo", sb_try = "Probando semilla", approach = "Acercandose a un paso" })[bot.st] or bot.st
-    line(string.format("Fase: %s   Intento: %d   Semilla #%d", phase, rng.tries or 0, bot.seedsTried or 1))
+      wsearch = "Buscando", wait = rng.delay and TX"Esperando el frame" or "Calibrando",
+      pressed = "Comprobando", walking = "Caminando", flee = "Huyendo", idle = TX"Detenido",
+      found = "Encontrado", rboot = TX"Nueva semilla (reset)", rquest = TX"Nueva semilla (cargando)",
+      rsettle = TX"Nueva semilla (cargando)", far = TX"Buscando objetivo", wbuild2 = "Calculando",
+      tv_open = TX"Abriendo la Tele", tv_run = TX"Tele Pokemon (avance rapido)", tv_exit = TX"Cerrando la Tele",
+      tv_settle = TX"Cerrando la Tele", sb_reset = "Reiniciando", sb_find = TX"Buscando el titulo",
+      sb_title = TX"Preparando titulo", sb_try = TX"Probando semilla", approach = TX"Acercandose a un paso" })[bot.st] or bot.st
+    line(string.format(TX"Fase: %s   Intento: %d   Semilla #%d", phase, rng.tries or 0, bot.seedsTried or 1))
     if m == 8 then
       if bot.st == "prep" or bot.st == "settle" then
-        line(string.format("Contador de pasos: %d   pasos sin cambio: %d/2", read8(A.wildData + 8), bot.prepSteps or 0))
+        line(string.format(TX"Contador de pasos: %d   pasos sin cambio: %d/2", read8(A.wildData + 8), bot.prepSteps or 0))
       elseif wr.water ~= nil then
-        line(string.format("Zona: %s%s", wr.water and "agua" or "hierba/cueva",
-             wr.info and string.format("  (tasa %d)", wr.info.rate) or ""))
+        line(string.format(TX"Zona: %s%s", wr.water and "agua" or "hierba/cueva",
+             wr.info and string.format(TX"  (tasa %d)", wr.info.rate) or ""))
       end
     end
     if rng.seed0 then
-      line(string.format("Avance: %d   Retraso: %s", rng.adv or 0, rng.delay and tostring(rng.delay) or "?"))
+      line(string.format(TX"Avance: %d   Retraso: %s", rng.adv or 0, rng.delay and tostring(rng.delay) or "?"))
     end
     if m == 8 and rng.stepsToEnc then
-      local now = (bot.st == "walking") and string.format("   (paso %d)", rng.walkSteps or 0) or ""
-      line(string.format("Pasos hasta el encuentro: %d%s", rng.stepsToEnc, now))
+      local now = (bot.st == "walking") and string.format(TX"   (paso %d)", rng.walkSteps or 0) or ""
+      line(string.format(TX"Pasos hasta el encuentro: %d%s", rng.stepsToEnc, now))
     end
     if m == 10 then
-      line(string.format("Arranque %d   semillas probadas %d   ultima %s", sb.w or 0, sb.tries or 0,
+      line(string.format(TX"Arranque %d   semillas probadas %d   ultima %s", sb.w or 0, sb.tries or 0,
            sb.last and string.format("%04X", sb.last) or "-"))
     end
     if rng.target and m == 9 then
-      line(string.format("TID %d  SID objetivo %d  en el avance %d", bot.tid or 0, rng.targetSid or 0, rng.target), "green")
+      line(string.format(TX"TID %d  SID objetivo %d  en el avance %d", bot.tid or 0, rng.targetSid or 0, rng.target), "green")
     elseif rng.target then
       local sp = nil
       if m == 8 then sp = slotSpecies(rng.targetSlot) end
-      monLines(y, "Objetivo:", sp, rng.targetPid, rng.targetSv, rng.targetIvs, "green"); y = y + 18
+      monLines(y, TX"Objetivo:", sp, rng.targetPid, rng.targetSv, rng.targetIvs, "green"); y = y + 18
       local absF = rng.baseFrame and (rng.baseFrame + rng.target) or nil
-      line(string.format("   en el avance %d%s", rng.target,
-           absF and string.format("  (frame %d desde la semilla inicial)", absF) or ""), "green")
+      line(string.format(TX"   en el avance %d%s", rng.target,
+           absF and string.format(TX"  (frame %d desde la semilla inicial)", absF) or ""), "green")
       if bot.st == "tv_run" or bot.st == "tv_open" then
         local left = math.max(rng.pressAt - teachyMargin() - rng.adv, 0)
-        line(string.format("Tele: faltan %d avances para cerrarla (~%d frames)", left, floor(left / 313)), "green")
+        line(string.format(TX"Tele: faltan %d avances para cerrarla (~%d frames)", left, floor(left / 313)), "green")
       end
       if bot.st == "wait" and rng.pressAt then
         local left = math.max(rng.pressAt - (rng.adv or 0), 0)
-        local verb = (m == 8) and "Empieza a caminar" or "Pulsa A"
-        line(string.format("%s en: %d frames (~%d s a 60 fps)", verb, left, floor(left / 60)), "green")
+        local verb = (m == 8) and TX"Empieza a caminar" or TX"Pulsa A"
+        line(string.format(TX"%s en: %d frames (~%d s a 60 fps)", verb, left, floor(left / 60)), "green")
       end
     end
   end
@@ -2424,7 +2433,7 @@ local function draw()
   local last = bot.last
   if last then
     local color = (last.sv and last.sv < 8) and "green" or nil
-    monLines(y + 2, "Ultimo:", last.species, last.pid, last.sv, last.ivs, color); y = y + 20
+    monLines(y + 2, TX"Ultimo:", last.species, last.pid, last.sv, last.ivs, color); y = y + 20
   end
   if bot.msg ~= "" then gui.text(1, 150, bot.msg, "orange") end
 end
@@ -2432,15 +2441,15 @@ end
 -- ------------------------------- Inicio ------------------------------
 print("FRLG Shiny Bot v4.3  (direcciones: Devon Studios x Real.96)")
 if not gameName then
-  print("Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
+  print(TX"Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
   return
 end
-print(string.format("Juego: %s  idioma 0x%02X  rev %s", gameName, gameLang, gameRev1 and "1.1" or "1.0"))
+print(string.format(TX"Juego: %s  idioma 0x%02X  rev %s", gameName, gameLang, gameRev1 and "1.1" or "1.0"))
 if not gMainVerified then
-  print("Aviso: la bandera de combate no esta verificada para este idioma (revisa 'Combate' en el panel).")
+  print(TX"Aviso: la bandera de combate no esta verificada para este idioma (revisa 'Combate' en el panel).")
 end
-print(string.format("Instancia %d   archivos generados en: %s", INSTANCE, LOGDIR ~= "" and LOGDIR or "(carpeta actual)"))
-print("7 = iniciar/detener   8 = cambiar modo   9 = panel (compacto/completo/oculto)   0 = recargar " .. CONFIG_FILE)
+print(string.format(TX"Instancia %d   archivos generados en: %s", INSTANCE, LOGDIR ~= "" and LOGDIR or TX"(carpeta actual)"))
+print(TX"7 = iniciar/detener   8 = cambiar modo   9 = panel (compacto/completo/oculto)   0 = recargar " .. CONFIG_FILE)
 applyModeFromConfig()
 reportConfig(cfgOk, cfgMsg, cfgProblems)
 
@@ -2454,7 +2463,7 @@ local function checkStopFlag()
   t, who = tonumber(t), tonumber(who)
   if t and tok and tok ~= TOKEN and t >= (bot.startTime or 0) then
     stopBot()
-    bot.msg = string.format("Detenido: la instancia %d encontro %s shiny", who, name or "?")
+    bot.msg = string.format(TX"Detenido: la instancia %d encontro %s shiny", who, name or "?")
     print(bot.msg)
     emu.pause()
   end

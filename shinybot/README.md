@@ -42,6 +42,9 @@ The easiest way is the [configurator](../configurator/README.md). Everything liv
 
 Seeds for `initialSeeds` depend on your TID/SID: compute them with [tools/rng/](../tools/rng/).
 
+`language` sets the panel, console and log language: `"es"` (default), `"en"` or `"ja"`
+(Japanese in romaji, since VBA-rr can't draw kana).
+
 ## Multiple windows
 
 You can run several instances at once (each one creates `inst_N.lock`). With

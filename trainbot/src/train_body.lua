@@ -45,8 +45,10 @@ local CONFIG = {
   healMode       = "nurse",   -- "nurse" = talk to the nurse; "tile" = tile that heals when stepped on (Tower 5F purified zone)
   logFile        = "train_log.txt",
   logDir         = "logs",
+  language       = "es",      -- "es", "en" or "ja" (romaji): panel, console and log text
 }
 local CONFIG_FILE = "FRLG_TrainBot.json"
+--@@LANG@@
 
 local read32  = memory.readdwordunsigned
 local read16  = memory.readwordunsigned
@@ -106,7 +108,7 @@ end)
 
 local function jsonDecode(str)
   local pos = 1
-  local function err(msg) error(string.format("JSON: %s (caracter %d)", msg, pos), 0) end
+  local function err(msg) error(string.format(TX"JSON: %s (caracter %d)", msg, pos), 0) end
   local function skip()
     while true do
       local _, e = str:find("^[ \t\r\n]+", pos)
@@ -120,7 +122,7 @@ local function jsonDecode(str)
     local out = {}
     while true do
       local c = str:sub(pos, pos)
-      if c == "" then err("texto sin cerrar") end
+      if c == "" then err(TX"texto sin cerrar") end
       if c == '"' then pos = pos + 1; break end
       if c == "\\" then out[#out + 1] = str:sub(pos + 1, pos + 1); pos = pos + 2
       else out[#out + 1] = c; pos = pos + 1 end
@@ -137,16 +139,16 @@ local function jsonDecode(str)
       if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       while true do
         skip()
-        if str:sub(pos, pos) ~= '"' then err("se esperaba un nombre entre comillas") end
+        if str:sub(pos, pos) ~= '"' then err(TX"se esperaba un nombre entre comillas") end
         local k = parseString()
         skip()
-        if str:sub(pos, pos) ~= ":" then err("falta ':'") end
+        if str:sub(pos, pos) ~= ":" then err(TX"falta ':'") end
         pos = pos + 1
         obj[k] = value()
         skip()
         local d = str:sub(pos, pos); pos = pos + 1
         if d == "}" then return obj end
-        if d ~= "," then err("falta ',' o '}'") end
+        if d ~= "," then err(TX"falta ',' o '}'") end
         skip()
         if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       end
@@ -160,7 +162,7 @@ local function jsonDecode(str)
         skip()
         local d = str:sub(pos, pos); pos = pos + 1
         if d == "]" then return arr end
-        if d ~= "," then err("falta ',' o ']'") end
+        if d ~= "," then err(TX"falta ',' o ']'") end
         skip()
         if str:sub(pos, pos) == "]" then pos = pos + 1; return arr end
       end
@@ -170,14 +172,14 @@ local function jsonDecode(str)
     elseif str:sub(pos, pos + 3) == "null" then pos = pos + 4; return nil
     else
       local num = str:match("^-?%d+%.?%d*", pos)
-      if not num or num == "" then err("valor no valido") end
+      if not num or num == "" then err(TX"valor no valido") end
       pos = pos + #num
       return tonumber(num)
     end
   end
   local v = value()
   skip()
-  if pos <= #str then err("texto de mas al final") end
+  if pos <= #str then err(TX"texto de mas al final") end
   return v
 end
 
@@ -193,7 +195,7 @@ end
 local STAT_KEYS = { hp = 1, ps = 1, atk = 2, ata = 2, attack = 2, ataque = 2, def = 3, defense = 3, defensa = 3,
   spa = 4, spatk = 4, ate = 4, atesp = 4, ataqueespecial = 4, spd = 5, spdef = 5, dfe = 5, defesp = 5,
   defensaespecial = 5, spe = 6, speed = 6, vel = 6, velocidad = 6 }
-local STAT_LABEL = { "PS", "At", "Df", "AtE", "DfE", "Vel" }
+local STAT_LABEL = { "PS", "At", "Df", "AtE", "DfE", "Vel" }  --@i18n
 -- EVs in memory are ordered HP, Atk, Def, Spe, SpA, SpD
 local EV_OF_STAT = { 1, 2, 3, 5, 6, 4 }
 
@@ -212,33 +214,40 @@ local function speciesSet(list, problems)
     for idx = 1, 411 do
       if simplify(speciesName(idx)) == sn then set[idx] = true; found = true end
     end
-    if not found then problems[#problems + 1] = "especie desconocida: " .. tostring(n) end
+    if not found then problems[#problems + 1] = TX"especie desconocida: " .. tostring(n) end
   end
   return set
 end
 
 local function interpretConfig(problems)
   tcfg = { target = nil }
+  -- First, so the other messages already come out in the chosen language.
+  local lang = simplify(CONFIG.language or "es")
+  if lang ~= "es" and lang ~= "en" and lang ~= "ja" then
+    CONFIG.language = "es"
+    problems[#problems + 1] = TX"language debe ser \"es\", \"en\" o \"ja\""; lang = "es"
+  end
+  CONFIG.language = lang
   if type(CONFIG.evs) == "table" then
     tcfg.target = { 0, 0, 0, 0, 0, 0 }     -- in memory order
     local total = 0
     for k, v in pairs(CONFIG.evs) do
       local i = STAT_KEYS[simplify(k)]
       v = tonumber(v)
-      if not i or not v then problems[#problems + 1] = "EV desconocido: " .. tostring(k)
+      if not i or not v then problems[#problems + 1] = TX"EV desconocido: " .. tostring(k)
       else
         if v > 255 then v = 255 end
         tcfg.target[EV_OF_STAT[i]] = v
         total = total + v
       end
     end
-    if total > 510 then problems[#problems + 1] = "los EVs suman " .. total .. " (maximo 510)" end
+    if total > 510 then problems[#problems + 1] = TX"los EVs suman " .. total .. TX" (maximo 510)" end
   end
   tcfg.only = speciesSet(CONFIG.species, problems)
   tcfg.avoid = speciesSet(CONFIG.avoidSpecies, problems)
   local lm = simplify(CONFIG.learnMoves or "auto")
   if lm ~= "never" and lm ~= "ask" and lm ~= "auto" then
-    problems[#problems + 1] = "learnMoves debe ser \"auto\", \"never\" o \"ask\""; lm = "never"
+    problems[#problems + 1] = TX"learnMoves debe ser \"auto\", \"never\" o \"ask\""; lm = "never"
   end
   tcfg.learn = lm
   local function moveSet(list, key)
@@ -250,7 +259,7 @@ local function interpretConfig(problems)
       for id, mv in pairs(TT_MOVE) do
         if simplify(mv[7]) == sn then set[id] = true; found = true; n = n + 1; break end
       end
-      if not found then problems[#problems + 1] = "ataque desconocido en " .. key .. ": " .. tostring(name) .. " (usa el nombre en ingles)" end
+      if not found then problems[#problems + 1] = TX"ataque desconocido en " .. key .. ": " .. tostring(name) .. TX" (usa el nombre en ingles)" end
     end
     return set, n
   end
@@ -258,8 +267,8 @@ local function interpretConfig(problems)
   local wn
   tcfg.wanted, wn = moveSet(CONFIG.wantedMoves, "wantedMoves")
   if tcfg.wanted and wn == 0 then tcfg.wanted = nil end
-  if wn > 4 then problems[#problems + 1] = "wantedMoves tiene " .. wn .. " ataques (maximo 4)" end
-  if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = "notify debe ser {\"ntfy\": \"tema\"}" end
+  if wn > 4 then problems[#problems + 1] = TX"wantedMoves tiene " .. wn .. TX" ataques (maximo 4)" end
+  if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = TX"notify debe ser {\"ntfy\": \"tema\"}" end
 end
 
 local function loadConfig()
@@ -269,11 +278,11 @@ local function loadConfig()
     if not f then return "no existe" end
     local data = f:read("*a"); f:close()
     local cfg = jsonDecode(data)
-    if type(cfg) ~= "table" then error("el archivo debe ser un objeto { ... }", 0) end
+    if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     local optional = { evs = 1, targetLevel = 1, maxLevel = 1, species = 1, avoidSpecies = 1, keepMoves = 1, wantedMoves = 1,
                        askTimeout = 1, notify = 1 }
     for k, v in pairs(cfg) do
-      if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = "opcion desconocida: " .. k end
+      if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = TX"opcion desconocida: " .. k end
       CONFIG[k] = v
     end
     for k in pairs(optional) do if cfg[k] == nil then CONFIG[k] = nil end end
@@ -432,8 +441,8 @@ local function samePos(a, b) return a and b and a.g == b.g and a.n == b.n and a.
 local DIR_KEY = { [1] = "down", [2] = "up", [3] = "left", [4] = "right" }
 
 -- ------------------------ Types and damage ------------------------------
-local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",
-  "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }
+local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",  --@i18n
+  "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }  --@i18n
 local EFFM = {}
 do
   local i = 1
@@ -631,7 +640,7 @@ local function wantedStatus(m)
       else
         local past
         for k = 1, #ls, 2 do if ls[k + 1] == id then past = ls[k] end end
-        txt = past and ("ya paso Nv." .. past .. ": Recordador") or "MT/tutor"
+        txt = past and (TX"ya paso Nv." .. past .. TX": Recordador") or TX"MT/tutor"
       end
     end
     out[#out + 1] = moveName(id) .. " " .. txt
@@ -661,11 +670,11 @@ end
 
 -- Decides whether fighting this species is worth it. Returns (fight, reason)
 local function shouldFight(mon, species)
-  if tcfg.avoid and tcfg.avoid[species] then return false, "evitada" end
-  if tcfg.only and not tcfg.only[species] then return false, "no esta en la lista" end
+  if tcfg.avoid and tcfg.avoid[species] then return false, TX"evitada" end
+  if tcfg.only and not tcfg.only[species] then return false, TX"no esta en la lista" end
   if not tcfg.target then return true, "nivel" end
   local g = evGain(mon, species)
-  if not g then return false, "sin datos" end
+  if not g then return false, TX"sin datos" end
   local total = evTotal(mon)
   local room = 510 - total
   local useful = false
@@ -674,14 +683,14 @@ local function shouldFight(mon, species)
       local add = math.min(g[i], 255 - mon.evs[i], room)
       local after = mon.evs[i] + add
       if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
-        return false, "daria EVs de " .. STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[i]]
+        return false, TX"daria EVs de " .. TX(STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[i]])
       end
       if mon.evs[i] < tcfg.target[i] then useful = true end
     end
   end
   if useful then return true, "EVs" end
   if evsDone(mon) and CONFIG.targetLevel and mon.level < CONFIG.targetLevel then return true, "nivel" end
-  return false, "no da los EVs que faltan"
+  return false, TX"no da los EVs que faltan"
 end
 
 local function trainingDone(mon)
@@ -814,7 +823,7 @@ local function loadRoute()
   route.go, route.back = cleanRoute(route.go), cleanRoute(route.back)
   route.go, route.back = fixRoute(route.go, route.back)
   if #route.go ~= g0 or #route.back ~= b0 then
-    print(string.format("Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d", g0, #route.go, b0, #route.back))
+    print(string.format(TX"Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d", g0, #route.go, b0, #route.back))
     saveRoute()
   end
 end
@@ -836,24 +845,24 @@ local function recStep()
 end
 
 local function recHotkey()
-  if bot.running then bot.msg = "Deten el bot (7) antes de grabar la ruta"; return end
+  if bot.running then bot.msg = TX"Deten el bot (7) antes de grabar la ruta"; return end
   local p = playerPos()
-  if not p then bot.msg = "Carga tu partida antes de grabar"; return end
+  if not p then bot.msg = TX"Carga tu partida antes de grabar"; return end
   if not rec then
     rec = { phase = "go", list = { { g = p.g, n = p.n, x = p.x, y = p.y, d = 0 } }, prevFace = p.face }
-    bot.msg = "GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6"
+    bot.msg = TX"GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6"
   elseif rec.phase == "go" then
-    if #rec.list < 2 then bot.msg = "Aun no te has movido: camina hasta la enfermera"; return end
+    if #rec.list < 2 then bot.msg = TX"Aun no te has movido: camina hasta la enfermera"; return end
     rec.go = rec.list
     rec.phase = "back"
     rec.list = { { g = p.g, n = p.n, x = p.x, y = p.y, d = 0 } }
-    bot.msg = "GRABANDO VUELTA: cura (si quieres) y vuelve al punto de entreno; pulsa 6"
+    bot.msg = TX"GRABANDO VUELTA: cura (si quieres) y vuelve al punto de entreno; pulsa 6"
   else
-    if #rec.list < 2 then bot.msg = "Aun no te has movido: vuelve al punto de entreno"; return end
+    if #rec.list < 2 then bot.msg = TX"Aun no te has movido: vuelve al punto de entreno"; return end
     route.go, route.back = fixRoute(cleanRoute(rec.go), cleanRoute(rec.list))
     rec = nil
     saveRoute()
-    bot.msg = string.format("Ruta guardada (%d pasos ida, %d vuelta)", #route.go, #route.back)
+    bot.msg = string.format(TX"Ruta guardada (%d pasos ida, %d vuelta)", #route.go, #route.back)
   end
   print(bot.msg)
 end
@@ -930,9 +939,9 @@ local function leadOk()
 end
 
 local function needHeal(m)
-  if m.hp == 0 then return "debilitado" end
-  if m.maxHP > 0 and m.hp * 100 < m.maxHP * CONFIG.healBelow then return "PS bajos" end
-  if usefulPP(m) < CONFIG.minPP then return "sin PP" end
+  if m.hp == 0 then return TX"debilitado" end
+  if m.maxHP > 0 and m.hp * 100 < m.maxHP * CONFIG.healBelow then return TX"PS bajos" end
+  if usefulPP(m) < CONFIG.minPP then return TX"sin PP" end
   return nil
 end
 
@@ -973,11 +982,11 @@ end
 
 local function beginHeal(reason)
   if not route.go then
-    halt("Necesita curarse (" .. reason .. "): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
+    halt(TX"Necesita curarse (" .. reason .. TX"): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
     return
   end
   bot.heals = bot.heals + 1
-  logLine("Al Centro Pokemon: " .. reason)
+  logLine(TX"Al Centro Pokemon: " .. reason)
   queue = {}
   zeroEnemy()
   navStart(route.go)
@@ -987,14 +996,14 @@ end
 -- After a battle: decide what comes next
 local function afterBattleDecide()
   local m = leadOk()
-  if not m then halt("No se pudo leer el Pokemon del equipo"); return end
+  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
   -- EVs gained in the last battle
   if bot.prevEvs then
     local parts = {}
     for st = 1, 6 do
       local i = EV_OF_STAT[st]
       local d = m.evs[i] - bot.prevEvs[i]
-      if d > 0 then parts[#parts + 1] = "+" .. d .. " " .. STAT_LABEL[st] end
+      if d > 0 then parts[#parts + 1] = "+" .. d .. " " .. TX(STAT_LABEL[st]) end
     end
     if #parts > 0 then
       bot.gainBattles = (bot.gainBattles or 0) + 1
@@ -1003,13 +1012,13 @@ local function afterBattleDecide()
     for i = 1, 6 do bot.prevEvs[i] = m.evs[i] end
   end
   if m.species ~= bot.leadSpecies then
-    logLine(string.format("%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+    logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
     bot.leadSpecies = m.species
   end
   if trainingDone(m) then
     stopBot()
     bot.done = true
-    bot.msg = string.format("ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+    bot.msg = string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
       table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/"))
     logLine(bot.msg)
     notify(bot.msg)
@@ -1024,8 +1033,8 @@ local function afterBattleDecide()
       local i = EV_OF_STAT[s]
       local need = tcfg.target[i] - m.evs[i]
       if need > 0 and need < mult and evTotal(m) < 510 then
-        halt(string.format("Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo",
-          need, STAT_LABEL[s], mult))
+        halt(string.format(TX"Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo",
+          need, TX(STAT_LABEL[s]), mult))
         return
       end
     end
@@ -1041,7 +1050,7 @@ local function afterBattleDecide()
         if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return end
       end
     end
-    halt("El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
+    halt(TX"El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
     return
   end
   startWalk()
@@ -1070,15 +1079,15 @@ end
 
 local function startBot()
   if otherInstanceAlive() then
-    bot.msg = "Hay OTRO Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"
+    bot.msg = TX"Hay OTRO Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"
     print(bot.msg); return
   end
-  if bot.cfgError then bot.msg = "Corrige " .. CONFIG_FILE .. " (mira la consola) y pulsa 0"; print(bot.msg); return end
-  if rec then bot.msg = "Termina de grabar la ruta (6) antes de iniciar"; return end
-  if inBattle() then bot.msg = "Inicia el bot fuera de combate, en la hierba"; return end
+  if bot.cfgError then bot.msg = TX"Corrige " .. CONFIG_FILE .. TX" (mira la consola) y pulsa 0"; print(bot.msg); return end
+  if rec then bot.msg = TX"Termina de grabar la ruta (6) antes de iniciar"; return end
+  if inBattle() then bot.msg = TX"Inicia el bot fuera de combate, en la hierba"; return end
   local m = leadOk()
   local p = playerPos()
-  if not m or not p then bot.msg = "Carga tu partida (en el mapa) antes de iniciar"; print(bot.msg); return end
+  if not m or not p then bot.msg = TX"Carga tu partida (en el mapa) antes de iniciar"; print(bot.msg); return end
   bot.cbOW = read32(A.callback2)
   bot.leadSpecies = m.species
   bot.spot = route.back and route.back[#route.back] or p
@@ -1090,10 +1099,10 @@ local function startBot()
   bot.startTime = 0
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
-  logLine(string.format("Entrenamiento iniciado: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+  logLine(string.format(TX"Entrenamiento iniciado: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
     table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")))
   local ws = wantedStatus(m)
-  if ws then logLine("Ataques deseados: " .. ws) end
+  if ws then logLine(TX"Ataques deseados: " .. ws) end
   afterBattleDecide()
 end
 
@@ -1130,14 +1139,14 @@ local function stepBattle()
       bot.lastFoe = foe
       if foe.sv < 8 and CONFIG.stopOnShiny then
         stopBot()
-        bot.msg = "SHINY SALVAJE: " .. speciesName(foe.species) .. "! Capturalo tu (juego en pausa)"
+        bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
         logLine(bot.msg)
         notify(bot.msg)
         emu.pause()
         return
       end
       local m = lead()
-      if bot.forceRun then bot.fight, bot.lastWhy = false, "camino al Centro"
+      if bot.forceRun then bot.fight, bot.lastWhy = false, TX"camino al Centro"
       elseif m then bot.fight, bot.lastWhy = shouldFight(m, foe.species) end
       if bot.fight then bot.fought = bot.fought + 1 else bot.fled = bot.fled + 1 end
     end
@@ -1152,10 +1161,10 @@ local function stepBattle()
     if CONFIG.evolve then
       local m = lead()
       if m and m.species ~= bot.leadSpecies then
-        logLine(string.format("%s esta evolucionando a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+        logLine(string.format(TX"%s esta evolucionando a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
         bot.st, bot.manualFrom, bot.owT = "manual", "evolve", 0
-        bot.msg = "Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
-        notify("Tu Pokemon evoluciono a " .. speciesName(m.species) .. ": termina la escena y el bot sigue solo")
+        bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
+        notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
         pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
         return
@@ -1179,8 +1188,8 @@ local function stepBattle()
       local idx = learnerIndex()
       local who = monAsAttacker(idx)
       bot.st, bot.manualFrom, bot.t = "manual", "learn", 0
-      bot.msg = string.format("%s quiere aprender %s: decide tu", who and speciesName(who.mon.species) or "?", moveName(new))
-      notify(bot.msg .. (slot and (" (el bot olvidaria " .. moveName(old) .. ")") or " (el bot no lo aprenderia)"))
+      bot.msg = string.format(TX"%s quiere aprender %s: decide tu", who and speciesName(who.mon.species) or "?", moveName(new))
+      notify(bot.msg .. (slot and (TX" (el bot olvidaria " .. moveName(old) .. ")") or TX" (el bot no lo aprenderia)"))
       return
     end
     if op == OP_LEARNMOVE then
@@ -1212,8 +1221,8 @@ local function stepBattle()
     bot.sawMove = false
     local me = battleMon(0)
     local run = not bot.fight or bot.forceRun
-    if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = "PS muy bajos" end
-    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = "sin ataques utiles" end
+    if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
+    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
     if c == want then tap("A", 16)
@@ -1246,9 +1255,9 @@ local function stepAfter()
   local m = lead()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
-    bot.msg = "Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
+    bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
     pcall(emu.pause)
-    notify("Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
+    notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
   if inOverworld() then bot.owT = bot.owT + 1 else bot.owT = 0 end
@@ -1274,7 +1283,7 @@ local function stepAfter()
   if #queue == 0 and not inOverworld() then
     if CONFIG.evolve then tap("A", 10) else tap("B", 6) end
   end
-  if bot.t > 5400 then halt("Aviso: no se pudo volver al mapa tras el combate") end
+  if bot.t > 5400 then halt(TX"Aviso: no se pudo volver al mapa tras el combate") end
 end
 
 local function stepManual()
@@ -1290,7 +1299,7 @@ local function stepManual()
     local onPrompt = not bot.cbBattle or read32(A.callback2) == bot.cbBattle
     if CONFIG.askTimeout and bot.t > CONFIG.askTimeout * 60 and onPrompt and inBattle() then
       bot.learnForce = "auto"
-      logLine("Sin respuesta: el bot decide solo si aprende el ataque")
+      logLine(TX"Sin respuesta: el bot decide solo si aprende el ataque")
       bot.msg = ""; bot.st = "battle"; return
     end
     if not inBattle() then bot.msg = ""; bot.st, bot.t, bot.owT = "after", 0, 0 end
@@ -1319,7 +1328,7 @@ local function stepLearnPick()
   if not inSummary then
     local who = monAsAttacker(learnerIndex())
     if who and L and who.mon.moves[L.slot] == L.new then
-      logLine(string.format("%s aprendio %s (olvido %s)", speciesName(who.mon.species), moveName(L.new), moveName(L.old)))
+      logLine(string.format(TX"%s aprendio %s (olvido %s)", speciesName(who.mon.species), moveName(L.new), moveName(L.old)))
     end
     bot.st, bot.t = "battle", 0
     return
@@ -1328,20 +1337,20 @@ local function stepLearnPick()
   local c = read8(A.sumCursor)
   local function abort(why)
     tap("B", 30); bot.picked = true; bot.learnForce = "never"
-    logLine("No se aprendio " .. moveName(L.new) .. ": " .. why .. " (usa \"learnMoves\": \"ask\")")
-    notify("No se pudo elegir el ataque a olvidar: " .. why)
+    logLine(TX"No se aprendio " .. moveName(L.new) .. ": " .. why .. TX" (usa \"learnMoves\": \"ask\")")
+    notify(TX"No se pudo elegir el ataque a olvidar: " .. why)
   end
   if not bot.probe then
     -- check that the cursor direction is right: down must go from 0 to 1
     if c == 1 then bot.probe = true
-    elseif bot.t > 400 then abort("el cursor no responde")
+    elseif bot.t > 400 then abort(TX"el cursor no responde")
     elseif c == 0 then tap("down", 20)
-    else abort("cursor inesperado") end
+    else abort(TX"cursor inesperado") end
     return
   end
   local want = L.slot - 1
   if c == want then tap("A", 30); bot.picked = true
-  elseif bot.t > 1200 then abort("tiempo agotado")
+  elseif bot.t > 1200 then abort(TX"tiempo agotado")
   elseif c < want then tap("down", 14) else tap("up", 14) end
 end
 
@@ -1374,7 +1383,7 @@ local function stepHealGo()
   if r == "done" then
     if simplify(CONFIG.healMode or "nurse") == "tile" then bot.st, bot.t = "heal_tile", 0
     else bot.st, bot.t = "nurse", 0; tap("up", 10) end
-  elseif r == "fail" then halt("No pude seguir la ruta al Centro (graba otra con 6)") end
+  elseif r == "fail" then halt(TX"No pude seguir la ruta al Centro (graba otra con 6)") end
 end
 
 local function stepNurse()
@@ -1385,7 +1394,7 @@ local function stepNurse()
     return
   end
   if bot.t > 2400 then
-    halt("No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)")
+    halt(TX"No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)")
     return
   end
   tap("A", 14)
@@ -1400,7 +1409,7 @@ local function stepHealTile()
     return
   end
   if bot.t > 1200 then
-    halt("La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)")
+    halt(TX"La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)")
     return
   end
   if bot.t % 20 == 0 then tap("B", 6) end
@@ -1420,9 +1429,9 @@ local function stepHealBack()
   if #queue > 0 then return end
   local r = navStep()
   if r == "done" then
-    logLine("De vuelta en el punto de entreno")
+    logLine(TX"De vuelta en el punto de entreno")
     afterBattleDecide()
-  elseif r == "fail" then halt("No pude volver al punto de entreno (graba otra ruta con 6)") end
+  elseif r == "fail" then halt(TX"No pude volver al punto de entreno (graba otra ruta con 6)") end
 end
 
 -- ------------------------------ Teclas -------------------------------
@@ -1434,7 +1443,7 @@ end
 local function handleHotkeys()
   local keys = input.get()
   if pressed("7", keys) then
-    if bot.running then stopBot(); bot.msg = "Detenido" else startBot() end
+    if bot.running then stopBot(); bot.msg = TX"Detenido" else startBot() end
   elseif pressed("6", keys) then
     recHotkey()
   elseif pressed("8", keys) then
@@ -1460,18 +1469,18 @@ end
 
 reportConfig = function(ok, msg, problems)
   bot.cfgError = (not ok) or #problems > 0
-  if not ok then bot.msg = "Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
-  elseif msg == "no existe" then bot.msg = "No hay " .. CONFIG_FILE .. ": uso la configuracion por defecto"
-  elseif #problems > 0 then bot.msg = "Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
-  else bot.msg = "Config cargada" end
+  if not ok then bot.msg = TX"Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
+  elseif msg == "no existe" then bot.msg = TX"No hay " .. CONFIG_FILE .. TX": uso la configuracion por defecto"
+  elseif #problems > 0 then bot.msg = TX"Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
+  else bot.msg = TX"Config cargada" end
   print(bot.msg)
-  for i = 2, #problems do print("Config: " .. problems[i]) end
+  for i = 2, #problems do print(TX"Config: " .. problems[i]) end
 end
 
 -- ------------------------------- Panel -------------------------------
-local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",
-  heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",
-  heal_back = "Volviendo al punto" }
+local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",  --@i18n
+  heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",  --@i18n
+  heal_back = "Volviendo al punto" }  --@i18n
 
 -- EV progress block: bar per stat, total, session, rate and estimated time
 local function evBlock(m, line)
@@ -1486,20 +1495,20 @@ local function evBlock(m, line)
       local gained = bot.startEvs and (m.evs[i] - bot.startEvs[i]) or 0
       local color = nil
       if tgt > 0 and m.evs[i] >= tgt then color = "green" elseif tgt == 0 and m.evs[i] > 0 then color = "orange" end
-      line(string.format("%-3s %3d/%-3s [%s]%s", STAT_LABEL[st], m.evs[i], tgt > 0 and tostring(tgt) or "-", bar,
+      line(string.format("%-3s %3d/%-3s [%s]%s", TX(STAT_LABEL[st]), m.evs[i], tgt > 0 and tostring(tgt) or "-", bar,
         gained > 0 and ("  +" .. gained) or ""), color)
       shown = shown + 1
     end
   end
-  if shown == 0 then line("EVs: 0 (aun no gana ninguno)") end
+  if shown == 0 then line(TX"EVs: 0 (aun no gana ninguno)") end
   local total = evTotal(m)
-  local txt = string.format("Total %d/510", total)
+  local txt = string.format(TX"Total %d/510", total)
   if bot.startEvs and bot.running then
     local gained = 0
     for i = 1, 6 do gained = gained + (m.evs[i] - bot.startEvs[i]) end
     local secs = 0
     pcall(function() secs = os.time() - (bot.startTime or os.time()) end)
-    txt = txt .. string.format("  sesion +%d", gained)
+    txt = txt .. string.format(TX"  sesion +%d", gained)
     if gained > 0 and secs >= 60 then
       local perH = gained * 3600 / secs
       txt = txt .. string.format("  ~%d/h", floor(perH + 0.5))
@@ -1508,13 +1517,13 @@ local function evBlock(m, line)
         for i = 1, 6 do left = left + math.max(tcfg.target[i] - m.evs[i], 0) end
         if left > 0 then
           local eta = floor(left / perH * 60 + 0.5)
-          txt = txt .. string.format("  faltan %d (~%dh%02dm)", left, floor(eta / 60), eta % 60)
+          txt = txt .. string.format(TX"  faltan %d (~%dh%02dm)", left, floor(eta / 60), eta % 60)
         end
       end
     end
   end
   line(txt)
-  if bot.lastGain and bot.running then line("Ultimo: " .. bot.lastGain) end
+  if bot.lastGain and bot.running then line(TX"Ultimo: " .. bot.lastGain) end
 end
 
 local function evLine(m)
@@ -1522,28 +1531,28 @@ local function evLine(m)
   for s = 1, 6 do
     local i = EV_OF_STAT[s]
     if tcfg.target then
-      if tcfg.target[i] > 0 or m.evs[i] > 0 then t[#t + 1] = string.format("%s %d/%d", STAT_LABEL[s], m.evs[i], tcfg.target[i]) end
-    elseif m.evs[i] > 0 then t[#t + 1] = string.format("%s %d", STAT_LABEL[s], m.evs[i]) end
+      if tcfg.target[i] > 0 or m.evs[i] > 0 then t[#t + 1] = string.format("%s %d/%d", TX(STAT_LABEL[s]), m.evs[i], tcfg.target[i]) end
+    elseif m.evs[i] > 0 then t[#t + 1] = string.format("%s %d", TX(STAT_LABEL[s]), m.evs[i]) end
   end
-  if #t == 0 then return "EVs: 0" end
-  return "EVs " .. table.concat(t, "  ")
+  if #t == 0 then return TX"EVs: 0" end
+  return TX"EVs " .. table.concat(t, "  ")
 end
 
 -- ------------------------- Inspection mode ---------------------------
-local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game
+local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game  --@i18n
 local function drawInspect()
   local which = bot.inspect
   local addr = (which == 7) and A.enemy or (A.party + (which - 1) * 0x64)
   local m = readPartyMon(addr)
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
-  local title = (which == 7) and "Rival" or string.format("Equipo %d/%d", which, partyCount())
-  if not m then line(title .. ": vacio  (8 = siguiente)"); return end
+  local title = (which == 7) and TX"Rival" or string.format(TX"Equipo %d/%d", which, partyCount())
+  if not m then line(title .. TX": vacio  (8 = siguiente)"); return end
   local shiny = m.sv < 8
   local nat = m.pid % 25
   local natName = natureNamesList[nat + 1] or "?"
   local up, down = floor(nat / 5) + 1, (nat % 5) + 1
-  local natFx = (up == down) and "neutra" or string.format("+%s -%s", NATURE_STAT[up], NATURE_STAT[down])
+  local natFx = (up == down) and TX"neutra" or string.format("+%s -%s", TX(NATURE_STAT[up]), TX(NATURE_STAT[down]))
   local sx = TT_SPECX[m.species]
   local gender = ""
   if sx then
@@ -1552,9 +1561,9 @@ local function drawInspect()
     else gender = (band(m.pid, 0xFF) < gr) and " F" or " M" end
   end
   local abilId = sx and ((m.abilityBit == 1 and sx[2] ~= 0) and sx[2] or sx[1]) or 0
-  line(string.format("%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and "  * SHINY *" or ""),
+  line(string.format(TX"%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and TX"  * SHINY *" or ""),
        shiny and "green" or nil)
-  line(string.format("%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
+  line(string.format(TX"%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
   -- Real stats (in memory: max HP 0x58, Atk 0x5A, Def 0x5C, Spe 0x5E, SpA 0x60, SpD 0x62)
   local st = { read16(addr + 0x58), read16(addr + 0x5A), read16(addr + 0x5C), read16(addr + 0x60), read16(addr + 0x62),
                read16(addr + 0x5E) }
@@ -1564,10 +1573,10 @@ local function drawInspect()
     for i = 1, 6 do parts[i] = string.format(fmt or "%4d", t[i]) end
     return string.format("%-5s", label) .. table.concat(parts)
   end
-  local hdr = { "PS", "At", "Df", "AtE", "DfE", "Vel" }
+  local hdr = { TX"PS", TX"At", TX"Df", TX"AtE", TX"DfE", TX"Vel" }
   line(row("", hdr, "%4s"))
   local statColor = {}
-  line(row("Stat", st))
+  line(row(TX"Stat", st))
   local perfect = true
   for i = 1, 6 do if m.ivs[i] < 31 then perfect = false end end
   line(row("IV", m.ivs), perfect and "green" or nil)
@@ -1575,10 +1584,10 @@ local function drawInspect()
   for i = 1, 6 do tot = tot + ev[i] end
   line(row("EV", ev) .. string.format("  (%d/510)", tot))
   local hpType, hpPow = hiddenPower(m.ivWord)
-  line(string.format("PS %d/%d  Poder Oculto: %s %d", m.hp, m.maxHP, TYPE_NAMES[hpType] or "?", hpPow))
-  local pkr = (m.pokerus == 0) and "no" or ((band(m.pokerus, 0x0F) > 0) and "SI (activo)" or "lo tuvo")
-  line(string.format("Exp %d  Amistad %d  Pokerus %s", m.exp, m.friendship, pkr))
-  line(string.format("Objeto: %s", m.item == 0 and "-" or (TT_ITEMNAME[m.item] or ("#" .. m.item))))
+  line(string.format(TX"PS %d/%d  Poder Oculto: %s %d", m.hp, m.maxHP, TX(TYPE_NAMES[hpType]) or "?", hpPow))
+  local pkr = (m.pokerus == 0) and TX"no" or ((band(m.pokerus, 0x0F) > 0) and TX"SI (activo)" or TX"lo tuvo")
+  line(string.format(TX"Exp %d  Amistad %d  Pokerus %s", m.exp, m.friendship, pkr))
+  line(string.format(TX"Objeto: %s", m.item == 0 and "-" or (TT_ITEMNAME[m.item] or ("#" .. m.item))))
   for i = 1, 4, 2 do
     local function mv(k)
       local id = m.moves[k]
@@ -1590,7 +1599,7 @@ local function drawInspect()
     line(string.format("%-18s %s", mv(i), mv(i + 1)))
   end
   local otid = m.otid % 0x10000
-  line(string.format("PID %08X  TID %d  SID %d   (8 = siguiente)", m.pid, otid, floor(m.otid / 0x10000)))
+  line(string.format(TX"PID %08X  TID %d  SID %d   (8 = siguiente)", m.pid, otid, floor(m.otid / 0x10000)))
 end
 
 local function draw()
@@ -1598,36 +1607,36 @@ local function draw()
   if bot.panel == 0 then return end
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
-  local status = bot.done and "COMPLETO" or (bot.running and (PHASE[bot.st] or bot.st) or "OFF")
-  if rec then status = (rec.phase == "go") and "GRABANDO IDA" or "GRABANDO VUELTA" end
-  line("Entrenar v1.10: " .. status, (bot.done or rec) and "green" or nil)
+  local status = bot.done and TX"COMPLETO" or (bot.running and (TX(PHASE[bot.st]) or bot.st) or "OFF")
+  if rec then status = (rec.phase == "go") and TX"GRABANDO IDA" or TX"GRABANDO VUELTA" end
+  line(TX"Entrenar v1.10: " .. status, (bot.done or rec) and "green" or nil)
   local m = lead()
   if m then
     local lv = CONFIG.targetLevel and string.format("Nv.%d/%d", m.level, CONFIG.targetLevel) or ("Nv." .. m.level)
-    line(string.format("%s %s  PS %d/%d  PP %d", speciesName(m.species), lv, m.hp, m.maxHP, usefulPP(m)))
+    line(string.format(TX"%s %s  PS %d/%d  PP %d", speciesName(m.species), lv, m.hp, m.maxHP, usefulPP(m)))
     evBlock(m, line)
-    if tcfg.wanted and (bot.panel == 2 or not bot.running) then line("Ataques: " .. (wantedStatus(m) or "")) end
+    if tcfg.wanted and (bot.panel == 2 or not bot.running) then line(TX"Ataques: " .. (wantedStatus(m) or "")) end
   end
   if bot.panel == 2 or not bot.running then
     if not bot.running and not rec then
-      line(string.format("7 iniciar  6 ruta  8 ver Pokemon  9 panel  0 config   Ruta: %s",
-        route.go and string.format("%d/%d pasos", #route.go, #route.back) or "no grabada"))
+      line(string.format(TX"7 iniciar  6 ruta  8 ver Pokemon  9 panel  0 config   Ruta: %s",
+        route.go and string.format(TX"%d/%d pasos", #route.go, #route.back) or TX"no grabada"))
     end
-    line(string.format("Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
+    line(string.format(TX"Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
   end
   if bot.lastFoe and bot.running then
-    line(string.format("Rival: %s Nv.%d  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level,
-      bot.fight and "pelear" or "huir", bot.lastWhy or ""))
+    line(string.format(TX"Rival: %s Nv.%d  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level,
+      bot.fight and TX"pelear" or TX"huir", bot.lastWhy or ""))
     if bot.panel == 2 and bot.st == "battle" and inBattle() then
       local slot = bestMove(bot.blocked)
       local me = battleMon(0)
-      if slot then line("Ataque: " .. (TT_MOVE[me.moves[slot]] and TT_MOVE[me.moves[slot]][7] or "?")) end
+      if slot then line(TX"Ataque: " .. (TT_MOVE[me.moves[slot]] and TT_MOVE[me.moves[slot]][7] or "?")) end
     end
   end
   if bot.panel == 2 then
     -- To check the addresses in other languages: on the FIGHT/RUN menu "Menu" must be 18 and "Espera" 1
     local p = playerPos()
-    line(string.format("Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
+    line(string.format(TX"Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
       band(read32(A.execFlags), 1), band(read8(A.actionCursor), 3), band(read8(A.moveCursor), 3),
       inBattle() and 1 or 0, p and string.format("%d.%d (%d,%d)", p.g, p.n, p.x, p.y) or "?"))
   end
@@ -1637,13 +1646,13 @@ end
 -- ------------------------------- Inicio ------------------------------
 print("FRLG Train Bot v1.10")
 if not gameName then
-  print("Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
+  print(TX"Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
   return
 end
-print(string.format("Juego: %s", GAME_LABEL))
-print("7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stats)   9 = panel   0 = recargar " .. CONFIG_FILE)
+print(string.format(TX"Juego: %s", GAME_LABEL))
+print(TX"7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stats)   9 = panel   0 = recargar " .. CONFIG_FILE)
 reportConfig(cfgOk, cfgMsg, cfgProblems)
-if route.go then print(string.format("Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
+if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
 
 local badFrames = 0
 while true do
@@ -1651,12 +1660,12 @@ while true do
   handleHotkeys()
   recStep()
   if bot.running then
-    if otherInstanceAlive() then halt("Hay OTRO Train Bot corriendo en otra ventana de Lua: deja solo uno") end
+    if otherInstanceAlive() then halt(TX"Hay OTRO Train Bot corriendo en otra ventana de Lua: deja solo uno") end
   end
   if bot.running then
     writeLock()
     if validPtr(read32(A.sb1)) then badFrames = 0 else badFrames = badFrames + 1 end
-    if badFrames > 30 then halt("El juego se reinicio: bot detenido") end
+    if badFrames > 30 then halt(TX"El juego se reinicio: bot detenido") end
   end
   if bot.running then
     local busy = runQueue()

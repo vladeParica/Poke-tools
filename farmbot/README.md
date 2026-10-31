@@ -58,6 +58,7 @@ the **USA** versions (FireRed/LeafGreen 1.0 and 1.1); on other versions, or with
 - **Opponents:** `species`, `avoidSpecies` (`nivel` and `objetos`; `robar` and `dinero` run from wild Pokémon they don't need).
 - **Battle, moves, healing, notifications:** same options as the Train Bot.
 - **Routes:** `routeFile` (Center), `trainerRouteFile` (trainers), `healMode`.
+- **Language:** `language` (`"es"`, `"en"` or `"ja"` in romaji) for the panel, console and log.
 
 Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
 

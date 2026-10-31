@@ -88,5 +88,6 @@
   "stopOthers": true,           // detener las demas instancias
   "sharedDir": null,            // carpeta compartida; null = la del script
   "logDir": "logs",             // subcarpeta para el log y los archivos de trabajo
-  "resetOnLoad": true           // reiniciar el juego al cargar el script
+  "resetOnLoad": true,          // reiniciar el juego al cargar el script
+  "language": "es"              // idioma del panel, consola y log: "es", "en" o "ja" (romaji)
 }

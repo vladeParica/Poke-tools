@@ -79,5 +79,7 @@
   // "tile"  = la ida termina en una casilla que cura al pisarla (zona purificada, Torre Pokemon 5F).
   "healMode": "nurse",
   "logFile": "train_log.txt",
-  "logDir": "logs"
+  "logDir": "logs",
+  // Idioma del panel, consola y log: "es", "en" o "ja" (japones en romaji).
+  "language": "es"
 }

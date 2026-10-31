@@ -35,6 +35,7 @@ Use the [configurator](../configurator/README.md) or edit `FRLG_TrainBot.json`, 
 - **Moves:** `learnMoves` (`auto`, `never`, `ask`), `wantedMoves`, `keepMoves`, `askTimeout`.
 - **Other:** `evolve`, `stopOnShiny`, `healMode` (`nurse` or `tile`), `routeFile`.
 - **Phone notifications:** `notify` with ntfy or a Discord webhook.
+- **Language:** `language` (`"es"`, `"en"` or `"ja"` in romaji) for the panel, console and log.
 
 Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
 

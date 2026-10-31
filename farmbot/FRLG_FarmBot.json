@@ -49,5 +49,6 @@
   "routeFile": "FRLG_TrainRoute.txt",   // ruta al Centro (tecla 6); sirve la del Train Bot
   "healMode": "nurse",                  // "nurse" o "tile" (zona purificada, Torre Pokemon 5F)
   "logFile": "farm_log.txt",
-  "logDir": "logs"
+  "logDir": "logs",
+  "language": "es"                      // idioma del panel, consola y log: "es", "en" o "ja" (romaji)
 }

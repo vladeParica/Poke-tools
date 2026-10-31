@@ -45,8 +45,977 @@ local CONFIG = {
   healMode       = "nurse",   -- "nurse" = talk to the nurse; "tile" = tile that heals when stepped on (Tower 5F purified zone)
   logFile        = "train_log.txt",
   logDir         = "logs",
+  language       = "es",      -- "es", "en" or "ja" (romaji): panel, console and log text
 }
 local CONFIG_FILE = "FRLG_TrainBot.json"
+-- Player-facing text is written in Spanish and shown in CONFIG.language (ADR-0014).
+-- Generated from shared/lang/*.json by the build script.
+local LANG = {
+  en = {
+    ["        para avanzar millones de frames en minutos. Por ahora espero a velocidad normal."] = "        to advance millions of frames in minutes. For now I'll wait at normal speed.",
+    ["   (paso %d)"] = "   (step %d)",
+    ["   Base: %08X"] = "   Base: %08X",
+    ["   IVs %s   PO %s %d"] = "   IVs %s   HP %s %d",
+    ["   Prob: %.1f%%"] = "   Prob: %.1f%%",
+    ["   en el avance %d%s"] = "   at advance %d%s",
+    ["  (frame %d desde la semilla inicial)"] = "  (frame %d from the initial seed)",
+    ["  (tasa %d)"] = "  (rate %d)",
+    ["  * SHINY *"] = "  * SHINY *",
+    ["  faltan %d (~%dh%02dm)"] = "  %d left (~%dh%02dm)",
+    ["  ganado +"] = "  earned +",
+    ["  lleva "] = "  holds ",
+    ["  meta $"] = "  goal $",
+    ["  opciones: "] = "  options: ",
+    ["  sesion +%d"] = "  session +%d",
+    [" (Square)"] = " (Square)",
+    [" (Star)"] = " (Star)",
+    [" (el bot no lo aprenderia)"] = " (the bot wouldn't learn it)",
+    [" (el bot olvidaria "] = " (the bot would forget ",
+    [" (maximo 510)"] = " (maximum 510)",
+    [" (mira la consola) y pulsa 0"] = " (see the console) and press 0",
+    [" (no lo quieres)"] = " (you don't want it)",
+    [" (tabla de encuentros no encontrada)"] = " (encounter table not found)",
+    [" (tasa %d)"] = " (rate %d)",
+    [" (usa \"learnMoves\": \"ask\")"] = " (use \"learnMoves\": \"ask\")",
+    [" (usa el nombre en ingles)"] = " (use the English name)",
+    [" ataques (maximo 4)"] = " moves (maximum 4)",
+    [" doble"] = " double",
+    [" lleva "] = " holds ",
+    [" | corrida iniciada "] = " | run started ",
+    ["! Capturalo tu (juego en pausa)"] = "! Catch it yourself (game paused)",
+    ["#%d %s [%s]  7 on/off 8 modo 9 panel 0 config"] = "#%d %s [%s]  7 on/off 8 mode 9 panel 0 config",
+    ["$%d (ganado +%d)"] = "$%d (earned +%d)",
+    ["%d combates"] = "%d battles",
+    ["%d objetos guardados en la mochila"] = "%d items stored in the bag",
+    ["%d/%d pasos"] = "%d/%d steps",
+    ["%s %s  IVs %s"] = "%s %s  IVs %s",
+    ["%s %s  PS %d/%d  PP %d"] = "%s %s  HP %d/%d  PP %d",
+    ["%s %sPID %08X%s  %s"] = "%s %sPID %08X%s  %s",
+    ["%s (%s)  Hab: %s"] = "%s (%s)  Ability: %s",
+    ["%s aprendio %s (olvido %s)"] = "%s learned %s (forgot %s)",
+    ["%s consiguio %s"] = "%s found %s",
+    ["%s debe ser un numero entero entre %d y %d"] = "%s must be a whole number between %d and %d",
+    ["%s en %d frames"] = "%s in %d frames",
+    ["%s en: %d frames (~%d s a 60 fps)"] = "%s in: %d frames (~%d s at 60 fps)",
+    ["%s esta evolucionando a %s"] = "%s is evolving into %s",
+    ["%s evoluciono a %s"] = "%s evolved into %s",
+    ["%s llego al Nv.%d"] = "%s reached Lv.%d",
+    ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
+    ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
+    ["%s: %d   (%d por hora de juego)"] = "%s: %d   (%d per hour of play)",
+    ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
+    ["(carpeta actual)"] = "(current folder)",
+    ["): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)"] = "): heal, go back to the spot and press 7. (Record the route with 6)",
+    ["): sigo caminando desde la base"] = "): I keep walking from the base",
+    ["+$%d  (total $%d)"] = "+$%d  (total $%d)",
+    [". Luego pulsa 7"] = ". Then press 7",
+    [". Terminalo tu en el menu y pulsa 7"] = ". Finish it yourself in the menu and press 7",
+    ["7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stats)   9 = panel   0 = recargar "] = "7 = start/stop   6 = record route to the Center   8 = view Pokemon (stats)   9 = panel   0 = reload ",
+    ["7 = iniciar/detener   6 = ruta al Centro   5 = ruta de entrenadores   4 = diagnostico   8 = ver Pokemon   9 = panel   0 = recargar "] = "7 = start/stop   6 = route to the Center   5 = trainer route   4 = diagnostic   8 = view Pokemon   9 = panel   0 = reload ",
+    ["7 = iniciar/detener   8 = cambiar modo   9 = panel (compacto/completo/oculto)   0 = recargar "] = "7 = start/stop   8 = change mode   9 = panel (compact/full/hidden)   0 = reload ",
+    ["7 iniciar  6 ruta  8 ver Pokemon  9 panel  0 config   Ruta: %s"] = "7 start  6 route  8 view Pokemon  9 panel  0 config   Route: %s",
+    ["7 iniciar  6 ruta Centro  5 ruta entrenadores  4 diagnostico  8 ver  9 panel  0 config   Centro: %s"] = "7 start  6 Center route  5 trainer route  4 diagnostic  8 view  9 panel  0 config   Center: %s",
+    ["7 iniciar  8 modo  9 panel  0 config"] = "7 start  8 mode  9 panel  0 config",
+    [": Recordador"] = ": Move Reminder",
+    [": termina la escena y el bot sigue solo"] = ": finish the scene and the bot carries on by itself",
+    [": uso la configuracion por defecto"] = ": using the default settings",
+    [": vacio  (8 = siguiente)"] = ": empty  (8 = next)",
+    ["A un paso del encuentro (%d pasos caminados): calibro el paso final"] = "One step from the encounter (%d steps walked): calibrating the final step",
+    ["ABIERTO"] = "OPEN",
+    ["Abriendo Tele"] = "Opening TV",
+    ["Abriendo la Tele"] = "Opening the TV",
+    ["Acciones: [%s]  cursor -> %s"] = "Actions: [%s]  cursor -> %s",
+    ["Acciones: cerrado"] = "Actions: closed",
+    ["Acercandose a un paso"] = "Getting one step away",
+    ["Acero"] = "Steel",
+    ["Agua"] = "Water",
+    ["Al Centro Pokemon: "] = "To the Pokemon Center: ",
+    ["Aprendiendo ataque"] = "Learning a move",
+    ["Arranque %d   semillas probadas %d   ultima %s"] = "Boot %d   seeds tried %d   last %s",
+    ["At"] = "Atk",
+    ["AtE"] = "SpA",
+    ["Ataque: "] = "Move: ",
+    ["Ataques deseados: "] = "Wanted moves: ",
+    ["Ataques: "] = "Moves: ",
+    ["Aun no te has movido"] = "You haven't moved yet",
+    ["Aun no te has movido: camina hasta la enfermera"] = "You haven't moved yet: walk to the nurse",
+    ["Aun no te has movido: vuelve al punto de entreno"] = "You haven't moved yet: go back to the training spot",
+    ["Aun no te has movido: vuelve al punto de inicio"] = "You haven't moved yet: go back to the start point",
+    ["Avance: %d   Retraso: %s"] = "Advance: %d   Delay: %s",
+    ["Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d"] = "Warning: the RNG matches but not the species/level (area table?). %s Lv.%d",
+    ["Aviso: el TID salio %d, se esperaba %d"] = "Warning: the TID came out %d, expected %d",
+    ["Aviso: en esta version el bot no quita los objetos solo; pausara para que lo hagas tu"] = "Warning: in this version the bot doesn't take the items by itself; it will pause so you do it",
+    ["Aviso: la bandera de combate no esta verificada para este idioma (revisa 'Combate' en el panel)."] = "Warning: the battle flag is not verified for this language (check 'Battle' on the panel).",
+    ["Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara"] = "Warning: menus not verified in this version: to take items the bot will pause and tell you",
+    ["Aviso: no se pudo confirmar la huida"] = "Warning: couldn't confirm the escape",
+    ["Aviso: no se pudo volver al mapa tras el combate"] = "Warning: couldn't get back to the map after the battle",
+    ["Aviso: registra la Tele Pokemon en SELECT (Mochila > Obj. clave > Tele Pokemon > Registrar)"] = "Warning: register the Teachy TV on SELECT (Bag > Key Items > Teachy TV > Register)",
+    ["Bicho"] = "Bug",
+    ["Bot iniciado: %s  (TID %d / SID %d)"] = "Bot started: %s  (TID %d / SID %d)",
+    ["Bot iniciado: Partida nueva  (TID nuevo %d)"] = "Bot started: New game  (new TID %d)",
+    ["Busca: "] = "Looking for: ",
+    ["Buscando SID... avance %d"] = "Searching for a SID... advance %d",
+    ["Buscando combate"] = "Looking for a battle",
+    ["Buscando el titulo"] = "Finding the title",
+    ["Buscando objetivo"] = "Searching target",
+    ["Buscando objetivo... avance %d"] = "Searching for a target... advance %d",
+    ["Buscapelea %d/100  vueltas %d  entrenadores %d  Ruta: %s"] = "VS Seeker %d/100  laps %d  trainers %d  Route: %s",
+    ["CAMBIAR"] = "SHIFT",
+    ["CARTA"] = "MAIL",
+    ["CENTRO "] = "CENTER ",
+    ["COMPLETO"] = "DONE",
+    ["Calculando"] = "Computing",
+    ["Calculando avances... %d%%"] = "Computing advances... %d%%",
+    ["Calibrado: retraso = %d avances"] = "Calibrated: delay = %d advances",
+    ["Calibrado: retraso = %d avances (TID %d)"] = "Calibrated: delay = %d advances (TID %d)",
+    ["Caminando"] = "Walking",
+    ["Carga tu partida (en el mapa) antes de iniciar"] = "Load your game (on the map) before starting",
+    ["Carga tu partida antes de grabar"] = "Load your game before recording",
+    ["Cargando Buscapelea"] = "Charging VS Seeker",
+    ["Cerrando Tele"] = "Closing TV",
+    ["Cerrando la Tele"] = "Closing the TV",
+    ["Combate"] = "Battle",
+    ["Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu"] = "DOUBLE battle against trainers: the bot doesn't handle them, finish it yourself",
+    ["Combate:%s Cursor:%d Res:%d%s"] = "Battle:%s Cursor:%d Res:%d%s",
+    ["Combates %d  peleados %d  huidos %d  curas %d"] = "Battles %d  fought %d  fled %d  heals %d",
+    ["Compara con la pantalla; los cambios van al log."] = "Compare with the screen; changes go to the log.",
+    ["Comprobando"] = "Checking",
+    ["Con Recogida: %d  llevan objeto: %d"] = "With Pickup: %d  holding items: %d",
+    ["Config cargada"] = "Config loaded",
+    ["Config: "] = "Config: ",
+    ["Contador de pasos: %d   pasos sin cambio: %d/2"] = "Step counter: %d   steps without change: %d/2",
+    ["Corrige "] = "Fix ",
+    ["Curando"] = "Healing",
+    ["DAR"] = "GIVE",
+    ["DATOS"] = "SUMMARY",
+    ["DIAG "] = "DIAG ",
+    ["DIAGNOSTICO (solo lee, no pulsa nada)  4 = salir"] = "DIAGNOSTIC (read-only, presses nothing)  4 = exit",
+    ["De vuelta en el punto de entreno"] = "Back at the training spot",
+    ["Deten el bot (7) antes de grabar la ruta"] = "Stop the bot (7) before recording the route",
+    ["Deten el bot (7) antes de grabar una ruta"] = "Stop the bot (7) before recording a route",
+    ["Detenido"] = "Stopped",
+    ["Detenido: la instancia %d encontro %s shiny"] = "Stopped: instance %d found a shiny %s",
+    ["Df"] = "Def",
+    ["DfE"] = "SpD",
+    ["Diagnostico activado ("] = "Diagnostic on (",
+    ["Diagnostico: abre los menus a mano y compara (4 = salir)"] = "Diagnostic: open the menus by hand and compare (4 = exit)",
+    ["Dinero $%s  Combate: %s"] = "Money $%s  Battle: %s",
+    ["Dinero $%s%s%s"] = "Money $%s%s%s",
+    ["Ditto 6x31 shiny: Modest (38F2) o Calm (BDD1), Ruta 14 / Mansion / Cueva Celeste"] = "Shiny 6x31 Ditto: Modest (38F2) or Calm (BDD1), Route 14 / Mansion / Cerulean Cave",
+    ["Ditto 6x31 shiny: Modest (5433), Cueva Celeste 1P/2P"] = "Shiny 6x31 Ditto: Modest (5433), Cerulean Cave 1F/2F",
+    ["Ditto 6x31 shiny: Timid (sem. 448B) o Modest (BC75), Ruta 14 / Mansion S1"] = "Shiny 6x31 Ditto: Timid (seed 448B) or Modest (BC75), Route 14 / Mansion B1F",
+    ["Dragon"] = "Dragon",
+    ["ENCONTRADO"] = "FOUND",
+    ["ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo"] = "FOUND! Game paused: save a state (Shift+F1) and catch it",
+    ["ENTRAR"] = "ENTER",
+    ["ENTRENADORES "] = "TRAINERS ",
+    ["ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s"] = "TRAINING DONE: %s Lv.%d  EVs %s",
+    ["ENVIAR"] = "SEND OUT",
+    ["EV desconocido: "] = "unknown EV: ",
+    ["EVs "] = "EVs ",
+    ["EVs: 0"] = "EVs: 0",
+    ["EVs: 0 (aun no gana ninguno)"] = "EVs: 0 (none gained yet)",
+    ["El Buscapelea no termino (revisa que este registrado en SELECT)"] = "The VS Seeker didn't finish (check it's registered on SELECT)",
+    ["El PID no es Metodo 1: usa el modo con soft reset"] = "The PID is not Method 1: use the soft reset mode",
+    ["El encuentro sale en el paso %d: me acerco a un paso"] = "The encounter comes on step %d: getting one step away",
+    ["El juego se reinicio: bot detenido"] = "The game was reset: bot stopped",
+    ["El personaje no esta en el punto de entreno: llevalo alli y pulsa 7"] = "The character is not at the training spot: take it there and press 7",
+    ["El personaje no esta en el punto de inicio: llevalo alli y pulsa 7"] = "The character is not at the start point: take it there and press 7",
+    ["El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"] = "The first party Pokemon needs Thief or Covet",
+    ["El roamer ya esta activo: usa un save de ANTES del evento"] = "The roamer is already active: use a save from BEFORE the event",
+    ["Electrico"] = "Electric",
+    ["Empieza a caminar"] = "Start walking",
+    ["Encuentro antes de dar el paso (%s PID %08X): rehago la base con el jugador quieto"] = "Encounter before the step (%s PID %08X): redoing the base with the player still",
+    ["Entrenamiento iniciado: %s Nv.%d  EVs %s"] = "Training started: %s Lv.%d  EVs %s",
+    ["Entrenar v1.10: "] = "Train v1.10: ",
+    ["Equipo %d/%d"] = "Party %d/%d",
+    ["Equipo lleno: deja un espacio libre para el regalo"] = "Party full: leave a free slot for the gift",
+    ["Equipo: %s  elegido %d -> %s"] = "Party: %s  chosen %d -> %s",
+    ["Error en "] = "Error in ",
+    ["Esperando"] = "Waiting",
+    ["Esperando el frame"] = "Waiting for the frame",
+    ["Esperando tu decision"] = "Waiting for your decision",
+    ["Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"] = "It's evolving: finish it yourself (new moves, texts). The bot carries on by itself after",
+    ["Estatico"] = "Static",
+    ["Estatico RNG"] = "Static RNG",
+    ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "This ROM is not FireRed / LeafGreen. The bot won't run.",
+    ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
+    ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
+    ["FARMEO COMPLETO: "] = "FARMING DONE: ",
+    ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "%d %s EVs missing but each battle gives %d: set allowOvershoot or use another method",
+    ["Fantasma"] = "Ghost",
+    ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
+    ["Farmeo iniciado (modo %s): %s Nv.%d"] = "Farming started (%s mode): %s Lv.%d",
+    ["Fase: %s   Intento: %d   Semilla #%d"] = "Phase: %s   Attempt: %d   Seed #%d",
+    ["Fin del combate"] = "Battle over",
+    ["Frame: %s   (frame del emulador: %d)"] = "Frame: %s   (emulator frame: %d)",
+    ["Fuego"] = "Fire",
+    ["GRABANDO "] = "RECORDING ",
+    ["GRABANDO IDA"] = "RECORDING WAY THERE",
+    ["GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6"] = "RECORDING WAY THERE: walk until you face the nurse and press 6",
+    ["GRABANDO RUTA: pasa por donde te ven los entrenadores y pulsa 5 al final"] = "RECORDING ROUTE: walk through the trainers' lines of sight and press 5 at the end",
+    ["GRABANDO VUELTA"] = "RECORDING WAY BACK",
+    ["GRABANDO VUELTA: cura (si quieres) y vuelve al punto de entreno; pulsa 6"] = "RECORDING WAY BACK: heal (if you want) and go back to the training spot; press 6",
+    ["GRABANDO VUELTA: cura (si quieres) y vuelve al punto de inicio; pulsa 6"] = "RECORDING WAY BACK: heal (if you want) and go back to the start point; press 6",
+    ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "RECORDING WAY BACK: go back to the start point (where you use the VS Seeker) and press 5",
+    ["GUARDAR"] = "SAVE",
+    ["Graba la ruta de los entrenadores con la tecla 5"] = "Record the trainer route with key 5",
+    ["Guardado en la mochila: %s (tienes %d)"] = "Stored in the bag: %s (you have %d)",
+    ["Guardados %d%s  encontrados %d%s"] = "Stored %d%s  found %d%s",
+    ["Guardando en la mochila: "] = "Storing in the bag: ",
+    ["Guardando objetos"] = "Storing items",
+    ["Hay OTRO Train Bot corriendo en otra ventana de Lua: deja solo uno"] = "ANOTHER Train Bot is running in another Lua window: leave only one",
+    ["Hay OTRO Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"] = "ANOTHER Train Bot is running in another Lua window: stop/close it first",
+    ["Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno"] = "Another Farm Bot or a Train Bot is running in another Lua window: leave only one",
+    ["Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"] = "Another Farm Bot or a Train Bot is running in another Lua window: stop/close it first",
+    ["Hielo"] = "Ice",
+    ["Huyendo"] = "Running away",
+    ["IV desconocido: "] = "unknown IV: ",
+    ["IVs "] = "IVs ",
+    ["Inicia el bot fuera de combate"] = "Start the bot outside battle",
+    ["Inicia el bot fuera de combate, en la hierba"] = "Start the bot outside battle, in the grass",
+    ["Instancia %d   archivos generados en: %s"] = "Instance %d   generated files in: %s",
+    ["Intento %d"] = "Attempt %d",
+    ["Intento %d: cayo en %d (objetivo %d)"] = "Attempt %d: landed on %d (target %d)",
+    ["Intento %d: encuentro fuera del calculo (%s), pruebo el frame vecino"] = "Attempt %d: encounter outside the prediction (%s), trying the next frame",
+    ["JSON: %s (caracter %d)"] = "JSON: %s (character %d)",
+    ["JUGADOR"] = "PLAYER",
+    ["Juego reiniciado: carga tu partida y pulsa 7"] = "Game reset: load your game and press 7",
+    ["Juego: %s"] = "Game: %s",
+    ["Juego: %s  idioma 0x%02X  rev %s"] = "Game: %s  language 0x%02X  rev %s",
+    ["Juego: %s  menus: %s"] = "Game: %s  menus: %s",
+    ["LEER"] = "READ",
+    ["LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"] = "DONE! Game paused: save a state (Shift+F1) and keep playing",
+    ["La Tele se paso del objetivo: busco el siguiente"] = "The Teachy TV overshot the target: looking for the next one",
+    ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "The tile didn't heal the party: the way there must end INSIDE the healing zone (record another with 6)",
+    ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "The seed changed (you loaded a state or reset). Bot stopped.",
+    ["Lucha"] = "Fighting",
+    ["MOCHILA"] = "BAG",
+    ["MOV. CAMPO"] = "FIELD MOVE",
+    ["MOVER"] = "SWITCH",
+    ["MT/tutor"] = "TM/tutor",
+    ["Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s"] = "Menu %d  Wait %d  Cursor %d/%d  Battle %d  Pos %s",
+    ["Menu START: %s  cursor %d/%d -> %s"] = "START menu: %s  cursor %d/%d -> %s",
+    ["Modo a un paso desactivado ("] = "One-step mode disabled (",
+    ["Modo: %s"] = "Mode: %s",
+    ["NO ENTRAR"] = "NO ENTRY",
+    ["NO verificados: quitar objetos pausara"] = "NOT verified: taking items will pause",
+    ["Necesita curarse ("] = "Needs healing (",
+    ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "No party Pokemon has the Pickup ability",
+    ["Niveles +%d desde el inicio%s"] = "Levels +%d since the start%s",
+    ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
+    ["No hay "] = "No ",
+    ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
+    ["No pude caer en esa semilla. Prueba otras semillas o el Initial Seed Bot de FRLG_RNG_2.0"] = "I couldn't hit that seed. Try other seeds or the Initial Seed Bot from FRLG_RNG_2.0",
+    ["No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."] = "I couldn't calibrate here (see the console). Try another part of the area.",
+    ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "I couldn't heal: the way there must end INSIDE the Center, facing the nurse (record another with 6)",
+    ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "I couldn't read the encounter table: remove the 'species' filter",
+    ["No pude quitar los objetos: "] = "I couldn't take the items: ",
+    ["No pude seguir la ruta al Centro (graba otra con 6)"] = "I couldn't follow the route to the Center (record another with 6)",
+    ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "I couldn't follow the trainer route (record another with 5)",
+    ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "I couldn't get back to the training spot (record another route with 6)",
+    ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "I can't use the VS Seeker: the character doesn't stay still on the map",
+    ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "The Teachy TV didn't open: register it on SELECT. Waiting at normal speed.",
+    ["No se aprendio "] = "Didn't learn ",
+    ["No se escribio ninguna semilla: revisa que el juego llegue al titulo"] = "No seed was written: check the game reaches the title screen",
+    ["No se pudo elegir el ataque a olvidar: "] = "Couldn't pick the move to forget: ",
+    ["No se pudo leer el Pokemon del equipo"] = "Couldn't read the party Pokemon",
+    ["No ubique el SID en el RNG: empieza el modo justo despues de nombrar al rival"] = "I couldn't place the SID in the RNG: start the mode right after naming your rival",
+    ["No ubique este encuentro en el RNG: %s Nv.%d PID %08X (%d)"] = "I couldn't place this encounter in the RNG: %s Lv.%d PID %08X (%d)",
+    ["Normal"] = "Normal",
+    ["Nueva semilla"] = "New seed",
+    ["Nueva semilla (%s)"] = "New seed (%s)",
+    ["Nueva semilla (cargando)"] = "New seed (loading)",
+    ["Nueva semilla (reset)"] = "New seed (reset)",
+    ["OBJETO"] = "ITEM",
+    ["OPCIONES"] = "OPTION",
+    ["Objetivo:"] = "Target:",
+    ["Objetivo: %s%s%s  avance %d"] = "Target: %s%s%s  advance %d",
+    ["Objetivo: SID %d en el avance %d"] = "Target: SID %d at advance %d",
+    ["Objetivo: avance %d%s  PID %08X  %s"] = "Target: advance %d%s  PID %08X  %s",
+    ["Objeto: %s"] = "Item: %s",
+    ["Orden de llamadas detectado: "] = "Call order detected: ",
+    ["PID %08X  TID %d  SID %d   (8 = siguiente)"] = "PID %08X  TID %d  SID %d   (8 = next)",
+    ["PO "] = "HP ",
+    ["POKEDEX"] = "POKEDEX",
+    ["POKEMON"] = "POKEMON",
+    ["PS"] = "HP",
+    ["PS %d/%d  Poder Oculto: %s %d"] = "HP %d/%d  Hidden Power: %s %d",
+    ["PS bajos"] = "low HP",
+    ["PS muy bajos"] = "very low HP",
+    ["Partida nueva"] = "New game",
+    ["Paso %d de %d   intento %d"] = "Step %d of %d   attempt %d",
+    ["Pasos hasta el encuentro: %d%s"] = "Steps to the encounter: %d%s",
+    ["Planta"] = "Grass",
+    ["Pon tus semillas en initialSeeds del .json (ej. [\"BC75\"])"] = "Put your seeds in initialSeeds in the .json (e.g. [\"BC75\"])",
+    ["Preparando"] = "Preparing",
+    ["Preparando titulo"] = "Preparing title",
+    ["Preparando: pasos %d (contador %d)"] = "Preparing: steps %d (counter %d)",
+    ["Prob. de haber visto un shiny: %.1f%%"] = "Chance of having seen a shiny: %.1f%%",
+    ["Probada por el bot: semilla %04X (arranque %d, frame %d)"] = "Tried by the bot: seed %04X (boot %d, frame %d)",
+    ["Probando semilla"] = "Trying seed",
+    ["Psiquico"] = "Psychic",
+    ["Pulsa A"] = "Press A",
+    ["Pulsar A"] = "Press A",
+    ["Pulsar A en %d frames   intento %d"] = "Press A in %d frames   attempt %d",
+    ["QUITAR"] = "TAKE",
+    ["QUITAR CARTA"] = "TAKE MAIL",
+    ["Quita los objetos (START > POKEMON > OBJETO > QUITAR): "] = "Take the items (START > POKEMON > ITEM > TAKE): ",
+    ["Quita los objetos del equipo: "] = "Take the items from the party: ",
+    ["REGISTRAR"] = "REGISTER",
+    ["RETIRARSE"] = "RETIRE",
+    ["Recogida (hay que ganar)"] = "Pickup (must win)",
+    ["Recogida: %d en el equipo  llevan objeto: %s"] = "Pickup: %d in the party  holding items: %s",
+    ["Regalo"] = "Gift",
+    ["Regalo RNG"] = "Gift RNG",
+    ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Register the VS Seeker on SELECT (Bag > VS Seeker > Register)",
+    ["Reiniciando"] = "Resetting",
+    ["Reset"] = "Reset",
+    ["Rival"] = "Opponent",
+    ["Rival: %s Nv.%d  -> %s (%s)"] = "Opponent: %s Lv.%d  -> %s (%s)",
+    ["Rival: %s Nv.%d%s  -> %s (%s)"] = "Opponent: %s Lv.%d%s  -> %s (%s)",
+    ["Roamer"] = "Roamer",
+    ["Roamer RNG"] = "Roamer RNG",
+    ["Robos %d"] = "Steals %d",
+    ["Roca"] = "Rock",
+    ["Ruta al Centro cargada: %d pasos de ida, %d de vuelta"] = "Route to the Center loaded: %d steps there, %d back",
+    ["Ruta al Centro guardada (%d pasos ida, %d vuelta)"] = "Route to the Center saved (%d steps there, %d back)",
+    ["Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d"] = "Route fixed: there %d -> %d steps, back %d -> %d",
+    ["Ruta de entrenadores"] = "Trainer route",
+    ["Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta"] = "Trainer route loaded: %d steps there, %d back",
+    ["Ruta de entrenadores guardada (%d pasos ida, %d vuelta)"] = "Trainer route saved (%d steps there, %d back)",
+    ["Ruta guardada (%d pasos ida, %d vuelta)"] = "Route saved (%d steps there, %d back)",
+    ["SALIR"] = "EXIT",
+    ["SELECT "] = "SELECT ",
+    ["SELECT: %s  Buscapelea %d/100"] = "SELECT: %s  VS Seeker %d/100",
+    ["SHINY SALVAJE: "] = "WILD SHINY: ",
+    ["SI (activo)"] = "YES (active)",
+    ["START "] = "START ",
+    ["START %d/%d  equipo %d  menu %d  tareas: start %s equipo %s acciones %s"] = "START %d/%d  party %d  menu %d  tasks: start %s party %s actions %s",
+    ["Salvaje"] = "Wild",
+    ["Salvaje RNG"] = "Wild RNG",
+    ["Savestate listo. Zona: %s%s"] = "Savestate ready. Area: %s%s",
+    ["Se repite: dejo de revisar antes del paso"] = "It happens again: I stop checking before the step",
+    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X ready: continue the game and use the RNG mode",
+    ["Semilla inicial"] = "Initial seed",
+    ["Semilla inicial %04X conseguida (%d pruebas)"] = "Initial seed %04X hit (%d tries)",
+    ["Semilla inicial: %04X   Actual: %08X"] = "Initial seed: %04X   Current: %08X",
+    ["Semilla lista: cargando la partida para "] = "Seed ready: loading the game for ",
+    ["Shiny descartado por filtros: %s PID %08X"] = "Shiny skipped by filters: %s PID %08X",
+    ["Sin ataques utiles contra un entrenador: terminalo tu"] = "No useful moves against a trainer: finish it yourself",
+    ["Sin respuesta: el bot decide solo si aprende el ataque"] = "No answer: the bot decides by itself whether to learn the move",
+    ["Sin shiny"] = "No shiny",
+    ["Siniestro"] = "Dark",
+    ["Stat"] = "Stat",
+    ["TID %d   SID objetivo: %s"] = "TID %d   target SID: %s",
+    ["TID %d  SID %d"] = "TID %d  SID %d",
+    ["TID %d  SID %d  (xor %04X)"] = "TID %d  SID %d  (xor %04X)",
+    ["TID %d  SID objetivo %d  en el avance %d"] = "TID %d  target SID %d  at advance %d",
+    ["Tele"] = "TV",
+    ["Tele Pokemon (avance rapido)"] = "Teachy TV (fast advance)",
+    ["Tele: faltan %d avances (~%d frames)"] = "TV: %d advances left (~%d frames)",
+    ["Tele: faltan %d avances para cerrarla (~%d frames)"] = "TV: %d advances left to close it (~%d frames)",
+    ["Termina de grabar la ruta (6) antes de iniciar"] = "Finish recording the route (6) before starting",
+    ["Termina de grabar la ruta antes de iniciar"] = "Finish recording the route before starting",
+    ["Termina primero la ruta que estas grabando (tecla "] = "First finish the route you are recording (key ",
+    ["Tierra"] = "Ground",
+    ["Timeouts: "] = "Timeouts: ",
+    ["Total %d/510"] = "Total %d/510",
+    ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Your Pokemon is evolving: finish the scene and the bot carries on by itself",
+    ["Tu Pokemon evoluciono a "] = "Your Pokemon evolved into ",
+    ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Your Pokemon fainted against a trainer: pick the next one yourself and finish the battle",
+    ["Ultimo:"] = "Last:",
+    ["Ultimo: "] = "Last: ",
+    ["Usando Buscapelea"] = "Using VS Seeker",
+    ["Vel"] = "Spe",
+    ["Veneno"] = "Poison",
+    ["Volador"] = "Flying",
+    ["Volviendo al inicio"] = "Going back to the start",
+    ["Volviendo al punto"] = "Going back to the spot",
+    ["Vuelta %d: Buscapelea usado"] = "Lap %d: VS Seeker used",
+    ["Vuelta %d: ningun entrenador quiere revancha todavia"] = "Lap %d: no trainer wants a rematch yet",
+    ["Yendo al Centro"] = "Going to the Center",
+    ["Zona: %s%s"] = "Area: %s%s",
+    ["[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s"] = "[%s] %s  PID %08X  %s  IVs %s  after %d attempts (%s mode)%s",
+    ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X hit after %d tries",
+    ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
+    ["acciones "] = "actions ",
+    ["ataque desconocido en "] = "unknown move in ",
+    ["calculando... (%d)"] = "computing... (%d)",
+    ["camino al Centro"] = "on the way to the Center",
+    ["cerrado"] = "closed",
+    ["combate "] = "battle ",
+    ["cursor inesperado"] = "unexpected cursor",
+    ["daria EVs de "] = "would give EVs in ",
+    ["de camino"] = "on the way",
+    ["debilitado"] = "fainted",
+    ["dinero"] = "money",
+    ["el archivo debe ser un objeto { ... }"] = "the file must be an object { ... }",
+    ["el cursor del menu START no llega a POKEMON"] = "the START menu cursor doesn't reach POKEMON",
+    ["el cursor no llega a la opcion"] = "the cursor doesn't reach the option",
+    ["el cursor no responde"] = "the cursor doesn't respond",
+    ["el encuentro sale sin caminar"] = "the encounter comes without walking",
+    ["el menu START no se abre"] = "the START menu doesn't open",
+    ["el modo \"nivel\" necesita targetLevel (o maxBattles)"] = "the \"nivel\" mode needs targetLevel (or maxBattles)",
+    ["el titulo no acepto la pulsacion"] = "the title screen didn't take the press",
+    ["encuentro inesperado"] = "unexpected encounter",
+    ["entrenador"] = "trainer",
+    ["entrenador (no se puede huir)"] = "trainer (can't run)",
+    ["equipo "] = "party ",
+    ["especie desconocida: "] = "unknown species: ",
+    ["evitada"] = "avoided",
+    ["experiencia"] = "experience",
+    ["falta ',' o ']'"] = "missing ',' or ']'",
+    ["falta ',' o '}'"] = "missing ',' or '}'",
+    ["falta ':'"] = "missing ':'",
+    ["huir"] = "run",
+    ["la mochila no tiene espacio para "] = "the bag has no room for ",
+    ["la pantalla del equipo no responde"] = "the party screen doesn't respond",
+    ["language debe ser \"es\", \"en\" o \"ja\""] = "language must be \"es\", \"en\" or \"ja\"",
+    ["learnMoves debe ser \"auto\", \"never\" o \"ask\""] = "learnMoves must be \"auto\", \"never\" or \"ask\"",
+    ["lleva "] = "holds ",
+    ["lo tuvo"] = "had it",
+    ["los EVs suman "] = "the EVs add up to ",
+    ["mode debe ser \"nivel\", \"objetos\", \"robar\" o \"dinero\""] = "mode must be \"nivel\", \"objetos\", \"robar\" or \"dinero\"",
+    ["nada"] = "nothing",
+    ["naturaleza desconocida: "] = "unknown nature: ",
+    ["neutra"] = "neutral",
+    ["ninguno"] = "none",
+    ["nivel"] = "level",
+    ["no"] = "no",
+    ["no aparece OBJETO"] = "ITEM doesn't show up",
+    ["no aparece QUITAR"] = "TAKE doesn't show up",
+    ["no da los EVs que faltan"] = "doesn't give the missing EVs",
+    ["no encuentro el paso"] = "can't find the step",
+    ["no esta en la lista"] = "not on the list",
+    ["no grabada"] = "not recorded",
+    ["no grabada (tecla 5)"] = "not recorded (key 5)",
+    ["no hay opcion POKEMON en el menu START"] = "there is no POKEMON option in the START menu",
+    ["no llego al Pokemon "] = "can't reach Pokemon ",
+    ["no lleva objeto"] = "holds no item",
+    ["no pude cerrar los menus"] = "I couldn't close the menus",
+    ["no se abrio la pantalla del equipo"] = "the party screen didn't open",
+    ["no se pudo robar"] = "couldn't steal",
+    ["no ubico el titulo"] = "can't find the title screen",
+    ["no volvio al mapa"] = "didn't return to the map",
+    ["no vuelve el mapa"] = "the map doesn't come back",
+    ["notify debe ser {\"ntfy\": \"tema\"}"] = "notify must be {\"ntfy\": \"topic\"}",
+    ["objetivos inalcanzables"] = "unreachable targets",
+    ["objeto desconocido en wantedItems: "] = "unknown item in wantedItems: ",
+    ["objetos (Recogida)"] = "items (Pickup)",
+    ["opcion desconocida: "] = "unknown option: ",
+    ["pelear"] = "fight",
+    ["prediccion fallida"] = "prediction failed",
+    ["rango elegido"] = "chosen range",
+    ["robado: "] = "stolen: ",
+    ["robar "] = "steal ",
+    ["robar objetos"] = "steal items",
+    ["salvaje"] = "wild",
+    ["se esperaba un nombre entre comillas"] = "expected a name in quotes",
+    ["si"] = "yes",
+    ["sin PP"] = "out of PP",
+    ["sin PP de Ladron/Antojo"] = "no Thief/Covet PP",
+    ["sin ataques utiles"] = "no useful moves",
+    ["sin datos"] = "no data",
+    ["sin objetivo con este arranque"] = "no target with this boot",
+    ["sin objetivo en %d avances"] = "no target in %d advances",
+    ["solo entrenadores"] = "trainers only",
+    ["takeItems debe ser \"auto\" o \"pause\""] = "takeItems must be \"auto\" or \"pause\"",
+    ["texto de mas al final"] = "extra text at the end",
+    ["texto sin cerrar"] = "unclosed text",
+    ["tiempo agotado"] = "timed out",
+    ["tipo de Poder Oculto desconocido: "] = "unknown Hidden Power type: ",
+    ["tu Pokemon ya lleva un objeto"] = "your Pokemon already holds an item",
+    ["valor no valido"] = "invalid value",
+    ["verificados (USA)"] = "verified (USA)",
+    ["wantedMoves tiene "] = "wantedMoves has ",
+    ["ya paso Nv."] = "already past Lv.",
+  },
+  ja = {
+    ["        para avanzar millones de frames en minutos. Por ahora espero a velocidad normal."] = "        suufun de suuhyakuman frame susumeraremasu. Ima wa futsuu no hayasa de machimasu.",
+    ["   (paso %d)"] = "   (%d ho me)",
+    ["   Base: %08X"] = "   Base: %08X",
+    ["   IVs %s   PO %s %d"] = "   Kotaichi %s   Mezapa %s %d",
+    ["   Prob: %.1f%%"] = "   Kakuritsu: %.1f%%",
+    ["   en el avance %d%s"] = "   shouhi %d%s",
+    ["  (frame %d desde la semilla inicial)"] = "  (shoki seed kara %d frame)",
+    ["  (tasa %d)"] = "  (ritsu %d)",
+    ["  * SHINY *"] = "  * IROCHIGAI *",
+    ["  faltan %d (~%dh%02dm)"] = "  nokori %d (~%dh%02dm)",
+    ["  ganado +"] = "  kakutoku +",
+    ["  lleva "] = "  mochimono ",
+    ["  meta $"] = "  mokuhyo $",
+    ["  opciones: "] = "  koumoku: ",
+    ["  sesion +%d"] = "  session +%d",
+    [" (Square)"] = " (Square)",
+    [" (Star)"] = " (Star)",
+    [" (el bot no lo aprenderia)"] = " (bot nara oboenai)",
+    [" (el bot olvidaria "] = " (bot nara wasureru: ",
+    [" (maximo 510)"] = " (saidai 510)",
+    [" (mira la consola) y pulsa 0"] = " (console wo mite) 0 wo oshite",
+    [" (no lo quieres)"] = " (iranai)",
+    [" (tabla de encuentros no encontrada)"] = " (encount table ga nai)",
+    [" (tasa %d)"] = " (ritsu %d)",
+    [" (usa \"learnMoves\": \"ask\")"] = " (\"learnMoves\": \"ask\" wo tsukatte)",
+    [" (usa el nombre en ingles)"] = " (eigo mei wo tsukatte)",
+    [" ataques (maximo 4)"] = " ko (saidai 4)",
+    [" doble"] = " double",
+    [" lleva "] = " mochimono ",
+    [" | corrida iniciada "] = " | kaishi ",
+    ["! Capturalo tu (juego en pausa)"] = "! Jibun de tsukamaete (ichiji teishi)",
+    ["#%d %s [%s]  7 on/off 8 modo 9 panel 0 config"] = "#%d %s [%s]  7 on/off 8 mode 9 panel 0 settei",
+    ["$%d (ganado +%d)"] = "$%d (kakutoku +%d)",
+    ["%d combates"] = "%d battle",
+    ["%d objetos guardados en la mochila"] = "%d ko no dougu wo bag ni shimatta",
+    ["%d/%d pasos"] = "%d/%d ho",
+    ["%s %s  IVs %s"] = "%s %s  Kotaichi %s",
+    ["%s %s  PS %d/%d  PP %d"] = "%s %s  HP %d/%d  PP %d",
+    ["%s %sPID %08X%s  %s"] = "%s %sPID %08X%s  %s",
+    ["%s (%s)  Hab: %s"] = "%s (%s)  Tokusei: %s",
+    ["%s aprendio %s (olvido %s)"] = "%s ga %s wo oboeta (%s wo wasureta)",
+    ["%s consiguio %s"] = "%s ga %s wo hirotta",
+    ["%s debe ser un numero entero entre %d y %d"] = "%s wa seisuu (%d kara %d)",
+    ["%s en %d frames"] = "%s made %d frame",
+    ["%s en: %d frames (~%d s a 60 fps)"] = "%s made: %d frame (~%d byou, 60 fps)",
+    ["%s esta evolucionando a %s"] = "%s ga %s ni shinka chuu",
+    ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
+    ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
+    ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
+    ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
+    ["%s: %d   (%d por hora de juego)"] = "%s: %d   (play 1 jikan atari %d)",
+    ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
+    ["(carpeta actual)"] = "(genzai no folder)",
+    ["): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)"] = "): kaifuku shite point ni modori 7 wo oshite. (6 de route wo kiroku)",
+    ["): sigo caminando desde la base"] = "): base kara arukitsuzukemasu",
+    ["+$%d  (total $%d)"] = "+$%d  (total $%d)",
+    [". Luego pulsa 7"] = ". Sono ato 7 wo oshite",
+    [". Terminalo tu en el menu y pulsa 7"] = ". Menu de jibun de owarasete 7 wo oshite",
+    ["7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stats)   9 = panel   0 = recargar "] = "7 = kaishi/teishi   6 = Center e no route kiroku   8 = Pokemon wo miru   9 = panel   0 = saiyomikomi ",
+    ["7 = iniciar/detener   6 = ruta al Centro   5 = ruta de entrenadores   4 = diagnostico   8 = ver Pokemon   9 = panel   0 = recargar "] = "7 = kaishi/teishi   6 = Center e no route   5 = trainer route   4 = shindan   8 = Pokemon wo miru   9 = panel   0 = saiyomikomi ",
+    ["7 = iniciar/detener   8 = cambiar modo   9 = panel (compacto/completo/oculto)   0 = recargar "] = "7 = kaishi/teishi   8 = mode henkou   9 = panel (kantan/zenbu/hihyouji)   0 = saiyomikomi ",
+    ["7 iniciar  6 ruta  8 ver Pokemon  9 panel  0 config   Ruta: %s"] = "7 kaishi  6 route  8 Pokemon  9 panel  0 settei   Route: %s",
+    ["7 iniciar  6 ruta Centro  5 ruta entrenadores  4 diagnostico  8 ver  9 panel  0 config   Centro: %s"] = "7 kaishi  6 Center route  5 trainer route  4 shindan  8 miru  9 panel  0 settei   Center: %s",
+    ["7 iniciar  8 modo  9 panel  0 config"] = "7 kaishi  8 mode  9 panel  0 settei",
+    [": Recordador"] = ": Waza Oshie",
+    [": termina la escena y el bot sigue solo"] = ": scene wo owaraseru to bot ga tsuzukemasu",
+    [": uso la configuracion por defecto"] = ": default settei wo tsukaimasu",
+    [": vacio  (8 = siguiente)"] = ": kara  (8 = tsugi)",
+    ["A un paso del encuentro (%d pasos caminados): calibro el paso final"] = "Encount no ippo mae (%d ho aruita): saigo no ippo wo hosei",
+    ["ABIERTO"] = "HIRAITE IRU",
+    ["Abriendo Tele"] = "TV wo hiraku",
+    ["Abriendo la Tele"] = "TV wo hiraite iru",
+    ["Acciones: [%s]  cursor -> %s"] = "Koudou: [%s]  cursor -> %s",
+    ["Acciones: cerrado"] = "Koudou: tojite iru",
+    ["Acercandose a un paso"] = "Ippo mae e",
+    ["Acero"] = "Hagane",
+    ["Agua"] = "Mizu",
+    ["Al Centro Pokemon: "] = "Pokemon Center e: ",
+    ["Aprendiendo ataque"] = "Waza wo oboete iru",
+    ["Arranque %d   semillas probadas %d   ultima %s"] = "Kidou %d   tameshita seed %d   saigo %s",
+    ["At"] = "A",
+    ["AtE"] = "C",
+    ["Ataque: "] = "Waza: ",
+    ["Ataques deseados: "] = "Oboesasetai waza: ",
+    ["Ataques: "] = "Waza: ",
+    ["Aun no te has movido"] = "Mada ugoite inai",
+    ["Aun no te has movido: camina hasta la enfermera"] = "Mada ugoite inai: Joy-san made aruite",
+    ["Aun no te has movido: vuelve al punto de entreno"] = "Mada ugoite inai: tokkun point ni modotte",
+    ["Aun no te has movido: vuelve al punto de inicio"] = "Mada ugoite inai: kaishi point ni modotte",
+    ["Avance: %d   Retraso: %s"] = "Shouhi: %d   Okure: %s",
+    ["Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d"] = "Chui: ransuu wa au ga Pokemon/level ga chigau (basho no table?). %s Lv.%d",
+    ["Aviso: el TID salio %d, se esperaba %d"] = "Chui: TID wa %d datta (yotei %d)",
+    ["Aviso: en esta version el bot no quita los objetos solo; pausara para que lo hagas tu"] = "Chui: kono version de wa bot ga dougu wo hazusenai; ichiji teishi suru node jibun de hazushite",
+    ["Aviso: la bandera de combate no esta verificada para este idioma (revisa 'Combate' en el panel)."] = "Chui: kono gengo no battle flag wa mi-kakunin desu (panel no 'Battle' wo mite).",
+    ["Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara"] = "Chui: kono version no menu wa mi-kakunin: dougu wo hazusu toki wa ichiji teishi shite shirasemasu",
+    ["Aviso: no se pudo confirmar la huida"] = "Chui: nigeta ka kakunin dekinakatta",
+    ["Aviso: no se pudo volver al mapa tras el combate"] = "Chui: battle no ato map ni modorenakatta",
+    ["Aviso: registra la Tele Pokemon en SELECT (Mochila > Obj. clave > Tele Pokemon > Registrar)"] = "Chui: Pokemon Mondai TV wo SELECT ni touroku shite (Bag > Daiji na mono > TV > Touroku)",
+    ["Bicho"] = "Mushi",
+    ["Bot iniciado: %s  (TID %d / SID %d)"] = "Bot kaishi: %s  (TID %d / SID %d)",
+    ["Bot iniciado: Partida nueva  (TID nuevo %d)"] = "Bot kaishi: Saisho kara  (atarashii TID %d)",
+    ["Busca: "] = "Sagasu: ",
+    ["Buscando SID... avance %d"] = "SID wo sagashite imasu... shouhi %d",
+    ["Buscando combate"] = "Battle wo sagashi chuu",
+    ["Buscando el titulo"] = "Title wo sagashi chuu",
+    ["Buscando objetivo"] = "Mokuhyo tansaku",
+    ["Buscando objetivo... avance %d"] = "Mokuhyo wo sagashite imasu... shouhi %d",
+    ["Buscapelea %d/100  vueltas %d  entrenadores %d  Ruta: %s"] = "Battle Searcher %d/100  shuukai %d  trainer %d  Route: %s",
+    ["CAMBIAR"] = "IREKAERU",
+    ["CARTA"] = "MAIL",
+    ["CENTRO "] = "CENTER ",
+    ["COMPLETO"] = "KANRYO",
+    ["Calculando"] = "Keisan chuu",
+    ["Calculando avances... %d%%"] = "Shouhi wo keisan chuu... %d%%",
+    ["Calibrado: retraso = %d avances"] = "Hosei kanryo: okure = %d shouhi",
+    ["Calibrado: retraso = %d avances (TID %d)"] = "Hosei kanryo: okure = %d shouhi (TID %d)",
+    ["Caminando"] = "Hokou chuu",
+    ["Carga tu partida (en el mapa) antes de iniciar"] = "Kaishi mae ni game wo yomikonde (map de)",
+    ["Carga tu partida antes de grabar"] = "Kiroku mae ni game wo yomikonde",
+    ["Cargando Buscapelea"] = "Battle Searcher juuden chuu",
+    ["Cerrando Tele"] = "TV wo tojiru",
+    ["Cerrando la Tele"] = "TV wo tojite iru",
+    ["Combate"] = "Battle",
+    ["Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu"] = "Trainer to no DOUBLE battle: bot wa taiou shinai node jibun de owarasete",
+    ["Combate:%s Cursor:%d Res:%d%s"] = "Battle:%s Cursor:%d Kekka:%d%s",
+    ["Combates %d  peleados %d  huidos %d  curas %d"] = "Battle %d  tatakatta %d  nigeta %d  kaifuku %d",
+    ["Compara con la pantalla; los cambios van al log."] = "Gamen to kurabete; henka wa log ni kirokusaremasu.",
+    ["Comprobando"] = "Kakunin chuu",
+    ["Con Recogida: %d  llevan objeto: %d"] = "Monohiroi: %d  mochimono ari: %d",
+    ["Config cargada"] = "Settei yomikomi kanryo",
+    ["Config: "] = "Settei: ",
+    ["Contador de pasos: %d   pasos sin cambio: %d/2"] = "Hosuu counter: %d   henka nashi: %d/2",
+    ["Corrige "] = "Shuusei shite: ",
+    ["Curando"] = "Kaifuku chuu",
+    ["DAR"] = "MOTASERU",
+    ["DATOS"] = "TSUYOSA",
+    ["DIAG "] = "DIAG ",
+    ["DIAGNOSTICO (solo lee, no pulsa nada)  4 = salir"] = "SHINDAN (yomu dake, button wa osanai)  4 = shuuryou",
+    ["De vuelta en el punto de entreno"] = "Tokkun point ni modotta",
+    ["Deten el bot (7) antes de grabar la ruta"] = "Route kiroku mae ni bot wo tomete (7)",
+    ["Deten el bot (7) antes de grabar una ruta"] = "Route kiroku mae ni bot wo tomete (7)",
+    ["Detenido"] = "Teishi",
+    ["Detenido: la instancia %d encontro %s shiny"] = "Teishi: instance %d ga irochigai no %s wo hakken",
+    ["Df"] = "B",
+    ["DfE"] = "D",
+    ["Diagnostico activado ("] = "Shindan on (",
+    ["Diagnostico: abre los menus a mano y compara (4 = salir)"] = "Shindan: menu wo jibun de hiraite hikaku shite (4 = shuuryou)",
+    ["Dinero $%s  Combate: %s"] = "Okozukai $%s  Battle: %s",
+    ["Dinero $%s%s%s"] = "Okozukai $%s%s%s",
+    ["Ditto 6x31 shiny: Modest (38F2) o Calm (BDD1), Ruta 14 / Mansion / Cueva Celeste"] = "Irochigai 6V Metamon: Hikaeme (38F2) ka Odayaka (BDD1), 14 ban douro / Yashiki / Hanada no doukutsu",
+    ["Ditto 6x31 shiny: Modest (5433), Cueva Celeste 1P/2P"] = "Irochigai 6V Metamon: Hikaeme (5433), Hanada no doukutsu 1F/2F",
+    ["Ditto 6x31 shiny: Timid (sem. 448B) o Modest (BC75), Ruta 14 / Mansion S1"] = "Irochigai 6V Metamon: Okubyou (seed 448B) ka Hikaeme (BC75), 14 ban douro / Yashiki B1",
+    ["Dragon"] = "Dragon",
+    ["ENCONTRADO"] = "HAKKEN",
+    ["ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo"] = "HAKKEN! Ichiji teishi: state wo hozon (Shift+F1) shite tsukamaete",
+    ["ENTRAR"] = "SANKA",
+    ["ENTRENADORES "] = "TRAINER ",
+    ["ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s"] = "IKUSEI KANRYO: %s Lv.%d  EVs %s",
+    ["ENVIAR"] = "OKURIDASU",
+    ["EV desconocido: "] = "fumei na doryokuchi: ",
+    ["EVs "] = "EVs ",
+    ["EVs: 0"] = "EVs: 0",
+    ["EVs: 0 (aun no gana ninguno)"] = "EVs: 0 (mada nashi)",
+    ["El Buscapelea no termino (revisa que este registrado en SELECT)"] = "Battle Searcher ga owaranakatta (SELECT ni touroku sarete iru ka kakunin)",
+    ["El PID no es Metodo 1: usa el modo con soft reset"] = "PID ga Method 1 dewa nai: soft reset mode wo tsukatte",
+    ["El encuentro sale en el paso %d: me acerco a un paso"] = "%d ho me de encount: ippo mae made chikazukimasu",
+    ["El juego se reinicio: bot detenido"] = "Game ga reset sareta: bot teishi",
+    ["El personaje no esta en el punto de entreno: llevalo alli y pulsa 7"] = "Shujinkou ga tokkun point ni inai: tsurete itte 7 wo oshite",
+    ["El personaje no esta en el punto de inicio: llevalo alli y pulsa 7"] = "Shujinkou ga kaishi point ni inai: tsurete itte 7 wo oshite",
+    ["El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"] = "Sentou no Pokemon ni Dorobou ka Hoshigaru ga hitsuyou",
+    ["El roamer ya esta activo: usa un save de ANTES del evento"] = "Haikai Pokemon wa mou ugoite iru: event MAE no save wo tsukatte",
+    ["Electrico"] = "Denki",
+    ["Empieza a caminar"] = "Arukihajimeru",
+    ["Encuentro antes de dar el paso (%s PID %08X): rehago la base con el jugador quieto"] = "Ippo mae ni encount (%s PID %08X): tomatta joutai de base wo tsukurinaoshi",
+    ["Entrenamiento iniciado: %s Nv.%d  EVs %s"] = "Ikusei kaishi: %s Lv.%d  EVs %s",
+    ["Entrenar v1.10: "] = "Ikusei v1.10: ",
+    ["Equipo %d/%d"] = "Temochi %d/%d",
+    ["Equipo lleno: deja un espacio libre para el regalo"] = "Temochi ga ippai: morau tame ni hitotsu akete",
+    ["Equipo: %s  elegido %d -> %s"] = "Temochi: %s  sentaku %d -> %s",
+    ["Error en "] = "Error: ",
+    ["Esperando"] = "Taiki chuu",
+    ["Esperando el frame"] = "Frame wo matte iru",
+    ["Esperando tu decision"] = "Anata no handan wo matte iru",
+    ["Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"] = "Shinka chuu: jibun de owarasete (atarashii waza, message). Sono ato bot ga tsuzukemasu",
+    ["Estatico"] = "Symbol",
+    ["Estatico RNG"] = "Symbol RNG",
+    ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "Kono ROM wa FireRed / LeafGreen dewa arimasen. Bot wa ugokimasen.",
+    ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
+    ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
+    ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
+    ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "Doryokuchi ga %d (%s) tarinai ga 1 kai %d: allowOvershoot ka betsu no houhou wo",
+    ["Fantasma"] = "Ghost",
+    ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
+    ["Farmeo iniciado (modo %s): %s Nv.%d"] = "Farm kaishi (%s mode): %s Lv.%d",
+    ["Fase: %s   Intento: %d   Semilla #%d"] = "Phase: %s   Shikou: %d   Seed #%d",
+    ["Fin del combate"] = "Battle shuuryou",
+    ["Frame: %s   (frame del emulador: %d)"] = "Frame: %s   (emulator no frame: %d)",
+    ["Fuego"] = "Honoo",
+    ["GRABANDO "] = "KIROKU CHUU ",
+    ["GRABANDO IDA"] = "IKI KIROKU CHUU",
+    ["GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6"] = "IKI KIROKU CHUU: Joy-san no mae made aruite 6 wo oshite",
+    ["GRABANDO RUTA: pasa por donde te ven los entrenadores y pulsa 5 al final"] = "ROUTE KIROKU CHUU: trainer no shisen wo tootte, saigo ni 5 wo oshite",
+    ["GRABANDO VUELTA"] = "KAERI KIROKU CHUU",
+    ["GRABANDO VUELTA: cura (si quieres) y vuelve al punto de entreno; pulsa 6"] = "KAERI KIROKU CHUU: (hitsuyou nara) kaifuku shite tokkun point ni modori, 6 wo oshite",
+    ["GRABANDO VUELTA: cura (si quieres) y vuelve al punto de inicio; pulsa 6"] = "KAERI KIROKU CHUU: (hitsuyou nara) kaifuku shite kaishi point ni modori, 6 wo oshite",
+    ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "KAERI KIROKU CHUU: kaishi point (Battle Searcher wo tsukau basho) ni modotte 5 wo oshite",
+    ["GUARDAR"] = "REPORT",
+    ["Graba la ruta de los entrenadores con la tecla 5"] = "5 key de trainer route wo kiroku shite",
+    ["Guardado en la mochila: %s (tienes %d)"] = "Bag ni shimatta: %s (shoji %d)",
+    ["Guardados %d%s  encontrados %d%s"] = "Shuunou %d%s  hakken %d%s",
+    ["Guardando en la mochila: "] = "Bag ni shimatte iru: ",
+    ["Guardando objetos"] = "Dougu wo shimatte iru",
+    ["Hay OTRO Train Bot corriendo en otra ventana de Lua: deja solo uno"] = "Betsu no Lua window de Train Bot ga ugoite iru: hitotsu dake ni shite",
+    ["Hay OTRO Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"] = "Betsu no Lua window de Train Bot ga ugoite iru: saki ni tomete/tojite",
+    ["Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno"] = "Betsu no Lua window de Farm Bot ka Train Bot ga ugoite iru: hitotsu dake ni shite",
+    ["Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"] = "Betsu no Lua window de Farm Bot ka Train Bot ga ugoite iru: saki ni tomete/tojite",
+    ["Hielo"] = "Koori",
+    ["Huyendo"] = "Nigete iru",
+    ["IV desconocido: "] = "fumei na kotaichi: ",
+    ["IVs "] = "Kotaichi ",
+    ["Inicia el bot fuera de combate"] = "Battle no soto de kaishi shite",
+    ["Inicia el bot fuera de combate, en la hierba"] = "Battle no soto, kusamura de kaishi shite",
+    ["Instancia %d   archivos generados en: %s"] = "Instance %d   sakusei file no basho: %s",
+    ["Intento %d"] = "Shikou %d",
+    ["Intento %d: cayo en %d (objetivo %d)"] = "Shikou %d: %d ni natta (mokuhyo %d)",
+    ["Intento %d: encuentro fuera del calculo (%s), pruebo el frame vecino"] = "Shikou %d: yosoku gai no encount (%s), tonari no frame wo tameshimasu",
+    ["JSON: %s (caracter %d)"] = "JSON: %s (%d moji me)",
+    ["JUGADOR"] = "TRAINER",
+    ["Juego reiniciado: carga tu partida y pulsa 7"] = "Game ga reset sareta: game wo yomikonde 7 wo oshite",
+    ["Juego: %s"] = "Game: %s",
+    ["Juego: %s  idioma 0x%02X  rev %s"] = "Game: %s  gengo 0x%02X  rev %s",
+    ["Juego: %s  menus: %s"] = "Game: %s  menu: %s",
+    ["LEER"] = "YOMU",
+    ["LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"] = "KANRYO! Ichiji teishi: state wo hozon (Shift+F1) shite tsuzukete",
+    ["La Tele se paso del objetivo: busco el siguiente"] = "TV ga mokuhyo wo koeta: tsugi wo sagashimasu",
+    ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "Kaifuku masu de kaifuku shinakatta: iki wa kaifuku zone no NAKA de owaru hitsuyou (6 de kiroku shinaoshite)",
+    ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "Seed ga kawatta (state load ka reset). Bot teishi.",
+    ["Lucha"] = "Kakutou",
+    ["MOCHILA"] = "BAG",
+    ["MOV. CAMPO"] = "FIELD WAZA",
+    ["MOVER"] = "NARABIKAE",
+    ["MT/tutor"] = "Waza machine/oshie",
+    ["Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s"] = "Menu %d  Taiki %d  Cursor %d/%d  Battle %d  Ichi %s",
+    ["Menu START: %s  cursor %d/%d -> %s"] = "START menu: %s  cursor %d/%d -> %s",
+    ["Modo a un paso desactivado ("] = "Ippo mae mode wo mukou ni shita (",
+    ["Modo: %s"] = "Mode: %s",
+    ["NO ENTRAR"] = "SANKA SHINAI",
+    ["NO verificados: quitar objetos pausara"] = "MI-KAKUNIN: dougu wo hazusu toki wa ichiji teishi",
+    ["Necesita curarse ("] = "Kaifuku ga hitsuyou (",
+    ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "Temochi ni tokusei Monohiroi no Pokemon ga inai",
+    ["Niveles +%d desde el inicio%s"] = "Kaishi kara Lv +%d%s",
+    ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
+    ["No hay "] = "Nai: ",
+    ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
+    ["No pude caer en esa semilla. Prueba otras semillas o el Initial Seed Bot de FRLG_RNG_2.0"] = "Sono seed ni naranakatta. Betsu no seed ka FRLG_RNG_2.0 no Initial Seed Bot wo tameshite",
+    ["No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."] = "Koko de hosei dekinakatta (console wo mite). Betsu no basho de tameshite.",
+    ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "Kaifuku dekinakatta: iki wa Center no NAKA, Joy-san no mae de owaru hitsuyou (6 de kiroku shinaoshite)",
+    ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "Encount table wo yomenakatta: 'species' no jouken wo hazushite",
+    ["No pude quitar los objetos: "] = "Dougu wo hazusenakatta: ",
+    ["No pude seguir la ruta al Centro (graba otra con 6)"] = "Center e no route wo tadorenakatta (6 de kiroku shinaoshite)",
+    ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "Trainer route wo tadorenakatta (5 de kiroku shinaoshite)",
+    ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "Tokkun point ni modorenakatta (6 de route wo kiroku shinaoshite)",
+    ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "Battle Searcher wo tsukaenai: shujinkou ga map de tomaranai",
+    ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "TV ga hirakanakatta: SELECT ni touroku shite. Futsuu no hayasa de machimasu.",
+    ["No se aprendio "] = "Oboenakatta: ",
+    ["No se escribio ninguna semilla: revisa que el juego llegue al titulo"] = "Seed ga kakikomarenakatta: title gamen made iku ka kakunin shite",
+    ["No se pudo elegir el ataque a olvidar: "] = "Wasureru waza wo erabenakatta: ",
+    ["No se pudo leer el Pokemon del equipo"] = "Temochi no Pokemon wo yomenakatta",
+    ["No ubique el SID en el RNG: empieza el modo justo despues de nombrar al rival"] = "SID wo ransuu de mitsukerarenakatta: rival no namae wo kimeta chokugo ni kaishi shite",
+    ["No ubique este encuentro en el RNG: %s Nv.%d PID %08X (%d)"] = "Kono encount wo ransuu de mitsukerarenakatta: %s Lv.%d PID %08X (%d)",
+    ["Normal"] = "Normal",
+    ["Nueva semilla"] = "Atarashii seed",
+    ["Nueva semilla (%s)"] = "Atarashii seed (%s)",
+    ["Nueva semilla (cargando)"] = "Atarashii seed (yomikomi)",
+    ["Nueva semilla (reset)"] = "Atarashii seed (reset)",
+    ["OBJETO"] = "MOCHIMONO",
+    ["OPCIONES"] = "SETTEI",
+    ["Objetivo:"] = "Mokuhyo:",
+    ["Objetivo: %s%s%s  avance %d"] = "Mokuhyo: %s%s%s  shouhi %d",
+    ["Objetivo: SID %d en el avance %d"] = "Mokuhyo: SID %d (shouhi %d)",
+    ["Objetivo: avance %d%s  PID %08X  %s"] = "Mokuhyo: shouhi %d%s  PID %08X  %s",
+    ["Objeto: %s"] = "Mochimono: %s",
+    ["Orden de llamadas detectado: "] = "Yobidashi junban: ",
+    ["PID %08X  TID %d  SID %d   (8 = siguiente)"] = "PID %08X  TID %d  SID %d   (8 = tsugi)",
+    ["PO "] = "Mezapa ",
+    ["POKEDEX"] = "ZUKAN",
+    ["POKEMON"] = "POKEMON",
+    ["PS"] = "H",
+    ["PS %d/%d  Poder Oculto: %s %d"] = "HP %d/%d  Mezapa: %s %d",
+    ["PS bajos"] = "HP ga hikui",
+    ["PS muy bajos"] = "HP ga totemo hikui",
+    ["Partida nueva"] = "Saisho kara",
+    ["Paso %d de %d   intento %d"] = "%d ho me / %d   shikou %d",
+    ["Pasos hasta el encuentro: %d%s"] = "Encount made: %d ho%s",
+    ["Planta"] = "Kusa",
+    ["Pon tus semillas en initialSeeds del .json (ej. [\"BC75\"])"] = ".json no initialSeeds ni seed wo irete (rei: [\"BC75\"])",
+    ["Preparando"] = "Junbi chuu",
+    ["Preparando titulo"] = "Title junbi",
+    ["Preparando: pasos %d (contador %d)"] = "Junbi chuu: %d ho (counter %d)",
+    ["Prob. de haber visto un shiny: %.1f%%"] = "Irochigai wo mita kakuritsu: %.1f%%",
+    ["Probada por el bot: semilla %04X (arranque %d, frame %d)"] = "Bot ga tameshita: seed %04X (kidou %d, frame %d)",
+    ["Probando semilla"] = "Seed shikou",
+    ["Psiquico"] = "Esper",
+    ["Pulsa A"] = "A wo osu",
+    ["Pulsar A"] = "A wo osu",
+    ["Pulsar A en %d frames   intento %d"] = "%d frame go ni A   shikou %d",
+    ["QUITAR"] = "AZUKARU",
+    ["QUITAR CARTA"] = "MAIL WO AZUKARU",
+    ["Quita los objetos (START > POKEMON > OBJETO > QUITAR): "] = "Dougu wo hazushite (START > POKEMON > MOCHIMONO > AZUKARU): ",
+    ["Quita los objetos del equipo: "] = "Temochi no dougu wo hazushite: ",
+    ["REGISTRAR"] = "TOUROKU",
+    ["RETIRARSE"] = "RETIRE",
+    ["Recogida (hay que ganar)"] = "Monohiroi (katsu hitsuyou ari)",
+    ["Recogida: %d en el equipo  llevan objeto: %s"] = "Monohiroi: temochi ni %d  mochimono: %s",
+    ["Regalo"] = "Morau",
+    ["Regalo RNG"] = "Morau RNG",
+    ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Battle Searcher wo SELECT ni touroku shite (Bag > Battle Searcher > Touroku)",
+    ["Reiniciando"] = "Reset chuu",
+    ["Reset"] = "Reset",
+    ["Rival"] = "Aite",
+    ["Rival: %s Nv.%d  -> %s (%s)"] = "Aite: %s Lv.%d  -> %s (%s)",
+    ["Rival: %s Nv.%d%s  -> %s (%s)"] = "Aite: %s Lv.%d%s  -> %s (%s)",
+    ["Roamer"] = "Haikai",
+    ["Roamer RNG"] = "Haikai RNG",
+    ["Robos %d"] = "Nusunda %d",
+    ["Roca"] = "Iwa",
+    ["Ruta al Centro cargada: %d pasos de ida, %d de vuelta"] = "Center e no route yomikomi: iki %d ho, kaeri %d",
+    ["Ruta al Centro guardada (%d pasos ida, %d vuelta)"] = "Center e no route hozon (iki %d ho, kaeri %d)",
+    ["Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d"] = "Route shuusei: iki %d -> %d ho, kaeri %d -> %d",
+    ["Ruta de entrenadores"] = "Trainer route",
+    ["Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta"] = "Trainer route yomikomi: iki %d ho, kaeri %d",
+    ["Ruta de entrenadores guardada (%d pasos ida, %d vuelta)"] = "Trainer route hozon (iki %d ho, kaeri %d)",
+    ["Ruta guardada (%d pasos ida, %d vuelta)"] = "Route hozon (iki %d ho, kaeri %d)",
+    ["SALIR"] = "TOJIRU",
+    ["SELECT "] = "SELECT ",
+    ["SELECT: %s  Buscapelea %d/100"] = "SELECT: %s  Battle Searcher %d/100",
+    ["SHINY SALVAJE: "] = "YASEI NO IROCHIGAI: ",
+    ["SI (activo)"] = "ARI (kansen chuu)",
+    ["START "] = "START ",
+    ["START %d/%d  equipo %d  menu %d  tareas: start %s equipo %s acciones %s"] = "START %d/%d  temochi %d  menu %d  task: start %s temochi %s koudou %s",
+    ["Salvaje"] = "Yasei",
+    ["Salvaje RNG"] = "Yasei RNG",
+    ["Savestate listo. Zona: %s%s"] = "Savestate junbi kanryo. Basho: %s%s",
+    ["Se repite: dejo de revisar antes del paso"] = "Mata okita: ippo mae no check wo yamemasu",
+    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X junbi kanryo: tsuzuki kara hajimete RNG mode wo tsukatte",
+    ["Semilla inicial"] = "Shoki seed",
+    ["Semilla inicial %04X conseguida (%d pruebas)"] = "Shoki seed %04X ni seikou (%d kai)",
+    ["Semilla inicial: %04X   Actual: %08X"] = "Shoki seed: %04X   Genzai: %08X",
+    ["Semilla lista: cargando la partida para "] = "Seed junbi kanryo: game wo yomikomi chuu: ",
+    ["Shiny descartado por filtros: %s PID %08X"] = "Irochigai wo jouken de miokuri: %s PID %08X",
+    ["Sin ataques utiles contra un entrenador: terminalo tu"] = "Trainer ni tsukaeru waza nashi: jibun de owarasete",
+    ["Sin respuesta: el bot decide solo si aprende el ataque"] = "Henji nashi: waza wo oboeru ka bot ga kimemasu",
+    ["Sin shiny"] = "Irochigai nashi",
+    ["Siniestro"] = "Aku",
+    ["Stat"] = "Nouryoku",
+    ["TID %d   SID objetivo: %s"] = "TID %d   mokuhyo SID: %s",
+    ["TID %d  SID %d"] = "TID %d  SID %d",
+    ["TID %d  SID %d  (xor %04X)"] = "TID %d  SID %d  (xor %04X)",
+    ["TID %d  SID objetivo %d  en el avance %d"] = "TID %d  mokuhyo SID %d  shouhi %d",
+    ["Tele"] = "TV",
+    ["Tele Pokemon (avance rapido)"] = "Pokemon Mondai TV (kousoku shouhi)",
+    ["Tele: faltan %d avances (~%d frames)"] = "TV: nokori %d shouhi (~%d frame)",
+    ["Tele: faltan %d avances para cerrarla (~%d frames)"] = "TV: tojiru made nokori %d shouhi (~%d frame)",
+    ["Termina de grabar la ruta (6) antes de iniciar"] = "Kaishi mae ni route kiroku (6) wo owarasete",
+    ["Termina de grabar la ruta antes de iniciar"] = "Kaishi mae ni route kiroku wo owarasete",
+    ["Termina primero la ruta que estas grabando (tecla "] = "Saki ni kiroku chuu no route wo owarasete (key ",
+    ["Tierra"] = "Jimen",
+    ["Timeouts: "] = "Timeout: ",
+    ["Total %d/510"] = "Goukei %d/510",
+    ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Pokemon ga shinka chuu: scene wo owaraseru to bot ga tsuzukemasu",
+    ["Tu Pokemon evoluciono a "] = "Pokemon ga shinka: ",
+    ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Trainer sen de Pokemon ga hinshi: tsugi wo erande battle wo owarasete",
+    ["Ultimo:"] = "Saigo:",
+    ["Ultimo: "] = "Saigo: ",
+    ["Usando Buscapelea"] = "Battle Searcher shiyou chuu",
+    ["Vel"] = "S",
+    ["Veneno"] = "Doku",
+    ["Volador"] = "Hikou",
+    ["Volviendo al inicio"] = "Kaishi point ni modori chuu",
+    ["Volviendo al punto"] = "Point ni modori chuu",
+    ["Vuelta %d: Buscapelea usado"] = "Shuukai %d: Battle Searcher wo tsukatta",
+    ["Vuelta %d: ningun entrenador quiere revancha todavia"] = "Shuukai %d: mada saisen shitai trainer wa inai",
+    ["Yendo al Centro"] = "Center e idou chuu",
+    ["Zona: %s%s"] = "Basho: %s%s",
+    ["[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s"] = "[%s] %s  PID %08X  %s  IVs %s  %d kai de hakken (%s mode)%s",
+    ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X ni %d kai de seikou",
+    ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
+    ["acciones "] = "koudou ",
+    ["ataque desconocido en "] = "fumei na waza: ",
+    ["calculando... (%d)"] = "keisan chuu... (%d)",
+    ["camino al Centro"] = "Center e idou chuu",
+    ["cerrado"] = "tojite iru",
+    ["combate "] = "battle ",
+    ["cursor inesperado"] = "yoki shinai cursor",
+    ["daria EVs de "] = "doryokuchi wo kureru: ",
+    ["de camino"] = "idou chuu",
+    ["debilitado"] = "hinshi",
+    ["dinero"] = "okozukai",
+    ["el archivo debe ser un objeto { ... }"] = "file wa object { ... } de aru hitsuyou ga aru",
+    ["el cursor del menu START no llega a POKEMON"] = "START menu no cursor ga POKEMON ni todokanai",
+    ["el cursor no llega a la opcion"] = "cursor ga koumoku ni todokanai",
+    ["el cursor no responde"] = "cursor ga hannou shinai",
+    ["el encuentro sale sin caminar"] = "arukazu ni encount suru",
+    ["el menu START no se abre"] = "START menu ga hirakanai",
+    ["el modo \"nivel\" necesita targetLevel (o maxBattles)"] = "\"nivel\" mode ni wa targetLevel (ka maxBattles) ga hitsuyou",
+    ["el titulo no acepto la pulsacion"] = "title gamen ga oshita no wo ukenakatta",
+    ["encuentro inesperado"] = "yoki shinai encount",
+    ["entrenador"] = "trainer",
+    ["entrenador (no se puede huir)"] = "trainer (nigerarenai)",
+    ["equipo "] = "temochi ",
+    ["especie desconocida: "] = "fumei na Pokemon: ",
+    ["evitada"] = "sakeru",
+    ["experiencia"] = "keikenchi",
+    ["falta ',' o ']'"] = "',' ka ']' ga nai",
+    ["falta ',' o '}'"] = "',' ka '}' ga nai",
+    ["falta ':'"] = "':' ga nai",
+    ["huir"] = "nigeru",
+    ["la mochila no tiene espacio para "] = "bag ni aki ga nai: ",
+    ["la pantalla del equipo no responde"] = "temochi gamen ga hannou shinai",
+    ["language debe ser \"es\", \"en\" o \"ja\""] = "language wa \"es\", \"en\", \"ja\" no dore ka",
+    ["learnMoves debe ser \"auto\", \"never\" o \"ask\""] = "learnMoves wa \"auto\", \"never\", \"ask\" no dore ka",
+    ["lleva "] = "mochimono: ",
+    ["lo tuvo"] = "kako ni ari",
+    ["los EVs suman "] = "doryokuchi no goukei ",
+    ["mode debe ser \"nivel\", \"objetos\", \"robar\" o \"dinero\""] = "mode wa \"nivel\", \"objetos\", \"robar\", \"dinero\" no dore ka",
+    ["nada"] = "nashi",
+    ["naturaleza desconocida: "] = "fumei na seikaku: ",
+    ["neutra"] = "muhosei",
+    ["ninguno"] = "nashi",
+    ["nivel"] = "level",
+    ["no"] = "nashi",
+    ["no aparece OBJETO"] = "MOCHIMONO ga denai",
+    ["no aparece QUITAR"] = "AZUKARU ga denai",
+    ["no da los EVs que faltan"] = "tarinai doryokuchi wo kurenai",
+    ["no encuentro el paso"] = "ippo ga mitsukaranai",
+    ["no esta en la lista"] = "list ni nai",
+    ["no grabada"] = "mi-kiroku",
+    ["no grabada (tecla 5)"] = "mi-kiroku (5 key)",
+    ["no hay opcion POKEMON en el menu START"] = "START menu ni POKEMON ga nai",
+    ["no llego al Pokemon "] = "Pokemon ni todokanai: ",
+    ["no lleva objeto"] = "dougu wo motte inai",
+    ["no pude cerrar los menus"] = "menu wo tojirarenakatta",
+    ["no se abrio la pantalla del equipo"] = "temochi gamen ga hirakanakatta",
+    ["no se pudo robar"] = "nusumenakatta",
+    ["no ubico el titulo"] = "title gamen ga mitsukaranai",
+    ["no volvio al mapa"] = "map ni modoranakatta",
+    ["no vuelve el mapa"] = "map ga modoranai",
+    ["notify debe ser {\"ntfy\": \"tema\"}"] = "notify wa {\"ntfy\": \"topic\"} no keishiki",
+    ["objetivos inalcanzables"] = "todokanai mokuhyo",
+    ["objeto desconocido en wantedItems: "] = "wantedItems ni fumei na dougu: ",
+    ["objetos (Recogida)"] = "dougu (Monohiroi)",
+    ["opcion desconocida: "] = "fumei na settei: ",
+    ["pelear"] = "tatakau",
+    ["prediccion fallida"] = "yosoku shippai",
+    ["rango elegido"] = "erabareta hanni",
+    ["robado: "] = "nusunda: ",
+    ["robar "] = "nusumu: ",
+    ["robar objetos"] = "dougu wo nusumu",
+    ["salvaje"] = "yasei",
+    ["se esperaba un nombre entre comillas"] = "\" de kakomareta namae ga hitsuyou",
+    ["si"] = "ari",
+    ["sin PP"] = "PP nashi",
+    ["sin PP de Ladron/Antojo"] = "Dorobou/Hoshigaru no PP nashi",
+    ["sin ataques utiles"] = "tsukaeru waza nashi",
+    ["sin datos"] = "data nashi",
+    ["sin objetivo con este arranque"] = "kono kidou de wa mokuhyo nashi",
+    ["sin objetivo en %d avances"] = "%d shouhi de mokuhyo nashi",
+    ["solo entrenadores"] = "trainer nomi",
+    ["takeItems debe ser \"auto\" o \"pause\""] = "takeItems wa \"auto\" ka \"pause\"",
+    ["texto de mas al final"] = "saigo ni yobun na moji ga aru",
+    ["texto sin cerrar"] = "moji retsu ga tojite inai",
+    ["tiempo agotado"] = "jikan gire",
+    ["tipo de Poder Oculto desconocido: "] = "fumei na mezapa type: ",
+    ["tu Pokemon ya lleva un objeto"] = "jibun no Pokemon ga sude ni dougu wo motte iru",
+    ["valor no valido"] = "muko na atai",
+    ["verificados (USA)"] = "kakunin zumi (USA)",
+    ["wantedMoves tiene "] = "wantedMoves no waza wa ",
+    ["ya paso Nv."] = "sude ni sugita Lv.",
+  },
+}
+local function TX(s)
+  local d = LANG[CONFIG.language]
+  return d and d[s] or s
+end
 
 local read32  = memory.readdwordunsigned
 local read16  = memory.readwordunsigned
@@ -1339,7 +2308,7 @@ end)
 
 local function jsonDecode(str)
   local pos = 1
-  local function err(msg) error(string.format("JSON: %s (caracter %d)", msg, pos), 0) end
+  local function err(msg) error(string.format(TX"JSON: %s (caracter %d)", msg, pos), 0) end
   local function skip()
     while true do
       local _, e = str:find("^[ \t\r\n]+", pos)
@@ -1353,7 +2322,7 @@ local function jsonDecode(str)
     local out = {}
     while true do
       local c = str:sub(pos, pos)
-      if c == "" then err("texto sin cerrar") end
+      if c == "" then err(TX"texto sin cerrar") end
       if c == '"' then pos = pos + 1; break end
       if c == "\\" then out[#out + 1] = str:sub(pos + 1, pos + 1); pos = pos + 2
       else out[#out + 1] = c; pos = pos + 1 end
@@ -1370,16 +2339,16 @@ local function jsonDecode(str)
       if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       while true do
         skip()
-        if str:sub(pos, pos) ~= '"' then err("se esperaba un nombre entre comillas") end
+        if str:sub(pos, pos) ~= '"' then err(TX"se esperaba un nombre entre comillas") end
         local k = parseString()
         skip()
-        if str:sub(pos, pos) ~= ":" then err("falta ':'") end
+        if str:sub(pos, pos) ~= ":" then err(TX"falta ':'") end
         pos = pos + 1
         obj[k] = value()
         skip()
         local d = str:sub(pos, pos); pos = pos + 1
         if d == "}" then return obj end
-        if d ~= "," then err("falta ',' o '}'") end
+        if d ~= "," then err(TX"falta ',' o '}'") end
         skip()
         if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       end
@@ -1393,7 +2362,7 @@ local function jsonDecode(str)
         skip()
         local d = str:sub(pos, pos); pos = pos + 1
         if d == "]" then return arr end
-        if d ~= "," then err("falta ',' o ']'") end
+        if d ~= "," then err(TX"falta ',' o ']'") end
         skip()
         if str:sub(pos, pos) == "]" then pos = pos + 1; return arr end
       end
@@ -1403,14 +2372,14 @@ local function jsonDecode(str)
     elseif str:sub(pos, pos + 3) == "null" then pos = pos + 4; return nil
     else
       local num = str:match("^-?%d+%.?%d*", pos)
-      if not num or num == "" then err("valor no valido") end
+      if not num or num == "" then err(TX"valor no valido") end
       pos = pos + #num
       return tonumber(num)
     end
   end
   local v = value()
   skip()
-  if pos <= #str then err("texto de mas al final") end
+  if pos <= #str then err(TX"texto de mas al final") end
   return v
 end
 
@@ -1426,7 +2395,7 @@ end
 local STAT_KEYS = { hp = 1, ps = 1, atk = 2, ata = 2, attack = 2, ataque = 2, def = 3, defense = 3, defensa = 3,
   spa = 4, spatk = 4, ate = 4, atesp = 4, ataqueespecial = 4, spd = 5, spdef = 5, dfe = 5, defesp = 5,
   defensaespecial = 5, spe = 6, speed = 6, vel = 6, velocidad = 6 }
-local STAT_LABEL = { "PS", "At", "Df", "AtE", "DfE", "Vel" }
+local STAT_LABEL = { "PS", "At", "Df", "AtE", "DfE", "Vel" }  --@i18n
 -- EVs in memory are ordered HP, Atk, Def, Spe, SpA, SpD
 local EV_OF_STAT = { 1, 2, 3, 5, 6, 4 }
 
@@ -1445,33 +2414,40 @@ local function speciesSet(list, problems)
     for idx = 1, 411 do
       if simplify(speciesName(idx)) == sn then set[idx] = true; found = true end
     end
-    if not found then problems[#problems + 1] = "especie desconocida: " .. tostring(n) end
+    if not found then problems[#problems + 1] = TX"especie desconocida: " .. tostring(n) end
   end
   return set
 end
 
 local function interpretConfig(problems)
   tcfg = { target = nil }
+  -- First, so the other messages already come out in the chosen language.
+  local lang = simplify(CONFIG.language or "es")
+  if lang ~= "es" and lang ~= "en" and lang ~= "ja" then
+    CONFIG.language = "es"
+    problems[#problems + 1] = TX"language debe ser \"es\", \"en\" o \"ja\""; lang = "es"
+  end
+  CONFIG.language = lang
   if type(CONFIG.evs) == "table" then
     tcfg.target = { 0, 0, 0, 0, 0, 0 }     -- in memory order
     local total = 0
     for k, v in pairs(CONFIG.evs) do
       local i = STAT_KEYS[simplify(k)]
       v = tonumber(v)
-      if not i or not v then problems[#problems + 1] = "EV desconocido: " .. tostring(k)
+      if not i or not v then problems[#problems + 1] = TX"EV desconocido: " .. tostring(k)
       else
         if v > 255 then v = 255 end
         tcfg.target[EV_OF_STAT[i]] = v
         total = total + v
       end
     end
-    if total > 510 then problems[#problems + 1] = "los EVs suman " .. total .. " (maximo 510)" end
+    if total > 510 then problems[#problems + 1] = TX"los EVs suman " .. total .. TX" (maximo 510)" end
   end
   tcfg.only = speciesSet(CONFIG.species, problems)
   tcfg.avoid = speciesSet(CONFIG.avoidSpecies, problems)
   local lm = simplify(CONFIG.learnMoves or "auto")
   if lm ~= "never" and lm ~= "ask" and lm ~= "auto" then
-    problems[#problems + 1] = "learnMoves debe ser \"auto\", \"never\" o \"ask\""; lm = "never"
+    problems[#problems + 1] = TX"learnMoves debe ser \"auto\", \"never\" o \"ask\""; lm = "never"
   end
   tcfg.learn = lm
   local function moveSet(list, key)
@@ -1483,7 +2459,7 @@ local function interpretConfig(problems)
       for id, mv in pairs(TT_MOVE) do
         if simplify(mv[7]) == sn then set[id] = true; found = true; n = n + 1; break end
       end
-      if not found then problems[#problems + 1] = "ataque desconocido en " .. key .. ": " .. tostring(name) .. " (usa el nombre en ingles)" end
+      if not found then problems[#problems + 1] = TX"ataque desconocido en " .. key .. ": " .. tostring(name) .. TX" (usa el nombre en ingles)" end
     end
     return set, n
   end
@@ -1491,8 +2467,8 @@ local function interpretConfig(problems)
   local wn
   tcfg.wanted, wn = moveSet(CONFIG.wantedMoves, "wantedMoves")
   if tcfg.wanted and wn == 0 then tcfg.wanted = nil end
-  if wn > 4 then problems[#problems + 1] = "wantedMoves tiene " .. wn .. " ataques (maximo 4)" end
-  if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = "notify debe ser {\"ntfy\": \"tema\"}" end
+  if wn > 4 then problems[#problems + 1] = TX"wantedMoves tiene " .. wn .. TX" ataques (maximo 4)" end
+  if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = TX"notify debe ser {\"ntfy\": \"tema\"}" end
 end
 
 local function loadConfig()
@@ -1502,11 +2478,11 @@ local function loadConfig()
     if not f then return "no existe" end
     local data = f:read("*a"); f:close()
     local cfg = jsonDecode(data)
-    if type(cfg) ~= "table" then error("el archivo debe ser un objeto { ... }", 0) end
+    if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     local optional = { evs = 1, targetLevel = 1, maxLevel = 1, species = 1, avoidSpecies = 1, keepMoves = 1, wantedMoves = 1,
                        askTimeout = 1, notify = 1 }
     for k, v in pairs(cfg) do
-      if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = "opcion desconocida: " .. k end
+      if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = TX"opcion desconocida: " .. k end
       CONFIG[k] = v
     end
     for k in pairs(optional) do if cfg[k] == nil then CONFIG[k] = nil end end
@@ -1665,8 +2641,8 @@ local function samePos(a, b) return a and b and a.g == b.g and a.n == b.n and a.
 local DIR_KEY = { [1] = "down", [2] = "up", [3] = "left", [4] = "right" }
 
 -- ------------------------ Types and damage ------------------------------
-local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",
-  "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }
+local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",  --@i18n
+  "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }  --@i18n
 local EFFM = {}
 do
   local i = 1
@@ -1864,7 +2840,7 @@ local function wantedStatus(m)
       else
         local past
         for k = 1, #ls, 2 do if ls[k + 1] == id then past = ls[k] end end
-        txt = past and ("ya paso Nv." .. past .. ": Recordador") or "MT/tutor"
+        txt = past and (TX"ya paso Nv." .. past .. TX": Recordador") or TX"MT/tutor"
       end
     end
     out[#out + 1] = moveName(id) .. " " .. txt
@@ -1894,11 +2870,11 @@ end
 
 -- Decides whether fighting this species is worth it. Returns (fight, reason)
 local function shouldFight(mon, species)
-  if tcfg.avoid and tcfg.avoid[species] then return false, "evitada" end
-  if tcfg.only and not tcfg.only[species] then return false, "no esta en la lista" end
+  if tcfg.avoid and tcfg.avoid[species] then return false, TX"evitada" end
+  if tcfg.only and not tcfg.only[species] then return false, TX"no esta en la lista" end
   if not tcfg.target then return true, "nivel" end
   local g = evGain(mon, species)
-  if not g then return false, "sin datos" end
+  if not g then return false, TX"sin datos" end
   local total = evTotal(mon)
   local room = 510 - total
   local useful = false
@@ -1907,14 +2883,14 @@ local function shouldFight(mon, species)
       local add = math.min(g[i], 255 - mon.evs[i], room)
       local after = mon.evs[i] + add
       if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
-        return false, "daria EVs de " .. STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[i]]
+        return false, TX"daria EVs de " .. TX(STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[i]])
       end
       if mon.evs[i] < tcfg.target[i] then useful = true end
     end
   end
   if useful then return true, "EVs" end
   if evsDone(mon) and CONFIG.targetLevel and mon.level < CONFIG.targetLevel then return true, "nivel" end
-  return false, "no da los EVs que faltan"
+  return false, TX"no da los EVs que faltan"
 end
 
 local function trainingDone(mon)
@@ -2047,7 +3023,7 @@ local function loadRoute()
   route.go, route.back = cleanRoute(route.go), cleanRoute(route.back)
   route.go, route.back = fixRoute(route.go, route.back)
   if #route.go ~= g0 or #route.back ~= b0 then
-    print(string.format("Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d", g0, #route.go, b0, #route.back))
+    print(string.format(TX"Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d", g0, #route.go, b0, #route.back))
     saveRoute()
   end
 end
@@ -2069,24 +3045,24 @@ local function recStep()
 end
 
 local function recHotkey()
-  if bot.running then bot.msg = "Deten el bot (7) antes de grabar la ruta"; return end
+  if bot.running then bot.msg = TX"Deten el bot (7) antes de grabar la ruta"; return end
   local p = playerPos()
-  if not p then bot.msg = "Carga tu partida antes de grabar"; return end
+  if not p then bot.msg = TX"Carga tu partida antes de grabar"; return end
   if not rec then
     rec = { phase = "go", list = { { g = p.g, n = p.n, x = p.x, y = p.y, d = 0 } }, prevFace = p.face }
-    bot.msg = "GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6"
+    bot.msg = TX"GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6"
   elseif rec.phase == "go" then
-    if #rec.list < 2 then bot.msg = "Aun no te has movido: camina hasta la enfermera"; return end
+    if #rec.list < 2 then bot.msg = TX"Aun no te has movido: camina hasta la enfermera"; return end
     rec.go = rec.list
     rec.phase = "back"
     rec.list = { { g = p.g, n = p.n, x = p.x, y = p.y, d = 0 } }
-    bot.msg = "GRABANDO VUELTA: cura (si quieres) y vuelve al punto de entreno; pulsa 6"
+    bot.msg = TX"GRABANDO VUELTA: cura (si quieres) y vuelve al punto de entreno; pulsa 6"
   else
-    if #rec.list < 2 then bot.msg = "Aun no te has movido: vuelve al punto de entreno"; return end
+    if #rec.list < 2 then bot.msg = TX"Aun no te has movido: vuelve al punto de entreno"; return end
     route.go, route.back = fixRoute(cleanRoute(rec.go), cleanRoute(rec.list))
     rec = nil
     saveRoute()
-    bot.msg = string.format("Ruta guardada (%d pasos ida, %d vuelta)", #route.go, #route.back)
+    bot.msg = string.format(TX"Ruta guardada (%d pasos ida, %d vuelta)", #route.go, #route.back)
   end
   print(bot.msg)
 end
@@ -2163,9 +3139,9 @@ local function leadOk()
 end
 
 local function needHeal(m)
-  if m.hp == 0 then return "debilitado" end
-  if m.maxHP > 0 and m.hp * 100 < m.maxHP * CONFIG.healBelow then return "PS bajos" end
-  if usefulPP(m) < CONFIG.minPP then return "sin PP" end
+  if m.hp == 0 then return TX"debilitado" end
+  if m.maxHP > 0 and m.hp * 100 < m.maxHP * CONFIG.healBelow then return TX"PS bajos" end
+  if usefulPP(m) < CONFIG.minPP then return TX"sin PP" end
   return nil
 end
 
@@ -2206,11 +3182,11 @@ end
 
 local function beginHeal(reason)
   if not route.go then
-    halt("Necesita curarse (" .. reason .. "): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
+    halt(TX"Necesita curarse (" .. reason .. TX"): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
     return
   end
   bot.heals = bot.heals + 1
-  logLine("Al Centro Pokemon: " .. reason)
+  logLine(TX"Al Centro Pokemon: " .. reason)
   queue = {}
   zeroEnemy()
   navStart(route.go)
@@ -2220,14 +3196,14 @@ end
 -- After a battle: decide what comes next
 local function afterBattleDecide()
   local m = leadOk()
-  if not m then halt("No se pudo leer el Pokemon del equipo"); return end
+  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
   -- EVs gained in the last battle
   if bot.prevEvs then
     local parts = {}
     for st = 1, 6 do
       local i = EV_OF_STAT[st]
       local d = m.evs[i] - bot.prevEvs[i]
-      if d > 0 then parts[#parts + 1] = "+" .. d .. " " .. STAT_LABEL[st] end
+      if d > 0 then parts[#parts + 1] = "+" .. d .. " " .. TX(STAT_LABEL[st]) end
     end
     if #parts > 0 then
       bot.gainBattles = (bot.gainBattles or 0) + 1
@@ -2236,13 +3212,13 @@ local function afterBattleDecide()
     for i = 1, 6 do bot.prevEvs[i] = m.evs[i] end
   end
   if m.species ~= bot.leadSpecies then
-    logLine(string.format("%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+    logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
     bot.leadSpecies = m.species
   end
   if trainingDone(m) then
     stopBot()
     bot.done = true
-    bot.msg = string.format("ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+    bot.msg = string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
       table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/"))
     logLine(bot.msg)
     notify(bot.msg)
@@ -2257,8 +3233,8 @@ local function afterBattleDecide()
       local i = EV_OF_STAT[s]
       local need = tcfg.target[i] - m.evs[i]
       if need > 0 and need < mult and evTotal(m) < 510 then
-        halt(string.format("Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo",
-          need, STAT_LABEL[s], mult))
+        halt(string.format(TX"Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo",
+          need, TX(STAT_LABEL[s]), mult))
         return
       end
     end
@@ -2274,7 +3250,7 @@ local function afterBattleDecide()
         if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return end
       end
     end
-    halt("El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
+    halt(TX"El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
     return
   end
   startWalk()
@@ -2303,15 +3279,15 @@ end
 
 local function startBot()
   if otherInstanceAlive() then
-    bot.msg = "Hay OTRO Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"
+    bot.msg = TX"Hay OTRO Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"
     print(bot.msg); return
   end
-  if bot.cfgError then bot.msg = "Corrige " .. CONFIG_FILE .. " (mira la consola) y pulsa 0"; print(bot.msg); return end
-  if rec then bot.msg = "Termina de grabar la ruta (6) antes de iniciar"; return end
-  if inBattle() then bot.msg = "Inicia el bot fuera de combate, en la hierba"; return end
+  if bot.cfgError then bot.msg = TX"Corrige " .. CONFIG_FILE .. TX" (mira la consola) y pulsa 0"; print(bot.msg); return end
+  if rec then bot.msg = TX"Termina de grabar la ruta (6) antes de iniciar"; return end
+  if inBattle() then bot.msg = TX"Inicia el bot fuera de combate, en la hierba"; return end
   local m = leadOk()
   local p = playerPos()
-  if not m or not p then bot.msg = "Carga tu partida (en el mapa) antes de iniciar"; print(bot.msg); return end
+  if not m or not p then bot.msg = TX"Carga tu partida (en el mapa) antes de iniciar"; print(bot.msg); return end
   bot.cbOW = read32(A.callback2)
   bot.leadSpecies = m.species
   bot.spot = route.back and route.back[#route.back] or p
@@ -2323,10 +3299,10 @@ local function startBot()
   bot.startTime = 0
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
-  logLine(string.format("Entrenamiento iniciado: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+  logLine(string.format(TX"Entrenamiento iniciado: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
     table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")))
   local ws = wantedStatus(m)
-  if ws then logLine("Ataques deseados: " .. ws) end
+  if ws then logLine(TX"Ataques deseados: " .. ws) end
   afterBattleDecide()
 end
 
@@ -2363,14 +3339,14 @@ local function stepBattle()
       bot.lastFoe = foe
       if foe.sv < 8 and CONFIG.stopOnShiny then
         stopBot()
-        bot.msg = "SHINY SALVAJE: " .. speciesName(foe.species) .. "! Capturalo tu (juego en pausa)"
+        bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
         logLine(bot.msg)
         notify(bot.msg)
         emu.pause()
         return
       end
       local m = lead()
-      if bot.forceRun then bot.fight, bot.lastWhy = false, "camino al Centro"
+      if bot.forceRun then bot.fight, bot.lastWhy = false, TX"camino al Centro"
       elseif m then bot.fight, bot.lastWhy = shouldFight(m, foe.species) end
       if bot.fight then bot.fought = bot.fought + 1 else bot.fled = bot.fled + 1 end
     end
@@ -2385,10 +3361,10 @@ local function stepBattle()
     if CONFIG.evolve then
       local m = lead()
       if m and m.species ~= bot.leadSpecies then
-        logLine(string.format("%s esta evolucionando a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+        logLine(string.format(TX"%s esta evolucionando a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
         bot.st, bot.manualFrom, bot.owT = "manual", "evolve", 0
-        bot.msg = "Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
-        notify("Tu Pokemon evoluciono a " .. speciesName(m.species) .. ": termina la escena y el bot sigue solo")
+        bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
+        notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
         pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
         return
@@ -2412,8 +3388,8 @@ local function stepBattle()
       local idx = learnerIndex()
       local who = monAsAttacker(idx)
       bot.st, bot.manualFrom, bot.t = "manual", "learn", 0
-      bot.msg = string.format("%s quiere aprender %s: decide tu", who and speciesName(who.mon.species) or "?", moveName(new))
-      notify(bot.msg .. (slot and (" (el bot olvidaria " .. moveName(old) .. ")") or " (el bot no lo aprenderia)"))
+      bot.msg = string.format(TX"%s quiere aprender %s: decide tu", who and speciesName(who.mon.species) or "?", moveName(new))
+      notify(bot.msg .. (slot and (TX" (el bot olvidaria " .. moveName(old) .. ")") or TX" (el bot no lo aprenderia)"))
       return
     end
     if op == OP_LEARNMOVE then
@@ -2445,8 +3421,8 @@ local function stepBattle()
     bot.sawMove = false
     local me = battleMon(0)
     local run = not bot.fight or bot.forceRun
-    if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = "PS muy bajos" end
-    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = "sin ataques utiles" end
+    if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
+    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
     if c == want then tap("A", 16)
@@ -2479,9 +3455,9 @@ local function stepAfter()
   local m = lead()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
-    bot.msg = "Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
+    bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
     pcall(emu.pause)
-    notify("Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
+    notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
   if inOverworld() then bot.owT = bot.owT + 1 else bot.owT = 0 end
@@ -2507,7 +3483,7 @@ local function stepAfter()
   if #queue == 0 and not inOverworld() then
     if CONFIG.evolve then tap("A", 10) else tap("B", 6) end
   end
-  if bot.t > 5400 then halt("Aviso: no se pudo volver al mapa tras el combate") end
+  if bot.t > 5400 then halt(TX"Aviso: no se pudo volver al mapa tras el combate") end
 end
 
 local function stepManual()
@@ -2523,7 +3499,7 @@ local function stepManual()
     local onPrompt = not bot.cbBattle or read32(A.callback2) == bot.cbBattle
     if CONFIG.askTimeout and bot.t > CONFIG.askTimeout * 60 and onPrompt and inBattle() then
       bot.learnForce = "auto"
-      logLine("Sin respuesta: el bot decide solo si aprende el ataque")
+      logLine(TX"Sin respuesta: el bot decide solo si aprende el ataque")
       bot.msg = ""; bot.st = "battle"; return
     end
     if not inBattle() then bot.msg = ""; bot.st, bot.t, bot.owT = "after", 0, 0 end
@@ -2552,7 +3528,7 @@ local function stepLearnPick()
   if not inSummary then
     local who = monAsAttacker(learnerIndex())
     if who and L and who.mon.moves[L.slot] == L.new then
-      logLine(string.format("%s aprendio %s (olvido %s)", speciesName(who.mon.species), moveName(L.new), moveName(L.old)))
+      logLine(string.format(TX"%s aprendio %s (olvido %s)", speciesName(who.mon.species), moveName(L.new), moveName(L.old)))
     end
     bot.st, bot.t = "battle", 0
     return
@@ -2561,20 +3537,20 @@ local function stepLearnPick()
   local c = read8(A.sumCursor)
   local function abort(why)
     tap("B", 30); bot.picked = true; bot.learnForce = "never"
-    logLine("No se aprendio " .. moveName(L.new) .. ": " .. why .. " (usa \"learnMoves\": \"ask\")")
-    notify("No se pudo elegir el ataque a olvidar: " .. why)
+    logLine(TX"No se aprendio " .. moveName(L.new) .. ": " .. why .. TX" (usa \"learnMoves\": \"ask\")")
+    notify(TX"No se pudo elegir el ataque a olvidar: " .. why)
   end
   if not bot.probe then
     -- check that the cursor direction is right: down must go from 0 to 1
     if c == 1 then bot.probe = true
-    elseif bot.t > 400 then abort("el cursor no responde")
+    elseif bot.t > 400 then abort(TX"el cursor no responde")
     elseif c == 0 then tap("down", 20)
-    else abort("cursor inesperado") end
+    else abort(TX"cursor inesperado") end
     return
   end
   local want = L.slot - 1
   if c == want then tap("A", 30); bot.picked = true
-  elseif bot.t > 1200 then abort("tiempo agotado")
+  elseif bot.t > 1200 then abort(TX"tiempo agotado")
   elseif c < want then tap("down", 14) else tap("up", 14) end
 end
 
@@ -2607,7 +3583,7 @@ local function stepHealGo()
   if r == "done" then
     if simplify(CONFIG.healMode or "nurse") == "tile" then bot.st, bot.t = "heal_tile", 0
     else bot.st, bot.t = "nurse", 0; tap("up", 10) end
-  elseif r == "fail" then halt("No pude seguir la ruta al Centro (graba otra con 6)") end
+  elseif r == "fail" then halt(TX"No pude seguir la ruta al Centro (graba otra con 6)") end
 end
 
 local function stepNurse()
@@ -2618,7 +3594,7 @@ local function stepNurse()
     return
   end
   if bot.t > 2400 then
-    halt("No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)")
+    halt(TX"No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)")
     return
   end
   tap("A", 14)
@@ -2633,7 +3609,7 @@ local function stepHealTile()
     return
   end
   if bot.t > 1200 then
-    halt("La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)")
+    halt(TX"La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)")
     return
   end
   if bot.t % 20 == 0 then tap("B", 6) end
@@ -2653,9 +3629,9 @@ local function stepHealBack()
   if #queue > 0 then return end
   local r = navStep()
   if r == "done" then
-    logLine("De vuelta en el punto de entreno")
+    logLine(TX"De vuelta en el punto de entreno")
     afterBattleDecide()
-  elseif r == "fail" then halt("No pude volver al punto de entreno (graba otra ruta con 6)") end
+  elseif r == "fail" then halt(TX"No pude volver al punto de entreno (graba otra ruta con 6)") end
 end
 
 -- ------------------------------ Teclas -------------------------------
@@ -2667,7 +3643,7 @@ end
 local function handleHotkeys()
   local keys = input.get()
   if pressed("7", keys) then
-    if bot.running then stopBot(); bot.msg = "Detenido" else startBot() end
+    if bot.running then stopBot(); bot.msg = TX"Detenido" else startBot() end
   elseif pressed("6", keys) then
     recHotkey()
   elseif pressed("8", keys) then
@@ -2693,18 +3669,18 @@ end
 
 reportConfig = function(ok, msg, problems)
   bot.cfgError = (not ok) or #problems > 0
-  if not ok then bot.msg = "Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
-  elseif msg == "no existe" then bot.msg = "No hay " .. CONFIG_FILE .. ": uso la configuracion por defecto"
-  elseif #problems > 0 then bot.msg = "Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
-  else bot.msg = "Config cargada" end
+  if not ok then bot.msg = TX"Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
+  elseif msg == "no existe" then bot.msg = TX"No hay " .. CONFIG_FILE .. TX": uso la configuracion por defecto"
+  elseif #problems > 0 then bot.msg = TX"Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
+  else bot.msg = TX"Config cargada" end
   print(bot.msg)
-  for i = 2, #problems do print("Config: " .. problems[i]) end
+  for i = 2, #problems do print(TX"Config: " .. problems[i]) end
 end
 
 -- ------------------------------- Panel -------------------------------
-local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",
-  heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",
-  heal_back = "Volviendo al punto" }
+local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",  --@i18n
+  heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",  --@i18n
+  heal_back = "Volviendo al punto" }  --@i18n
 
 -- EV progress block: bar per stat, total, session, rate and estimated time
 local function evBlock(m, line)
@@ -2719,20 +3695,20 @@ local function evBlock(m, line)
       local gained = bot.startEvs and (m.evs[i] - bot.startEvs[i]) or 0
       local color = nil
       if tgt > 0 and m.evs[i] >= tgt then color = "green" elseif tgt == 0 and m.evs[i] > 0 then color = "orange" end
-      line(string.format("%-3s %3d/%-3s [%s]%s", STAT_LABEL[st], m.evs[i], tgt > 0 and tostring(tgt) or "-", bar,
+      line(string.format("%-3s %3d/%-3s [%s]%s", TX(STAT_LABEL[st]), m.evs[i], tgt > 0 and tostring(tgt) or "-", bar,
         gained > 0 and ("  +" .. gained) or ""), color)
       shown = shown + 1
     end
   end
-  if shown == 0 then line("EVs: 0 (aun no gana ninguno)") end
+  if shown == 0 then line(TX"EVs: 0 (aun no gana ninguno)") end
   local total = evTotal(m)
-  local txt = string.format("Total %d/510", total)
+  local txt = string.format(TX"Total %d/510", total)
   if bot.startEvs and bot.running then
     local gained = 0
     for i = 1, 6 do gained = gained + (m.evs[i] - bot.startEvs[i]) end
     local secs = 0
     pcall(function() secs = os.time() - (bot.startTime or os.time()) end)
-    txt = txt .. string.format("  sesion +%d", gained)
+    txt = txt .. string.format(TX"  sesion +%d", gained)
     if gained > 0 and secs >= 60 then
       local perH = gained * 3600 / secs
       txt = txt .. string.format("  ~%d/h", floor(perH + 0.5))
@@ -2741,13 +3717,13 @@ local function evBlock(m, line)
         for i = 1, 6 do left = left + math.max(tcfg.target[i] - m.evs[i], 0) end
         if left > 0 then
           local eta = floor(left / perH * 60 + 0.5)
-          txt = txt .. string.format("  faltan %d (~%dh%02dm)", left, floor(eta / 60), eta % 60)
+          txt = txt .. string.format(TX"  faltan %d (~%dh%02dm)", left, floor(eta / 60), eta % 60)
         end
       end
     end
   end
   line(txt)
-  if bot.lastGain and bot.running then line("Ultimo: " .. bot.lastGain) end
+  if bot.lastGain and bot.running then line(TX"Ultimo: " .. bot.lastGain) end
 end
 
 local function evLine(m)
@@ -2755,28 +3731,28 @@ local function evLine(m)
   for s = 1, 6 do
     local i = EV_OF_STAT[s]
     if tcfg.target then
-      if tcfg.target[i] > 0 or m.evs[i] > 0 then t[#t + 1] = string.format("%s %d/%d", STAT_LABEL[s], m.evs[i], tcfg.target[i]) end
-    elseif m.evs[i] > 0 then t[#t + 1] = string.format("%s %d", STAT_LABEL[s], m.evs[i]) end
+      if tcfg.target[i] > 0 or m.evs[i] > 0 then t[#t + 1] = string.format("%s %d/%d", TX(STAT_LABEL[s]), m.evs[i], tcfg.target[i]) end
+    elseif m.evs[i] > 0 then t[#t + 1] = string.format("%s %d", TX(STAT_LABEL[s]), m.evs[i]) end
   end
-  if #t == 0 then return "EVs: 0" end
-  return "EVs " .. table.concat(t, "  ")
+  if #t == 0 then return TX"EVs: 0" end
+  return TX"EVs " .. table.concat(t, "  ")
 end
 
 -- ------------------------- Inspection mode ---------------------------
-local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game
+local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game  --@i18n
 local function drawInspect()
   local which = bot.inspect
   local addr = (which == 7) and A.enemy or (A.party + (which - 1) * 0x64)
   local m = readPartyMon(addr)
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
-  local title = (which == 7) and "Rival" or string.format("Equipo %d/%d", which, partyCount())
-  if not m then line(title .. ": vacio  (8 = siguiente)"); return end
+  local title = (which == 7) and TX"Rival" or string.format(TX"Equipo %d/%d", which, partyCount())
+  if not m then line(title .. TX": vacio  (8 = siguiente)"); return end
   local shiny = m.sv < 8
   local nat = m.pid % 25
   local natName = natureNamesList[nat + 1] or "?"
   local up, down = floor(nat / 5) + 1, (nat % 5) + 1
-  local natFx = (up == down) and "neutra" or string.format("+%s -%s", NATURE_STAT[up], NATURE_STAT[down])
+  local natFx = (up == down) and TX"neutra" or string.format("+%s -%s", TX(NATURE_STAT[up]), TX(NATURE_STAT[down]))
   local sx = TT_SPECX[m.species]
   local gender = ""
   if sx then
@@ -2785,9 +3761,9 @@ local function drawInspect()
     else gender = (band(m.pid, 0xFF) < gr) and " F" or " M" end
   end
   local abilId = sx and ((m.abilityBit == 1 and sx[2] ~= 0) and sx[2] or sx[1]) or 0
-  line(string.format("%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and "  * SHINY *" or ""),
+  line(string.format(TX"%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and TX"  * SHINY *" or ""),
        shiny and "green" or nil)
-  line(string.format("%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
+  line(string.format(TX"%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
   -- Real stats (in memory: max HP 0x58, Atk 0x5A, Def 0x5C, Spe 0x5E, SpA 0x60, SpD 0x62)
   local st = { read16(addr + 0x58), read16(addr + 0x5A), read16(addr + 0x5C), read16(addr + 0x60), read16(addr + 0x62),
                read16(addr + 0x5E) }
@@ -2797,10 +3773,10 @@ local function drawInspect()
     for i = 1, 6 do parts[i] = string.format(fmt or "%4d", t[i]) end
     return string.format("%-5s", label) .. table.concat(parts)
   end
-  local hdr = { "PS", "At", "Df", "AtE", "DfE", "Vel" }
+  local hdr = { TX"PS", TX"At", TX"Df", TX"AtE", TX"DfE", TX"Vel" }
   line(row("", hdr, "%4s"))
   local statColor = {}
-  line(row("Stat", st))
+  line(row(TX"Stat", st))
   local perfect = true
   for i = 1, 6 do if m.ivs[i] < 31 then perfect = false end end
   line(row("IV", m.ivs), perfect and "green" or nil)
@@ -2808,10 +3784,10 @@ local function drawInspect()
   for i = 1, 6 do tot = tot + ev[i] end
   line(row("EV", ev) .. string.format("  (%d/510)", tot))
   local hpType, hpPow = hiddenPower(m.ivWord)
-  line(string.format("PS %d/%d  Poder Oculto: %s %d", m.hp, m.maxHP, TYPE_NAMES[hpType] or "?", hpPow))
-  local pkr = (m.pokerus == 0) and "no" or ((band(m.pokerus, 0x0F) > 0) and "SI (activo)" or "lo tuvo")
-  line(string.format("Exp %d  Amistad %d  Pokerus %s", m.exp, m.friendship, pkr))
-  line(string.format("Objeto: %s", m.item == 0 and "-" or (TT_ITEMNAME[m.item] or ("#" .. m.item))))
+  line(string.format(TX"PS %d/%d  Poder Oculto: %s %d", m.hp, m.maxHP, TX(TYPE_NAMES[hpType]) or "?", hpPow))
+  local pkr = (m.pokerus == 0) and TX"no" or ((band(m.pokerus, 0x0F) > 0) and TX"SI (activo)" or TX"lo tuvo")
+  line(string.format(TX"Exp %d  Amistad %d  Pokerus %s", m.exp, m.friendship, pkr))
+  line(string.format(TX"Objeto: %s", m.item == 0 and "-" or (TT_ITEMNAME[m.item] or ("#" .. m.item))))
   for i = 1, 4, 2 do
     local function mv(k)
       local id = m.moves[k]
@@ -2823,7 +3799,7 @@ local function drawInspect()
     line(string.format("%-18s %s", mv(i), mv(i + 1)))
   end
   local otid = m.otid % 0x10000
-  line(string.format("PID %08X  TID %d  SID %d   (8 = siguiente)", m.pid, otid, floor(m.otid / 0x10000)))
+  line(string.format(TX"PID %08X  TID %d  SID %d   (8 = siguiente)", m.pid, otid, floor(m.otid / 0x10000)))
 end
 
 local function draw()
@@ -2831,36 +3807,36 @@ local function draw()
   if bot.panel == 0 then return end
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
-  local status = bot.done and "COMPLETO" or (bot.running and (PHASE[bot.st] or bot.st) or "OFF")
-  if rec then status = (rec.phase == "go") and "GRABANDO IDA" or "GRABANDO VUELTA" end
-  line("Entrenar v1.10: " .. status, (bot.done or rec) and "green" or nil)
+  local status = bot.done and TX"COMPLETO" or (bot.running and (TX(PHASE[bot.st]) or bot.st) or "OFF")
+  if rec then status = (rec.phase == "go") and TX"GRABANDO IDA" or TX"GRABANDO VUELTA" end
+  line(TX"Entrenar v1.10: " .. status, (bot.done or rec) and "green" or nil)
   local m = lead()
   if m then
     local lv = CONFIG.targetLevel and string.format("Nv.%d/%d", m.level, CONFIG.targetLevel) or ("Nv." .. m.level)
-    line(string.format("%s %s  PS %d/%d  PP %d", speciesName(m.species), lv, m.hp, m.maxHP, usefulPP(m)))
+    line(string.format(TX"%s %s  PS %d/%d  PP %d", speciesName(m.species), lv, m.hp, m.maxHP, usefulPP(m)))
     evBlock(m, line)
-    if tcfg.wanted and (bot.panel == 2 or not bot.running) then line("Ataques: " .. (wantedStatus(m) or "")) end
+    if tcfg.wanted and (bot.panel == 2 or not bot.running) then line(TX"Ataques: " .. (wantedStatus(m) or "")) end
   end
   if bot.panel == 2 or not bot.running then
     if not bot.running and not rec then
-      line(string.format("7 iniciar  6 ruta  8 ver Pokemon  9 panel  0 config   Ruta: %s",
-        route.go and string.format("%d/%d pasos", #route.go, #route.back) or "no grabada"))
+      line(string.format(TX"7 iniciar  6 ruta  8 ver Pokemon  9 panel  0 config   Ruta: %s",
+        route.go and string.format(TX"%d/%d pasos", #route.go, #route.back) or TX"no grabada"))
     end
-    line(string.format("Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
+    line(string.format(TX"Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
   end
   if bot.lastFoe and bot.running then
-    line(string.format("Rival: %s Nv.%d  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level,
-      bot.fight and "pelear" or "huir", bot.lastWhy or ""))
+    line(string.format(TX"Rival: %s Nv.%d  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level,
+      bot.fight and TX"pelear" or TX"huir", bot.lastWhy or ""))
     if bot.panel == 2 and bot.st == "battle" and inBattle() then
       local slot = bestMove(bot.blocked)
       local me = battleMon(0)
-      if slot then line("Ataque: " .. (TT_MOVE[me.moves[slot]] and TT_MOVE[me.moves[slot]][7] or "?")) end
+      if slot then line(TX"Ataque: " .. (TT_MOVE[me.moves[slot]] and TT_MOVE[me.moves[slot]][7] or "?")) end
     end
   end
   if bot.panel == 2 then
     -- To check the addresses in other languages: on the FIGHT/RUN menu "Menu" must be 18 and "Espera" 1
     local p = playerPos()
-    line(string.format("Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
+    line(string.format(TX"Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
       band(read32(A.execFlags), 1), band(read8(A.actionCursor), 3), band(read8(A.moveCursor), 3),
       inBattle() and 1 or 0, p and string.format("%d.%d (%d,%d)", p.g, p.n, p.x, p.y) or "?"))
   end
@@ -2870,13 +3846,13 @@ end
 -- ------------------------------- Inicio ------------------------------
 print("FRLG Train Bot v1.10")
 if not gameName then
-  print("Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
+  print(TX"Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
   return
 end
-print(string.format("Juego: %s", GAME_LABEL))
-print("7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stats)   9 = panel   0 = recargar " .. CONFIG_FILE)
+print(string.format(TX"Juego: %s", GAME_LABEL))
+print(TX"7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stats)   9 = panel   0 = recargar " .. CONFIG_FILE)
 reportConfig(cfgOk, cfgMsg, cfgProblems)
-if route.go then print(string.format("Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
+if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
 
 local badFrames = 0
 while true do
@@ -2884,12 +3860,12 @@ while true do
   handleHotkeys()
   recStep()
   if bot.running then
-    if otherInstanceAlive() then halt("Hay OTRO Train Bot corriendo en otra ventana de Lua: deja solo uno") end
+    if otherInstanceAlive() then halt(TX"Hay OTRO Train Bot corriendo en otra ventana de Lua: deja solo uno") end
   end
   if bot.running then
     writeLock()
     if validPtr(read32(A.sb1)) then badFrames = 0 else badFrames = badFrames + 1 end
-    if badFrames > 30 then halt("El juego se reinicio: bot detenido") end
+    if badFrames > 30 then halt(TX"El juego se reinicio: bot detenido") end
   end
   if bot.running then
     local busy = runQueue()

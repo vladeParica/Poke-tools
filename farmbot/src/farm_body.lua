@@ -49,8 +49,10 @@ local CONFIG = {
   healMode       = "nurse",   -- "nurse" = talk to the nurse; "tile" = healing tile (Tower 5F purified zone)
   logFile        = "farm_log.txt",
   logDir         = "logs",
+  language       = "es",      -- "es", "en" or "ja" (romaji): panel, console and log text
 }
 local CONFIG_FILE = "FRLG_FarmBot.json"
+--@@LANG@@
 
 local read32  = memory.readdwordunsigned
 local read16  = memory.readwordunsigned
@@ -146,7 +148,7 @@ end)
 
 local function jsonDecode(str)
   local pos = 1
-  local function err(msg) error(string.format("JSON: %s (caracter %d)", msg, pos), 0) end
+  local function err(msg) error(string.format(TX"JSON: %s (caracter %d)", msg, pos), 0) end
   local function skip()
     while true do
       local _, e = str:find("^[ \t\r\n]+", pos)
@@ -160,7 +162,7 @@ local function jsonDecode(str)
     local out = {}
     while true do
       local c = str:sub(pos, pos)
-      if c == "" then err("texto sin cerrar") end
+      if c == "" then err(TX"texto sin cerrar") end
       if c == '"' then pos = pos + 1; break end
       if c == "\\" then out[#out + 1] = str:sub(pos + 1, pos + 1); pos = pos + 2
       else out[#out + 1] = c; pos = pos + 1 end
@@ -177,16 +179,16 @@ local function jsonDecode(str)
       if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       while true do
         skip()
-        if str:sub(pos, pos) ~= '"' then err("se esperaba un nombre entre comillas") end
+        if str:sub(pos, pos) ~= '"' then err(TX"se esperaba un nombre entre comillas") end
         local k = parseString()
         skip()
-        if str:sub(pos, pos) ~= ":" then err("falta ':'") end
+        if str:sub(pos, pos) ~= ":" then err(TX"falta ':'") end
         pos = pos + 1
         obj[k] = value()
         skip()
         local d = str:sub(pos, pos); pos = pos + 1
         if d == "}" then return obj end
-        if d ~= "," then err("falta ',' o '}'") end
+        if d ~= "," then err(TX"falta ',' o '}'") end
         skip()
         if str:sub(pos, pos) == "}" then pos = pos + 1; return obj end
       end
@@ -200,7 +202,7 @@ local function jsonDecode(str)
         skip()
         local d = str:sub(pos, pos); pos = pos + 1
         if d == "]" then return arr end
-        if d ~= "," then err("falta ',' o ']'") end
+        if d ~= "," then err(TX"falta ',' o ']'") end
         skip()
         if str:sub(pos, pos) == "]" then pos = pos + 1; return arr end
       end
@@ -210,14 +212,14 @@ local function jsonDecode(str)
     elseif str:sub(pos, pos + 3) == "null" then pos = pos + 4; return nil
     else
       local num = str:match("^-?%d+%.?%d*", pos)
-      if not num or num == "" then err("valor no valido") end
+      if not num or num == "" then err(TX"valor no valido") end
       pos = pos + #num
       return tonumber(num)
     end
   end
   local v = value()
   skip()
-  if pos <= #str then err("texto de mas al final") end
+  if pos <= #str then err(TX"texto de mas al final") end
   return v
 end
 
@@ -244,7 +246,7 @@ local function speciesSet(list, problems)
     for idx = 1, 411 do
       if simplify(speciesName(idx)) == sn then set[idx] = true; found = true end
     end
-    if not found then problems[#problems + 1] = "especie desconocida: " .. tostring(n) end
+    if not found then problems[#problems + 1] = TX"especie desconocida: " .. tostring(n) end
   end
   return set
 end
@@ -259,13 +261,20 @@ local function itemName(id) return (id and id ~= 0) and (TT_ITEMNAME[id] or ("#"
 local FARM_MODES = { nivel = true, objetos = true, robar = true, dinero = true }
 local function interpretConfig(problems)
   tcfg = { target = nil }
+  -- First, so the other messages already come out in the chosen language.
+  local lang = simplify(CONFIG.language or "es")
+  if lang ~= "es" and lang ~= "en" and lang ~= "ja" then
+    CONFIG.language = "es"
+    problems[#problems + 1] = TX"language debe ser \"es\", \"en\" o \"ja\""; lang = "es"
+  end
+  CONFIG.language = lang
   local mode = simplify(CONFIG.mode or "nivel")
   if not FARM_MODES[mode] then
-    problems[#problems + 1] = "mode debe ser \"nivel\", \"objetos\", \"robar\" o \"dinero\""; mode = "nivel"
+    problems[#problems + 1] = TX"mode debe ser \"nivel\", \"objetos\", \"robar\" o \"dinero\""; mode = "nivel"
   end
   tcfg.mode = mode
   local tk = simplify(CONFIG.takeItems or "auto")
-  if tk ~= "auto" and tk ~= "pause" then problems[#problems + 1] = "takeItems debe ser \"auto\" o \"pause\""; tk = "pause" end
+  if tk ~= "auto" and tk ~= "pause" then problems[#problems + 1] = TX"takeItems debe ser \"auto\" o \"pause\""; tk = "pause" end
   tcfg.take = tk
   tcfg.wantedItems = nil
   if CONFIG.wantedItems ~= nil then
@@ -275,7 +284,7 @@ local function interpretConfig(problems)
       for _, n in ipairs(list) do
         local id = itemIdByName(n)
         if id then tcfg.wantedItems[id] = true
-        else problems[#problems + 1] = "objeto desconocido en wantedItems: " .. tostring(n) .. " (usa el nombre en ingles)" end
+        else problems[#problems + 1] = TX"objeto desconocido en wantedItems: " .. tostring(n) .. TX" (usa el nombre en ingles)" end
       end
     end
   end
@@ -283,19 +292,19 @@ local function interpretConfig(problems)
     local v = CONFIG[key]
     if v == nil then return end
     if type(v) ~= "number" or v < lo or v > hi or floor(v) ~= v then
-      problems[#problems + 1] = string.format("%s debe ser un numero entero entre %d y %d", key, lo, hi)
+      problems[#problems + 1] = string.format(TX"%s debe ser un numero entero entre %d y %d", key, lo, hi)
       CONFIG[key] = nil
     end
   end
   num("targetLevel", 1, 100); num("itemTarget", 1, 99999); num("moneyTarget", 1, 999999); num("maxBattles", 1, 999999)
   if mode == "nivel" and not CONFIG.targetLevel and not CONFIG.maxBattles then
-    problems[#problems + 1] = "el modo \"nivel\" necesita targetLevel (o maxBattles)"
+    problems[#problems + 1] = TX"el modo \"nivel\" necesita targetLevel (o maxBattles)"
   end
   tcfg.only = speciesSet(CONFIG.species, problems)
   tcfg.avoid = speciesSet(CONFIG.avoidSpecies, problems)
   local lm = simplify(CONFIG.learnMoves or "auto")
   if lm ~= "never" and lm ~= "ask" and lm ~= "auto" then
-    problems[#problems + 1] = "learnMoves debe ser \"auto\", \"never\" o \"ask\""; lm = "never"
+    problems[#problems + 1] = TX"learnMoves debe ser \"auto\", \"never\" o \"ask\""; lm = "never"
   end
   tcfg.learn = lm
   local function moveSet(list, key)
@@ -307,7 +316,7 @@ local function interpretConfig(problems)
       for id, mv in pairs(TT_MOVE) do
         if simplify(mv[7]) == sn then set[id] = true; found = true; n = n + 1; break end
       end
-      if not found then problems[#problems + 1] = "ataque desconocido en " .. key .. ": " .. tostring(name) .. " (usa el nombre en ingles)" end
+      if not found then problems[#problems + 1] = TX"ataque desconocido en " .. key .. ": " .. tostring(name) .. TX" (usa el nombre en ingles)" end
     end
     return set, n
   end
@@ -317,8 +326,8 @@ local function interpretConfig(problems)
   local wn
   tcfg.wanted, wn = moveSet(CONFIG.wantedMoves, "wantedMoves")
   if tcfg.wanted and wn == 0 then tcfg.wanted = nil end
-  if wn > 4 then problems[#problems + 1] = "wantedMoves tiene " .. wn .. " ataques (maximo 4)" end
-  if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = "notify debe ser {\"ntfy\": \"tema\"}" end
+  if wn > 4 then problems[#problems + 1] = TX"wantedMoves tiene " .. wn .. TX" ataques (maximo 4)" end
+  if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = TX"notify debe ser {\"ntfy\": \"tema\"}" end
 end
 
 local function loadConfig()
@@ -328,11 +337,11 @@ local function loadConfig()
     if not f then return "no existe" end
     local data = f:read("*a"); f:close()
     local cfg = jsonDecode(data)
-    if type(cfg) ~= "table" then error("el archivo debe ser un objeto { ... }", 0) end
+    if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     local optional = { targetLevel = 1, itemTarget = 1, wantedItems = 1, moneyTarget = 1, maxBattles = 1, species = 1,
                        avoidSpecies = 1, keepMoves = 1, wantedMoves = 1, askTimeout = 1, notify = 1 }
     for k, v in pairs(cfg) do
-      if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = "opcion desconocida: " .. k end
+      if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = TX"opcion desconocida: " .. k end
       CONFIG[k] = v
     end
     for k in pairs(optional) do if cfg[k] == nil then CONFIG[k] = nil end end
@@ -555,8 +564,8 @@ local function samePos(a, b) return a and b and a.g == b.g and a.n == b.n and a.
 local DIR_KEY = { [1] = "down", [2] = "up", [3] = "left", [4] = "right" }
 
 -- ------------------------ Types and damage ------------------------------
-local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",
-  "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }
+local TYPE_NAMES = { [0] = "Normal", "Lucha", "Volador", "Veneno", "Tierra", "Roca", "Bicho", "Fantasma", "Acero", "???",  --@i18n
+  "Fuego", "Agua", "Planta", "Electrico", "Psiquico", "Hielo", "Dragon", "Siniestro" }  --@i18n
 local EFFM = {}
 do
   local i = 1
@@ -754,7 +763,7 @@ local function wantedStatus(m)
       else
         local past
         for k = 1, #ls, 2 do if ls[k + 1] == id then past = ls[k] end end
-        txt = past and ("ya paso Nv." .. past .. ": Recordador") or "MT/tutor"
+        txt = past and (TX"ya paso Nv." .. past .. TX": Recordador") or TX"MT/tutor"
       end
     end
     out[#out + 1] = moveName(id) .. " " .. txt
@@ -764,22 +773,22 @@ end
 
 -- Decides whether fighting a wild Pokemon is worth it. Returns (fight, reason)
 local function shouldFight(mon, species)
-  if tcfg.mode == "dinero" then return false, "solo entrenadores" end
-  if tcfg.avoid and tcfg.avoid[species] then return false, "evitada" end
-  if tcfg.only and not tcfg.only[species] then return false, "no esta en la lista" end
-  return true, (tcfg.mode == "objetos") and "Recogida (hay que ganar)" or "experiencia"
+  if tcfg.mode == "dinero" then return false, TX"solo entrenadores" end
+  if tcfg.avoid and tcfg.avoid[species] then return false, TX"evitada" end
+  if tcfg.only and not tcfg.only[species] then return false, TX"no esta en la lista" end
+  return true, (tcfg.mode == "objetos") and TX"Recogida (hay que ganar)" or TX"experiencia"
 end
 
 -- Steal: returns the move slot (1-4) or nil, and the reason
 local function stealPlan(foe)
-  if foe.item == 0 then return nil, "no lleva objeto" end
-  if tcfg.wantedItems and not tcfg.wantedItems[foe.item] then return nil, "lleva " .. itemName(foe.item) .. " (no lo quieres)" end
-  if battleItem(0) ~= 0 then return nil, "tu Pokemon ya lleva un objeto" end
+  if foe.item == 0 then return nil, TX"no lleva objeto" end
+  if tcfg.wantedItems and not tcfg.wantedItems[foe.item] then return nil, TX"lleva " .. itemName(foe.item) .. TX" (no lo quieres)" end
+  if battleItem(0) ~= 0 then return nil, TX"tu Pokemon ya lleva un objeto" end
   local bm = battleMon(0)
   for k = 1, 4 do
-    if (bm.moves[k] == K.MOVE_THIEF or bm.moves[k] == K.MOVE_COVET) and bm.pp[k] > 0 then return k, "robar " .. itemName(foe.item) end
+    if (bm.moves[k] == K.MOVE_THIEF or bm.moves[k] == K.MOVE_COVET) and bm.pp[k] > 0 then return k, TX"robar " .. itemName(foe.item) end
   end
-  return nil, "sin PP de Ladron/Antojo"
+  return nil, TX"sin PP de Ladron/Antojo"
 end
 
 -- ------------------------------ Estado -------------------------------
@@ -906,7 +915,7 @@ local function loadRoute()
   route.go, route.back = cleanRoute(route.go), cleanRoute(route.back)
   route.go, route.back = fixRoute(route.go, route.back)
   if #route.go ~= g0 or #route.back ~= b0 then
-    print(string.format("Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d", g0, #route.go, b0, #route.back))
+    print(string.format(TX"Ruta corregida: ida %d -> %d pasos, vuelta %d -> %d", g0, #route.go, b0, #route.back))
     saveRoute()
   end
 end
@@ -951,37 +960,37 @@ local function recStep()
 end
 
 -- kind = "heal" (key 6, to the Center) or "trainer" (key 5, past the trainers)
-local REC_TEXT = {
-  heal = { "GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6",
-           "GRABANDO VUELTA: cura (si quieres) y vuelve al punto de inicio; pulsa 6", "6" },
-  trainer = { "GRABANDO RUTA: pasa por donde te ven los entrenadores y pulsa 5 al final",
-              "GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5", "5" },
+local REC_TEXT = {  --@i18n
+  heal = { "GRABANDO IDA: camina hasta quedar frente a la enfermera y pulsa 6",  --@i18n
+           "GRABANDO VUELTA: cura (si quieres) y vuelve al punto de inicio; pulsa 6", "6" },  --@i18n
+  trainer = { "GRABANDO RUTA: pasa por donde te ven los entrenadores y pulsa 5 al final",  --@i18n
+              "GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5", "5" },  --@i18n
 }
 local function recHotkey(kind)
-  if bot.running then bot.msg = "Deten el bot (7) antes de grabar una ruta"; return end
+  if bot.running then bot.msg = TX"Deten el bot (7) antes de grabar una ruta"; return end
   local p = playerPos()
-  if not p then bot.msg = "Carga tu partida antes de grabar"; return end
-  if rec and rec.kind ~= kind then bot.msg = "Termina primero la ruta que estas grabando (tecla " .. REC_TEXT[rec.kind][3] .. ")"; return end
+  if not p then bot.msg = TX"Carga tu partida antes de grabar"; return end
+  if rec and rec.kind ~= kind then bot.msg = TX"Termina primero la ruta que estas grabando (tecla " .. REC_TEXT[rec.kind][3] .. ")"; return end
   local txt = REC_TEXT[kind]
   if not rec then
     rec = { kind = kind, phase = "go", list = { { g = p.g, n = p.n, x = p.x, y = p.y, d = 0 } }, prevFace = p.face }
-    bot.msg = txt[1]
+    bot.msg = TX(txt[1])
   elseif rec.phase == "go" then
-    if #rec.list < 2 then bot.msg = "Aun no te has movido"; return end
+    if #rec.list < 2 then bot.msg = TX"Aun no te has movido"; return end
     rec.go = rec.list
     rec.phase = "back"
     rec.list = { { g = p.g, n = p.n, x = p.x, y = p.y, d = 0 } }
-    bot.msg = txt[2]
+    bot.msg = TX(txt[2])
   else
-    if #rec.list < 2 then bot.msg = "Aun no te has movido: vuelve al punto de inicio"; return end
+    if #rec.list < 2 then bot.msg = TX"Aun no te has movido: vuelve al punto de inicio"; return end
     if kind == "heal" then
       route.go, route.back = fixRoute(cleanRoute(rec.go), cleanRoute(rec.list))
       saveRoute()
-      bot.msg = string.format("Ruta al Centro guardada (%d pasos ida, %d vuelta)", #route.go, #route.back)
+      bot.msg = string.format(TX"Ruta al Centro guardada (%d pasos ida, %d vuelta)", #route.go, #route.back)
     else
       troute.go, troute.back = cleanRoute(rec.go), cleanRoute(rec.list)
       saveTrainerRoute()
-      bot.msg = string.format("Ruta de entrenadores guardada (%d pasos ida, %d vuelta)", #troute.go, #troute.back)
+      bot.msg = string.format(TX"Ruta de entrenadores guardada (%d pasos ida, %d vuelta)", #troute.go, #troute.back)
     end
     rec = nil
   end
@@ -1060,9 +1069,9 @@ local function leadOk()
 end
 
 local function needHeal(m)
-  if m.hp == 0 then return "debilitado" end
-  if m.maxHP > 0 and m.hp * 100 < m.maxHP * CONFIG.healBelow then return "PS bajos" end
-  if usefulPP(m) < CONFIG.minPP then return "sin PP" end
+  if m.hp == 0 then return TX"debilitado" end
+  if m.maxHP > 0 and m.hp * 100 < m.maxHP * CONFIG.healBelow then return TX"PS bajos" end
+  if usefulPP(m) < CONFIG.minPP then return TX"sin PP" end
   return nil
 end
 
@@ -1103,11 +1112,11 @@ end
 
 local function beginHeal(reason)
   if not route.go then
-    halt("Necesita curarse (" .. reason .. "): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
+    halt(TX"Necesita curarse (" .. reason .. TX"): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
     return
   end
   bot.heals = bot.heals + 1
-  logLine("Al Centro Pokemon: " .. reason)
+  logLine(TX"Al Centro Pokemon: " .. reason)
   queue = {}
   zeroEnemy()
   navStart(route.go)
@@ -1116,16 +1125,16 @@ end
 
 -- Goal reached? Returns the summary text or nil
 local function farmDone(m)
-  if CONFIG.maxBattles and bot.battles >= CONFIG.maxBattles then return string.format("%d combates", bot.battles) end
+  if CONFIG.maxBattles and bot.battles >= CONFIG.maxBattles then return string.format(TX"%d combates", bot.battles) end
   if tcfg.mode == "nivel" and CONFIG.targetLevel and m.level >= CONFIG.targetLevel then
-    return string.format("%s llego al Nv.%d", speciesName(m.species), m.level)
+    return string.format(TX"%s llego al Nv.%d", speciesName(m.species), m.level)
   end
   if (tcfg.mode == "objetos" or tcfg.mode == "robar") and CONFIG.itemTarget and bot.items >= CONFIG.itemTarget then
-    return string.format("%d objetos guardados en la mochila", bot.items)
+    return string.format(TX"%d objetos guardados en la mochila", bot.items)
   end
   if tcfg.mode == "dinero" and CONFIG.moneyTarget then
     local mn = money()
-    if mn and mn >= CONFIG.moneyTarget then return string.format("$%d (ganado +%d)", mn, bot.earned) end
+    if mn and mn >= CONFIG.moneyTarget then return string.format(TX"$%d (ganado +%d)", mn, bot.earned) end
   end
   return nil
 end
@@ -1133,7 +1142,7 @@ end
 local function completeFarm(why)
   stopBot()
   bot.done = true
-  bot.msg = "FARMEO COMPLETO: " .. why
+  bot.msg = TX"FARMEO COMPLETO: " .. why
   logLine(bot.msg)
   notify(bot.msg)
   emu.pause()
@@ -1143,7 +1152,7 @@ local function trackMoney()
   local mn = money()
   if mn and bot.lastMoney and mn > bot.lastMoney then
     bot.earned = bot.earned + (mn - bot.lastMoney)
-    logLine(string.format("+$%d  (total $%d)", mn - bot.lastMoney, mn))
+    logLine(string.format(TX"+$%d  (total $%d)", mn - bot.lastMoney, mn))
   end
   if mn then bot.lastMoney = mn end
 end
@@ -1158,7 +1167,7 @@ local function scanItems()
   for slot, item in pairs(bot.seenHeld) do
     if not now[slot] then
       bot.items = bot.items + 1
-      logLine(string.format("Guardado en la mochila: %s (tienes %d)", itemName(item), bagCount(item)))
+      logLine(string.format(TX"Guardado en la mochila: %s (tienes %d)", itemName(item), bagCount(item)))
       bot.seenHeld[slot] = nil
     end
   end
@@ -1168,7 +1177,7 @@ local function scanItems()
       bot.found = bot.found + 1
       bot.lastItem = itemName(h.item)
       local who = partyMon(h.slot)
-      logLine(string.format("%s consiguio %s", who and speciesName(who.species) or "?", itemName(h.item)))
+      logLine(string.format(TX"%s consiguio %s", who and speciesName(who.species) or "?", itemName(h.item)))
     end
   end
   return held
@@ -1179,13 +1188,13 @@ local beginTake, beginTrainerLoop
 -- After a battle (or on start): decide what comes next
 local function afterBattleDecide()
   local m = leadOk()
-  if not m then halt("No se pudo leer el Pokemon del equipo"); return end
+  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
   if m.species ~= bot.leadSpecies then
-    logLine(string.format("%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+    logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
     bot.leadSpecies = m.species
   end
   if bot.lastLevel and m.level > bot.lastLevel then
-    logLine(string.format("%s subio al Nv.%d", speciesName(m.species), m.level))
+    logLine(string.format(TX"%s subio al Nv.%d", speciesName(m.species), m.level))
   end
   bot.lastLevel = m.level
   if tcfg.mode == "dinero" then trackMoney() end
@@ -1209,7 +1218,7 @@ local function afterBattleDecide()
         if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return end
       end
     end
-    halt("El personaje no esta en el punto de inicio: llevalo alli y pulsa 7")
+    halt(TX"El personaje no esta en el punto de inicio: llevalo alli y pulsa 7")
     return
   end
   if tcfg.mode == "dinero" then beginTrainerLoop(); return end
@@ -1241,29 +1250,29 @@ end
 
 local function startBot()
   if otherInstanceAlive() then
-    bot.msg = "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"
+    bot.msg = TX"Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: detenlo/cierralo primero"
     print(bot.msg); return
   end
-  if bot.cfgError then bot.msg = "Corrige " .. CONFIG_FILE .. " (mira la consola) y pulsa 0"; print(bot.msg); return end
-  if rec then bot.msg = "Termina de grabar la ruta antes de iniciar"; return end
-  if inBattle() then bot.msg = "Inicia el bot fuera de combate"; return end
+  if bot.cfgError then bot.msg = TX"Corrige " .. CONFIG_FILE .. TX" (mira la consola) y pulsa 0"; print(bot.msg); return end
+  if rec then bot.msg = TX"Termina de grabar la ruta antes de iniciar"; return end
+  if inBattle() then bot.msg = TX"Inicia el bot fuera de combate"; return end
   local m = leadOk()
   local p = playerPos()
-  if not m or not p then bot.msg = "Carga tu partida (en el mapa) antes de iniciar"; print(bot.msg); return end
+  if not m or not p then bot.msg = TX"Carga tu partida (en el mapa) antes de iniciar"; print(bot.msg); return end
   local mode = tcfg.mode
   if mode == "objetos" then
     bot.pickSlots = pickupSlots()
-    if #bot.pickSlots == 0 then bot.msg = "Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"; print(bot.msg); return end
+    if #bot.pickSlots == 0 then bot.msg = TX"Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"; print(bot.msg); return end
   elseif mode == "robar" then
     local has = false
     for k = 1, 4 do if m.moves[k] == K.MOVE_THIEF or m.moves[k] == K.MOVE_COVET then has = true end end
-    if not has then bot.msg = "El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"; print(bot.msg); return end
+    if not has then bot.msg = TX"El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"; print(bot.msg); return end
   elseif mode == "dinero" then
-    if not troute.go then bot.msg = "Graba la ruta de los entrenadores con la tecla 5"; print(bot.msg); return end
-    if registeredItem() ~= K.ITEM_VS_SEEKER then bot.msg = "Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"; print(bot.msg); return end
+    if not troute.go then bot.msg = TX"Graba la ruta de los entrenadores con la tecla 5"; print(bot.msg); return end
+    if registeredItem() ~= K.ITEM_VS_SEEKER then bot.msg = TX"Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"; print(bot.msg); return end
   end
   if (mode == "objetos" or mode == "robar") and (tcfg.take == "pause" or not MENU) and not bot.warnedTake then
-    print("Aviso: en esta version el bot no quita los objetos solo; pausara para que lo hagas tu")
+    print(TX"Aviso: en esta version el bot no quita los objetos solo; pausara para que lo hagas tu")
     bot.warnedTake = true
   end
   bot.cbOW = read32(A.callback2)
@@ -1279,13 +1288,13 @@ local function startBot()
   bot.startTime = 0
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
-  logLine(string.format("Farmeo iniciado (modo %s): %s Nv.%d", mode, speciesName(m.species), m.level))
+  logLine(string.format(TX"Farmeo iniciado (modo %s): %s Nv.%d", mode, speciesName(m.species), m.level))
   -- Items they were already holding are not counted as found
   if mode == "objetos" or mode == "robar" then
     for _, h in ipairs(holdingSlots(itemSlots())) do bot.seenHeld[h.slot] = h.item end
   end
   local ws = wantedStatus(m)
-  if ws then logLine("Ataques deseados: " .. ws) end
+  if ws then logLine(TX"Ataques deseados: " .. ws) end
   afterBattleDecide()
 end
 
@@ -1322,7 +1331,7 @@ local function stepBattle()
       bot.lastFoe = foe
       if foe.sv < 8 and CONFIG.stopOnShiny and band(read32(A.battleType), K.BT_TRAINER) == 0 then
         stopBot()
-        bot.msg = "SHINY SALVAJE: " .. speciesName(foe.species) .. "! Capturalo tu (juego en pausa)"
+        bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
         logLine(bot.msg)
         notify(bot.msg)
         emu.pause()
@@ -1333,13 +1342,13 @@ local function stepBattle()
       bot.trainer = band(bt, K.BT_TRAINER) ~= 0
       bot.steal = nil
       if bot.trainer and band(bt, K.BT_DOUBLE) ~= 0 then
-        halt("Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu")
+        halt(TX"Combate DOBLE contra entrenadores: el bot no los maneja, terminalo tu")
         return
       end
       if bot.trainer then
-        bot.fight, bot.forceRun, bot.lastWhy = true, false, "entrenador (no se puede huir)"
+        bot.fight, bot.forceRun, bot.lastWhy = true, false, TX"entrenador (no se puede huir)"
         bot.trainers = (bot.trainers or 0) + 1
-      elseif bot.forceRun then bot.fight, bot.lastWhy = false, "de camino"
+      elseif bot.forceRun then bot.fight, bot.lastWhy = false, TX"de camino"
       elseif tcfg.mode == "robar" then
         local slot, why = stealPlan(foe)
         bot.lastWhy = why
@@ -1352,7 +1361,7 @@ local function stepBattle()
   if #queue > 0 then return end
 
   if bot.trainer and battleMon(0).hp == 0 then
-    halt("Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
+    halt(TX"Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
     return
   end
 
@@ -1364,10 +1373,10 @@ local function stepBattle()
     if CONFIG.evolve then
       local m = lead()
       if m and m.species ~= bot.leadSpecies then
-        logLine(string.format("%s esta evolucionando a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+        logLine(string.format(TX"%s esta evolucionando a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
         bot.st, bot.manualFrom, bot.owT = "manual", "evolve", 0
-        bot.msg = "Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
-        notify("Tu Pokemon evoluciono a " .. speciesName(m.species) .. ": termina la escena y el bot sigue solo")
+        bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
+        notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
         pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
         return
@@ -1391,8 +1400,8 @@ local function stepBattle()
       local idx = learnerIndex()
       local who = monAsAttacker(idx)
       bot.st, bot.manualFrom, bot.t = "manual", "learn", 0
-      bot.msg = string.format("%s quiere aprender %s: decide tu", who and speciesName(who.mon.species) or "?", moveName(new))
-      notify(bot.msg .. (slot and (" (el bot olvidaria " .. moveName(old) .. ")") or " (el bot no lo aprenderia)"))
+      bot.msg = string.format(TX"%s quiere aprender %s: decide tu", who and speciesName(who.mon.species) or "?", moveName(new))
+      notify(bot.msg .. (slot and (TX" (el bot olvidaria " .. moveName(old) .. ")") or TX" (el bot no lo aprenderia)"))
       return
     end
     if op == OP_LEARNMOVE then
@@ -1426,18 +1435,18 @@ local function stepBattle()
     -- Steal done (or too many attempts): run with the item
     if bot.steal and not bot.steal.done then
       if battleItem(0) ~= 0 then
-        bot.steal.done = true; bot.fight = false; bot.lastWhy = "robado: " .. itemName(battleItem(0))
+        bot.steal.done = true; bot.fight = false; bot.lastWhy = TX"robado: " .. itemName(battleItem(0))
         bot.steals = (bot.steals or 0) + 1
       elseif bot.steal.tries >= 3 then
-        bot.steal.done = true; bot.fight = false; bot.lastWhy = "no se pudo robar"
+        bot.steal.done = true; bot.fight = false; bot.lastWhy = TX"no se pudo robar"
       end
     end
     local run = not bot.fight or bot.forceRun
     if bot.trainer then run = false
-    elseif not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = "PS muy bajos" end
+    elseif not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
     if not run and not bestMove(bot.blocked) and not (bot.steal and not bot.steal.done) then
-      if bot.trainer then halt("Sin ataques utiles contra un entrenador: terminalo tu"); return end
-      run = true; bot.lastWhy = "sin ataques utiles"
+      if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
+      run = true; bot.lastWhy = TX"sin ataques utiles"
     end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
@@ -1454,7 +1463,7 @@ local function stepBattle()
     local slot = bestMove(bot.blocked)
     if bot.steal and not bot.steal.done and not bot.blocked[bot.steal.slot] then slot = bot.steal.slot end
     if not slot then
-      if bot.trainer then halt("Sin ataques utiles contra un entrenador: terminalo tu"); return end
+      if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       tap("B", 10); bot.forceRun = true; return
     end
     local want = slot - 1
@@ -1476,9 +1485,9 @@ local function stepAfter()
   local m = lead()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
-    bot.msg = "Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
+    bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
     pcall(emu.pause)
-    notify("Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
+    notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
   if inOverworld() then bot.owT = bot.owT + 1 else bot.owT = 0 end
@@ -1510,7 +1519,7 @@ local function stepAfter()
   if #queue == 0 and not inOverworld() then
     if CONFIG.evolve then tap("A", 10) else tap("B", 6) end
   end
-  if bot.t > 5400 then halt("Aviso: no se pudo volver al mapa tras el combate") end
+  if bot.t > 5400 then halt(TX"Aviso: no se pudo volver al mapa tras el combate") end
 end
 
 local function stepManual()
@@ -1526,7 +1535,7 @@ local function stepManual()
     local onPrompt = not bot.cbBattle or read32(A.callback2) == bot.cbBattle
     if CONFIG.askTimeout and bot.t > CONFIG.askTimeout * 60 and onPrompt and inBattle() then
       bot.learnForce = "auto"
-      logLine("Sin respuesta: el bot decide solo si aprende el ataque")
+      logLine(TX"Sin respuesta: el bot decide solo si aprende el ataque")
       bot.msg = ""; bot.st = "battle"; return
     end
     if not inBattle() then bot.msg = ""; bot.st, bot.t, bot.owT = "after", 0, 0 end
@@ -1555,7 +1564,7 @@ local function stepLearnPick()
   if not inSummary then
     local who = monAsAttacker(learnerIndex())
     if who and L and who.mon.moves[L.slot] == L.new then
-      logLine(string.format("%s aprendio %s (olvido %s)", speciesName(who.mon.species), moveName(L.new), moveName(L.old)))
+      logLine(string.format(TX"%s aprendio %s (olvido %s)", speciesName(who.mon.species), moveName(L.new), moveName(L.old)))
     end
     bot.st, bot.t = "battle", 0
     return
@@ -1564,20 +1573,20 @@ local function stepLearnPick()
   local c = read8(A.sumCursor)
   local function abort(why)
     tap("B", 30); bot.picked = true; bot.learnForce = "never"
-    logLine("No se aprendio " .. moveName(L.new) .. ": " .. why .. " (usa \"learnMoves\": \"ask\")")
-    notify("No se pudo elegir el ataque a olvidar: " .. why)
+    logLine(TX"No se aprendio " .. moveName(L.new) .. ": " .. why .. TX" (usa \"learnMoves\": \"ask\")")
+    notify(TX"No se pudo elegir el ataque a olvidar: " .. why)
   end
   if not bot.probe then
     -- check that the cursor direction is right: down must go from 0 to 1
     if c == 1 then bot.probe = true
-    elseif bot.t > 400 then abort("el cursor no responde")
+    elseif bot.t > 400 then abort(TX"el cursor no responde")
     elseif c == 0 then tap("down", 20)
-    else abort("cursor inesperado") end
+    else abort(TX"cursor inesperado") end
     return
   end
   local want = L.slot - 1
   if c == want then tap("A", 30); bot.picked = true
-  elseif bot.t > 1200 then abort("tiempo agotado")
+  elseif bot.t > 1200 then abort(TX"tiempo agotado")
   elseif c < want then tap("down", 14) else tap("up", 14) end
 end
 
@@ -1610,7 +1619,7 @@ local function stepHealGo()
   if r == "done" then
     if simplify(CONFIG.healMode or "nurse") == "tile" then bot.st, bot.t = "heal_tile", 0
     else bot.st, bot.t = "nurse", 0; tap("up", 10) end
-  elseif r == "fail" then halt("No pude seguir la ruta al Centro (graba otra con 6)") end
+  elseif r == "fail" then halt(TX"No pude seguir la ruta al Centro (graba otra con 6)") end
 end
 
 local function stepNurse()
@@ -1621,7 +1630,7 @@ local function stepNurse()
     return
   end
   if bot.t > 2400 then
-    halt("No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)")
+    halt(TX"No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)")
     return
   end
   tap("A", 14)
@@ -1636,7 +1645,7 @@ local function stepHealTile()
     return
   end
   if bot.t > 1200 then
-    halt("La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)")
+    halt(TX"La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)")
     return
   end
   if bot.t % 20 == 0 then tap("B", 6) end
@@ -1656,9 +1665,9 @@ local function stepHealBack()
   if #queue > 0 then return end
   local r = navStep()
   if r == "done" then
-    logLine("De vuelta en el punto de entreno")
+    logLine(TX"De vuelta en el punto de entreno")
     afterBattleDecide()
-  elseif r == "fail" then halt("No pude volver al punto de entreno (graba otra ruta con 6)") end
+  elseif r == "fail" then halt(TX"No pude volver al punto de entreno (graba otra ruta con 6)") end
 end
 
 -- -------------------- Take items (party menu) --------------------
@@ -1687,13 +1696,13 @@ beginTake = function(held)
   for _, h in ipairs(held) do names[#names + 1] = itemName(h.item) end
   if tcfg.take == "pause" or not MENU then
     stopBot()
-    bot.msg = "Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. ". Luego pulsa 7"
+    bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
     logLine(bot.msg)
-    notify("Quita los objetos del equipo: " .. table.concat(names, ", "))
+    notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
     pcall(emu.pause)
     return
   end
-  logLine("Guardando en la mochila: " .. table.concat(names, ", "))
+  logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
   queue = {}
   zeroEnemy()
   bot.take = { list = held, i = 1, phase = "settle", tries = 0 }
@@ -1706,19 +1715,19 @@ local function stepTake()
   local T = bot.take
   local function fail(why)
     bot.take = nil
-    halt("No pude quitar los objetos: " .. why .. ". Terminalo tu en el menu y pulsa 7")
+    halt(TX"No pude quitar los objetos: " .. why .. TX". Terminalo tu en el menu y pulsa 7")
   end
   local function go(phase) T.phase, bot.t = phase, 0 end
   if T.phase == "settle" then
     -- on the map, standing still, before opening the menu
     if inOverworld() then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
     if T.ow >= 30 then tap("start", 20); go("startmenu") end
-    if bot.t > 600 then fail("no vuelve el mapa") end
+    if bot.t > 600 then fail(TX"no vuelve el mapa") end
   elseif T.phase == "startmenu" then
     if not taskActive(MENU.taskStartMenu) then
       if bot.t > 90 then
         T.tries = T.tries + 1
-        if T.tries > 3 then fail("el menu START no se abre") return end
+        if T.tries > 3 then fail(TX"el menu START no se abre") return end
         go("settle")
       end
       return
@@ -1726,43 +1735,43 @@ local function stepTake()
     local n = read8(MENU.startCount)
     local want
     for k = 0, math.min(n, 9) - 1 do if read8(MENU.startOrder + k) == K.STARTMENU_POKEMON then want = k end end
-    if not want then fail("no hay opcion POKEMON en el menu START") return end
+    if not want then fail(TX"no hay opcion POKEMON en el menu START") return end
     local cur = read8(MENU.startCursor)
     if cur == want then tap("A", 30); go("party")
-    elseif bot.t > 300 then fail("el cursor del menu START no llega a POKEMON")
+    elseif bot.t > 300 then fail(TX"el cursor del menu START no llega a POKEMON")
     else moveCursor(cur, want) end
   elseif T.phase == "party" then
     if read32(A.callback2) == MENU.cbParty and taskActive(MENU.taskChooseMon) then
       T.ready = (T.ready or 0) + 1
       if T.ready > 20 then T.ready = nil; go("pick") end
-    elseif bot.t > 600 then fail("no se abrio la pantalla del equipo") end
+    elseif bot.t > 600 then fail(TX"no se abrio la pantalla del equipo") end
   elseif T.phase == "pick" then
     local e = T.list[T.i]
     if not e then go("exit") return end
     local m = partyMon(e.slot)
     if not m or m.item == 0 then T.i = T.i + 1 return end
     if not taskActive(MENU.taskChooseMon) then
-      if bot.t > 300 then fail("la pantalla del equipo no responde") end
+      if bot.t > 300 then fail(TX"la pantalla del equipo no responde") end
       if bot.t % 30 == 0 then tap("B", 10) end
       return
     end
     local cur = s8(read8(MENU.partyMenu + 9))
     if cur == e.slot then tap("A", 20); go("actions")
-    elseif bot.t > 300 then fail("no llego al Pokemon " .. (e.slot + 1))
+    elseif bot.t > 300 then fail(TX"no llego al Pokemon " .. (e.slot + 1))
     elseif cur < e.slot or cur > 5 then tap("down", 8) else tap("up", 8) end
   elseif T.phase == "actions" or T.phase == "itemmenu" then
     local opt = (T.phase == "actions") and K.OPT_ITEM or K.OPT_TAKE
     local acts = menuActions()
     local want = taskActive(MENU.taskSelection) and indexOf(acts, opt) or nil
     if not want then
-      if bot.t > 240 then fail(T.phase == "actions" and "no aparece OBJETO" or "no aparece QUITAR") end
+      if bot.t > 240 then fail(T.phase == "actions" and TX"no aparece OBJETO" or TX"no aparece QUITAR") end
       return
     end
     local cur = s8(read8(MENU.menuCursor))
     if cur == want then
       tap("A", 20)
       if T.phase == "actions" then go("itemmenu") else go("taking") end
-    elseif bot.t > 240 then fail("el cursor no llega a la opcion")
+    elseif bot.t > 240 then fail(TX"el cursor no llega a la opcion")
     else moveCursor(cur, want) end
   elseif T.phase == "taking" then
     local e = T.list[T.i]
@@ -1772,7 +1781,7 @@ local function stepTake()
       if taskActive(MENU.taskChooseMon) and bot.t > 30 then T.i = T.i + 1; go("pick") return end
       if bot.t % 12 == 0 then tap("B", 8) end
     elseif bot.t > 240 then
-      fail("la mochila no tiene espacio para " .. itemName(e.item))
+      fail(TX"la mochila no tiene espacio para " .. itemName(e.item))
     end
   elseif T.phase == "exit" then
     -- leave the party and close the START menu (B until on the map with no menu)
@@ -1785,7 +1794,7 @@ local function stepTake()
       return
     end
     if not onMap and bot.t % 20 == 0 then tap("B", 10) end
-    if bot.t > 1200 then fail("no pude cerrar los menus") end
+    if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
   end
 end
 
@@ -1820,7 +1829,7 @@ local function stepTrUse()
   if not bot.vsPressed then
     if inOverworld() then bot.ow = (bot.ow or 0) + 1 else bot.ow = 0 end
     if bot.ow >= 20 then tap("select", 20); bot.vsPressed, bot.t, bot.ow = true, 0, 0 end
-    if bot.t > 600 then halt("No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa") end
+    if bot.t > 600 then halt(TX"No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa") end
     return
   end
   local busy = MENU and taskActive(MENU.taskVsSeeker)
@@ -1828,14 +1837,14 @@ local function stepTrUse()
   if quiet then bot.ow = (bot.ow or 0) + 1 else bot.ow = 0 end
   if bot.t > 60 and bot.ow >= 60 then
     bot.laps = bot.laps + 1
-    if vsSeekerCharge() >= 100 then logLine(string.format("Vuelta %d: ningun entrenador quiere revancha todavia", bot.laps))
-    else logLine(string.format("Vuelta %d: Buscapelea usado", bot.laps)) end
+    if vsSeekerCharge() >= 100 then logLine(string.format(TX"Vuelta %d: ningun entrenador quiere revancha todavia", bot.laps))
+    else logLine(string.format(TX"Vuelta %d: Buscapelea usado", bot.laps)) end
     navStart(troute.go)
     bot.st, bot.t = "tr_go", 0
     return
   end
   if bot.t > 40 and bot.t % 25 == 0 then tap("B", 10) end    -- close messages ("no trainers", etc.)
-  if bot.t > 2400 then halt("El Buscapelea no termino (revisa que este registrado en SELECT)") end
+  if bot.t > 2400 then halt(TX"El Buscapelea no termino (revisa que este registrado en SELECT)") end
 end
 
 local function stepTrRoute(back)
@@ -1848,7 +1857,7 @@ local function stepTrRoute(back)
   if r == "done" then
     if back then afterBattleDecide()
     else navStart(troute.back); bot.st, bot.t = "tr_back", 0 end
-  elseif r == "fail" then halt("No pude seguir la ruta de los entrenadores (graba otra con 5)") end
+  elseif r == "fail" then halt(TX"No pude seguir la ruta de los entrenadores (graba otra con 5)") end
 end
 
 -- ------------------------------ Teclas -------------------------------
@@ -1859,70 +1868,70 @@ local reportConfig
 -- panel with the screen; every change is written to the log so it can be reported.
 local DG = {
   on = false, last = nil,
-  START = { [0] = "POKEDEX", "POKEMON", "MOCHILA", "JUGADOR", "GUARDAR", "OPCIONES", "SALIR", "RETIRARSE", "JUGADOR" },
-  ACT = { [0] = "DATOS", "MOVER", "SALIR", "OBJETO", "DAR", "QUITAR", "CARTA", "QUITAR CARTA", "LEER", "SALIR",
-    "CAMBIAR", "ENVIAR", "ENTRAR", "NO ENTRAR", "GUARDAR", "REGISTRAR", "CAMBIAR", "CAMBIAR" },
+  START = { [0] = "POKEDEX", "POKEMON", "MOCHILA", "JUGADOR", "GUARDAR", "OPCIONES", "SALIR", "RETIRARSE", "JUGADOR" },  --@i18n
+  ACT = { [0] = "DATOS", "MOVER", "SALIR", "OBJETO", "DAR", "QUITAR", "CARTA", "QUITAR CARTA", "LEER", "SALIR",  --@i18n
+    "CAMBIAR", "ENVIAR", "ENTRAR", "NO ENTRAR", "GUARDAR", "REGISTRAR", "CAMBIAR", "CAMBIAR" },  --@i18n
 }
-function DG.actName(id) return DG.ACT[id] or (id >= 18 and "MOV. CAMPO" or ("#" .. id)) end
+function DG.actName(id) return TX(DG.ACT[id]) or (id >= 18 and TX"MOV. CAMPO" or ("#" .. id)) end
 -- Returns the diagnostic lines and a one-line summary for the log.
 function DG.read()
   local L, sum = {}, {}
   local function add(text, short) L[#L + 1] = text; if short then sum[#sum + 1] = short end end
-  add(string.format("Juego: %s  menus: %s", GAME_LABEL, MENU and "verificados (USA)" or "NO verificados: quitar objetos pausara"))
+  add(string.format(TX"Juego: %s  menus: %s", GAME_LABEL, MENU and TX"verificados (USA)" or TX"NO verificados: quitar objetos pausara"))
   if MENU then
     local n, c = read8(MENU.startCount), read8(MENU.startCursor)
     local open = taskActive(MENU.taskStartMenu)
     local names = {}
-    for k = 0, math.min(n, 9) - 1 do names[#names + 1] = DG.START[read8(MENU.startOrder + k)] or "?" end
-    local cur = (n > 0 and n <= 9 and c < n) and (DG.START[read8(MENU.startOrder + c)] or "?") or "?"
-    add(string.format("Menu START: %s  cursor %d/%d -> %s", open and "ABIERTO" or "cerrado", c + 1, n, cur),
-      "START " .. (open and cur or "cerrado"))
-    add("  opciones: " .. table.concat(names, " "))
+    for k = 0, math.min(n, 9) - 1 do names[#names + 1] = TX(DG.START[read8(MENU.startOrder + k)]) or "?" end
+    local cur = (n > 0 and n <= 9 and c < n) and (TX(DG.START[read8(MENU.startOrder + c)]) or "?") or "?"
+    add(string.format(TX"Menu START: %s  cursor %d/%d -> %s", open and TX"ABIERTO" or TX"cerrado", c + 1, n, cur),
+      TX"START " .. (open and cur or TX"cerrado"))
+    add(TX"  opciones: " .. table.concat(names, " "))
     local pOpen = read32(A.callback2) == MENU.cbParty
     local slot = s8(read8(MENU.partyMenu + 9))
     local pm = (slot >= 0 and slot < 6) and partyMon(slot) or nil
-    local who = (slot == 7) and "SALIR" or (pm and (speciesName(pm.species) .. (pm.item ~= 0 and (" lleva " .. itemName(pm.item)) or "")) or "?")
-    add(string.format("Equipo: %s  elegido %d -> %s", pOpen and "ABIERTO" or "cerrado", slot + 1, who),
-      "equipo " .. (pOpen and (slot + 1 .. " " .. who) or "cerrado"))
+    local who = (slot == 7) and TX"SALIR" or (pm and (speciesName(pm.species) .. (pm.item ~= 0 and (TX" lleva " .. itemName(pm.item)) or "")) or "?")
+    add(string.format(TX"Equipo: %s  elegido %d -> %s", pOpen and TX"ABIERTO" or TX"cerrado", slot + 1, who),
+      TX"equipo " .. (pOpen and (slot + 1 .. " " .. who) or TX"cerrado"))
     if pOpen and taskActive(MENU.taskSelection) then
       local acts, names2 = menuActions(), {}
       for _, a in ipairs(acts) do names2[#names2 + 1] = DG.actName(a) end
       local mc = read8(MENU.menuCursor)
       local sel = acts[mc + 1] and DG.actName(acts[mc + 1]) or "?"
-      add(string.format("Acciones: [%s]  cursor -> %s", table.concat(names2, ", "), sel), "acciones " .. sel)
+      add(string.format(TX"Acciones: [%s]  cursor -> %s", table.concat(names2, ", "), sel), TX"acciones " .. sel)
     else
-      add("Acciones: cerrado")
+      add(TX"Acciones: cerrado")
     end
   end
   local reg = registeredItem()
-  add(string.format("SELECT: %s  Buscapelea %d/100", reg ~= 0 and itemName(reg) or "nada", vsSeekerCharge()),
-    "SELECT " .. (reg ~= 0 and itemName(reg) or "nada"))
-  local bt = "no"
+  add(string.format(TX"SELECT: %s  Buscapelea %d/100", reg ~= 0 and itemName(reg) or TX"nada", vsSeekerCharge()),
+    TX"SELECT " .. (reg ~= 0 and itemName(reg) or TX"nada"))
+  local bt = TX"no"
   if inBattle() then
     local f = read32(A.battleType)
-    bt = (band(f, K.BT_TRAINER) ~= 0 and "entrenador" or "salvaje") .. (band(f, K.BT_DOUBLE) ~= 0 and " doble" or "")
+    bt = (band(f, K.BT_TRAINER) ~= 0 and TX"entrenador" or TX"salvaje") .. (band(f, K.BT_DOUBLE) ~= 0 and TX" doble" or "")
   end
   local mn = money()
-  add(string.format("Dinero $%s  Combate: %s", mn and tostring(mn) or "?", bt), "combate " .. bt)
+  add(string.format(TX"Dinero $%s  Combate: %s", mn and tostring(mn) or "?", bt), TX"combate " .. bt)
   local slots = pickupSlots()
   local held = {}
   for _, h in ipairs(holdingSlots(slots)) do held[#held + 1] = itemName(h.item) end
-  add(string.format("Recogida: %d en el equipo  llevan objeto: %s", #slots, #held > 0 and table.concat(held, ", ") or "ninguno"))
+  add(string.format(TX"Recogida: %d en el equipo  llevan objeto: %s", #slots, #held > 0 and table.concat(held, ", ") or TX"ninguno"))
   return L, table.concat(sum, " | ")
 end
 function DG.toggle()
   DG.on = not DG.on
   DG.last = nil
-  bot.msg = DG.on and "Diagnostico: abre los menus a mano y compara (4 = salir)" or ""
-  if DG.on then logLine("Diagnostico activado (" .. GAME_LABEL .. ")") end
+  bot.msg = DG.on and TX"Diagnostico: abre los menus a mano y compara (4 = salir)" or ""
+  if DG.on then logLine(TX"Diagnostico activado (" .. GAME_LABEL .. ")") end
 end
 function DG.draw()
   local lines, sum = DG.read()
-  if sum ~= DG.last then DG.last = sum; logLine("DIAG " .. sum) end
+  if sum ~= DG.last then DG.last = sum; logLine(TX"DIAG " .. sum) end
   local y = 1
-  gui.text(1, y, "DIAGNOSTICO (solo lee, no pulsa nada)  4 = salir", "green"); y = y + 9
+  gui.text(1, y, TX"DIAGNOSTICO (solo lee, no pulsa nada)  4 = salir", "green"); y = y + 9
   for _, t in ipairs(lines) do gui.text(1, y, t); y = y + 9 end
-  gui.text(1, y + 2, "Compara con la pantalla; los cambios van al log.", "orange")
+  gui.text(1, y + 2, TX"Compara con la pantalla; los cambios van al log.", "orange")
 end
 
 local prevKeys = {}
@@ -1932,7 +1941,7 @@ end
 local function handleHotkeys()
   local keys = input.get()
   if pressed("7", keys) then
-    if bot.running then stopBot(); bot.msg = "Detenido" else startBot() end
+    if bot.running then stopBot(); bot.msg = TX"Detenido" else startBot() end
   elseif pressed("6", keys) then
     recHotkey("heal")
   elseif pressed("5", keys) then
@@ -1963,36 +1972,36 @@ end
 
 reportConfig = function(ok, msg, problems)
   bot.cfgError = (not ok) or #problems > 0
-  if not ok then bot.msg = "Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
-  elseif msg == "no existe" then bot.msg = "No hay " .. CONFIG_FILE .. ": uso la configuracion por defecto"
-  elseif #problems > 0 then bot.msg = "Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
-  else bot.msg = "Config cargada" end
+  if not ok then bot.msg = TX"Error en " .. CONFIG_FILE .. ": " .. tostring(msg)
+  elseif msg == "no existe" then bot.msg = TX"No hay " .. CONFIG_FILE .. TX": uso la configuracion por defecto"
+  elseif #problems > 0 then bot.msg = TX"Config: " .. problems[1] .. (#problems > 1 and string.format(" (+%d)", #problems - 1) or "")
+  else bot.msg = TX"Config cargada" end
   print(bot.msg)
-  for i = 2, #problems do print("Config: " .. problems[i]) end
+  for i = 2, #problems do print(TX"Config: " .. problems[i]) end
 end
 
 -- ------------------------------- Panel -------------------------------
-local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",
-  take = "Guardando objetos", tr_charge = "Cargando Buscapelea", tr_use = "Usando Buscapelea",
-  tr_go = "Ruta de entrenadores", tr_back = "Volviendo al inicio",
-  heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",
-  heal_back = "Volviendo al punto" }
+local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",  --@i18n
+  take = "Guardando objetos", tr_charge = "Cargando Buscapelea", tr_use = "Usando Buscapelea",  --@i18n
+  tr_go = "Ruta de entrenadores", tr_back = "Volviendo al inicio",  --@i18n
+  heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",  --@i18n
+  heal_back = "Volviendo al punto" }  --@i18n
 
 -- ------------------------- Inspection mode ---------------------------
-local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game
+local NATURE_STAT = { "At", "Df", "Vel", "AtE", "DfE" }   -- nature order in the game  --@i18n
 local function drawInspect()
   local which = bot.inspect
   local addr = (which == 7) and A.enemy or (A.party + (which - 1) * 0x64)
   local m = readPartyMon(addr)
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
-  local title = (which == 7) and "Rival" or string.format("Equipo %d/%d", which, partyCount())
-  if not m then line(title .. ": vacio  (8 = siguiente)"); return end
+  local title = (which == 7) and TX"Rival" or string.format(TX"Equipo %d/%d", which, partyCount())
+  if not m then line(title .. TX": vacio  (8 = siguiente)"); return end
   local shiny = m.sv < 8
   local nat = m.pid % 25
   local natName = natureNamesList[nat + 1] or "?"
   local up, down = floor(nat / 5) + 1, (nat % 5) + 1
-  local natFx = (up == down) and "neutra" or string.format("+%s -%s", NATURE_STAT[up], NATURE_STAT[down])
+  local natFx = (up == down) and TX"neutra" or string.format("+%s -%s", TX(NATURE_STAT[up]), TX(NATURE_STAT[down]))
   local sx = TT_SPECX[m.species]
   local gender = ""
   if sx then
@@ -2001,9 +2010,9 @@ local function drawInspect()
     else gender = (band(m.pid, 0xFF) < gr) and " F" or " M" end
   end
   local abilId = sx and ((m.abilityBit == 1 and sx[2] ~= 0) and sx[2] or sx[1]) or 0
-  line(string.format("%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and "  * SHINY *" or ""),
+  line(string.format(TX"%s: %s%s Nv.%d%s", title, speciesName(m.species), gender, m.level, shiny and TX"  * SHINY *" or ""),
        shiny and "green" or nil)
-  line(string.format("%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
+  line(string.format(TX"%s (%s)  Hab: %s", natName, natFx, TT_ABILNAME[abilId] or "?"))
   -- Real stats (in memory: max HP 0x58, Atk 0x5A, Def 0x5C, Spe 0x5E, SpA 0x60, SpD 0x62)
   local st = { read16(addr + 0x58), read16(addr + 0x5A), read16(addr + 0x5C), read16(addr + 0x60), read16(addr + 0x62),
                read16(addr + 0x5E) }
@@ -2013,10 +2022,10 @@ local function drawInspect()
     for i = 1, 6 do parts[i] = string.format(fmt or "%4d", t[i]) end
     return string.format("%-5s", label) .. table.concat(parts)
   end
-  local hdr = { "PS", "At", "Df", "AtE", "DfE", "Vel" }
+  local hdr = { TX"PS", TX"At", TX"Df", TX"AtE", TX"DfE", TX"Vel" }
   line(row("", hdr, "%4s"))
   local statColor = {}
-  line(row("Stat", st))
+  line(row(TX"Stat", st))
   local perfect = true
   for i = 1, 6 do if m.ivs[i] < 31 then perfect = false end end
   line(row("IV", m.ivs), perfect and "green" or nil)
@@ -2024,10 +2033,10 @@ local function drawInspect()
   for i = 1, 6 do tot = tot + ev[i] end
   line(row("EV", ev) .. string.format("  (%d/510)", tot))
   local hpType, hpPow = hiddenPower(m.ivWord)
-  line(string.format("PS %d/%d  Poder Oculto: %s %d", m.hp, m.maxHP, TYPE_NAMES[hpType] or "?", hpPow))
-  local pkr = (m.pokerus == 0) and "no" or ((band(m.pokerus, 0x0F) > 0) and "SI (activo)" or "lo tuvo")
-  line(string.format("Exp %d  Amistad %d  Pokerus %s", m.exp, m.friendship, pkr))
-  line(string.format("Objeto: %s", m.item == 0 and "-" or (TT_ITEMNAME[m.item] or ("#" .. m.item))))
+  line(string.format(TX"PS %d/%d  Poder Oculto: %s %d", m.hp, m.maxHP, TX(TYPE_NAMES[hpType]) or "?", hpPow))
+  local pkr = (m.pokerus == 0) and TX"no" or ((band(m.pokerus, 0x0F) > 0) and TX"SI (activo)" or TX"lo tuvo")
+  line(string.format(TX"Exp %d  Amistad %d  Pokerus %s", m.exp, m.friendship, pkr))
+  line(string.format(TX"Objeto: %s", m.item == 0 and "-" or (TT_ITEMNAME[m.item] or ("#" .. m.item))))
   for i = 1, 4, 2 do
     local function mv(k)
       local id = m.moves[k]
@@ -2039,10 +2048,10 @@ local function drawInspect()
     line(string.format("%-18s %s", mv(i), mv(i + 1)))
   end
   local otid = m.otid % 0x10000
-  line(string.format("PID %08X  TID %d  SID %d   (8 = siguiente)", m.pid, otid, floor(m.otid / 0x10000)))
+  line(string.format(TX"PID %08X  TID %d  SID %d   (8 = siguiente)", m.pid, otid, floor(m.otid / 0x10000)))
 end
 
-local MODE_LABEL = { nivel = "nivel", objetos = "objetos (Recogida)", robar = "robar objetos", dinero = "dinero" }
+local MODE_LABEL = { nivel = "nivel", objetos = "objetos (Recogida)", robar = "robar objetos", dinero = "dinero" }  --@i18n
 local function rate(n)
   local secs = 0
   pcall(function() secs = os.time() - (bot.startTime or os.time()) end)
@@ -2056,59 +2065,59 @@ local function draw()
   if bot.panel == 0 then return end
   local y = 1
   local function line(text, color) gui.text(1, y, text, color); y = y + 9 end
-  local status = bot.done and "COMPLETO" or (bot.running and (PHASE[bot.st] or bot.st) or "OFF")
-  if rec then status = "GRABANDO " .. ((rec.kind == "trainer") and "ENTRENADORES " or "CENTRO ") .. ((rec.phase == "go") and "(IDA)" or "(VUELTA)") end
-  line(string.format("Farmear v1.0 [%s]: %s", MODE_LABEL[tcfg.mode] or "?", status), (bot.done or rec) and "green" or nil)
+  local status = bot.done and TX"COMPLETO" or (bot.running and (TX(PHASE[bot.st]) or bot.st) or "OFF")
+  if rec then status = TX"GRABANDO " .. ((rec.kind == "trainer") and TX"ENTRENADORES " or TX"CENTRO ") .. ((rec.phase == "go") and "(IDA)" or "(VUELTA)") end
+  line(string.format(TX"Farmear v1.0 [%s]: %s", TX(MODE_LABEL[tcfg.mode]) or "?", status), (bot.done or rec) and "green" or nil)
   local m = lead()
   if m then
     local lv = (tcfg.mode == "nivel" and CONFIG.targetLevel) and string.format("Nv.%d/%d", m.level, CONFIG.targetLevel) or ("Nv." .. m.level)
-    line(string.format("%s %s  PS %d/%d  PP %d", speciesName(m.species), lv, m.hp, m.maxHP, usefulPP(m)))
+    line(string.format(TX"%s %s  PS %d/%d  PP %d", speciesName(m.species), lv, m.hp, m.maxHP, usefulPP(m)))
   end
   local running = bot.running or bot.done
   if tcfg.mode == "nivel" and m and running then
-    line(string.format("Niveles +%d desde el inicio%s", m.level - (bot.startLevel or m.level), rate(m.level - (bot.startLevel or m.level))))
+    line(string.format(TX"Niveles +%d desde el inicio%s", m.level - (bot.startLevel or m.level), rate(m.level - (bot.startLevel or m.level))))
   elseif tcfg.mode == "objetos" or tcfg.mode == "robar" then
     local tgt = CONFIG.itemTarget and ("/" .. CONFIG.itemTarget) or ""
     if running then
-      line(string.format("Guardados %d%s  encontrados %d%s", bot.items or 0, tgt, bot.found or 0, rate(bot.found or 0)),
+      line(string.format(TX"Guardados %d%s  encontrados %d%s", bot.items or 0, tgt, bot.found or 0, rate(bot.found or 0)),
         (CONFIG.itemTarget and (bot.items or 0) >= CONFIG.itemTarget) and "green" or nil)
     end
     if tcfg.mode == "objetos" then
       local slots = bot.pickSlots or pickupSlots()
-      line(string.format("Con Recogida: %d  llevan objeto: %d", #slots, #holdingSlots(slots)))
+      line(string.format(TX"Con Recogida: %d  llevan objeto: %d", #slots, #holdingSlots(slots)))
     elseif running then
-      line(string.format("Robos %d", bot.steals or 0))
+      line(string.format(TX"Robos %d", bot.steals or 0))
     end
-    if bot.lastItem and running then line("Ultimo: " .. bot.lastItem) end
+    if bot.lastItem and running then line(TX"Ultimo: " .. bot.lastItem) end
   elseif tcfg.mode == "dinero" then
     local mn = money()
-    line(string.format("Dinero $%s%s%s", mn and tostring(mn) or "?", CONFIG.moneyTarget and ("  meta $" .. CONFIG.moneyTarget) or "",
-      running and ("  ganado +" .. (bot.earned or 0) .. rate(bot.earned or 0)) or ""))
-    line(string.format("Buscapelea %d/100  vueltas %d  entrenadores %d  Ruta: %s", vsSeekerCharge(), bot.laps or 0, bot.trainers or 0,
-      troute.go and string.format("%d/%d pasos", #troute.go, #troute.back) or "no grabada (tecla 5)"))
+    line(string.format(TX"Dinero $%s%s%s", mn and tostring(mn) or "?", CONFIG.moneyTarget and (TX"  meta $" .. CONFIG.moneyTarget) or "",
+      running and (TX"  ganado +" .. (bot.earned or 0) .. rate(bot.earned or 0)) or ""))
+    line(string.format(TX"Buscapelea %d/100  vueltas %d  entrenadores %d  Ruta: %s", vsSeekerCharge(), bot.laps or 0, bot.trainers or 0,
+      troute.go and string.format(TX"%d/%d pasos", #troute.go, #troute.back) or TX"no grabada (tecla 5)"))
   end
   if bot.panel == 2 or not bot.running then
     if not bot.running and not rec then
-      line(string.format("7 iniciar  6 ruta Centro  5 ruta entrenadores  4 diagnostico  8 ver  9 panel  0 config   Centro: %s",
-        route.go and string.format("%d/%d pasos", #route.go, #route.back) or "no grabada"))
+      line(string.format(TX"7 iniciar  6 ruta Centro  5 ruta entrenadores  4 diagnostico  8 ver  9 panel  0 config   Centro: %s",
+        route.go and string.format(TX"%d/%d pasos", #route.go, #route.back) or TX"no grabada"))
     end
-    line(string.format("Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
+    line(string.format(TX"Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
   end
   if bot.lastFoe and bot.running then
-    local held = bot.lastFoe.item ~= 0 and ("  lleva " .. itemName(bot.lastFoe.item)) or ""
-    line(string.format("Rival: %s Nv.%d%s  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level, held,
-      bot.fight and "pelear" or "huir", bot.lastWhy or ""))
+    local held = bot.lastFoe.item ~= 0 and (TX"  lleva " .. itemName(bot.lastFoe.item)) or ""
+    line(string.format(TX"Rival: %s Nv.%d%s  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level, held,
+      bot.fight and TX"pelear" or TX"huir", bot.lastWhy or ""))
   end
   if bot.panel == 2 then
     local p = playerPos()
-    line(string.format("Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
+    line(string.format(TX"Menu %d  Espera %d  Cursor %d/%d  Combate %d  Pos %s", read8(A.bufferA),
       band(read32(A.execFlags), 1), band(read8(A.actionCursor), 3), band(read8(A.moveCursor), 3),
       inBattle() and 1 or 0, p and string.format("%d.%d (%d,%d)", p.g, p.n, p.x, p.y) or "?"))
     if MENU then
-      line(string.format("START %d/%d  equipo %d  menu %d  tareas: start %s equipo %s acciones %s", read8(MENU.startCursor),
+      line(string.format(TX"START %d/%d  equipo %d  menu %d  tareas: start %s equipo %s acciones %s", read8(MENU.startCursor),
         read8(MENU.startCount), s8 and read8(MENU.partyMenu + 9) or 0, read8(MENU.menuCursor),
-        taskActive(MENU.taskStartMenu) and "si" or "no", taskActive(MENU.taskChooseMon) and "si" or "no",
-        taskActive(MENU.taskSelection) and "si" or "no"))
+        taskActive(MENU.taskStartMenu) and TX"si" or TX"no", taskActive(MENU.taskChooseMon) and TX"si" or TX"no",
+        taskActive(MENU.taskSelection) and TX"si" or TX"no"))
     end
   end
   if bot.msg ~= "" then gui.text(1, 150, bot.msg, "orange") end
@@ -2117,16 +2126,16 @@ end
 -- ------------------------------- Inicio ------------------------------
 print("FRLG Farm Bot v1.0")
 if not gameName then
-  print("Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
+  print(TX"Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara.")
   return
 end
-print(string.format("Juego: %s", GAME_LABEL))
-print("7 = iniciar/detener   6 = ruta al Centro   5 = ruta de entrenadores   4 = diagnostico   8 = ver Pokemon   9 = panel   0 = recargar " .. CONFIG_FILE)
-print(string.format("Modo: %s", MODE_LABEL[tcfg.mode] or "?"))
-if not MENU then print("Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara") end
+print(string.format(TX"Juego: %s", GAME_LABEL))
+print(TX"7 = iniciar/detener   6 = ruta al Centro   5 = ruta de entrenadores   4 = diagnostico   8 = ver Pokemon   9 = panel   0 = recargar " .. CONFIG_FILE)
+print(string.format(TX"Modo: %s", TX(MODE_LABEL[tcfg.mode]) or "?"))
+if not MENU then print(TX"Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara") end
 reportConfig(cfgOk, cfgMsg, cfgProblems)
-if route.go then print(string.format("Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
-if troute.go then print(string.format("Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta", #troute.go, #troute.back)) end
+if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
+if troute.go then print(string.format(TX"Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta", #troute.go, #troute.back)) end
 
 local badFrames = 0
 while true do
@@ -2134,12 +2143,12 @@ while true do
   handleHotkeys()
   recStep()
   if bot.running then
-    if otherInstanceAlive() then halt("Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno") end
+    if otherInstanceAlive() then halt(TX"Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno") end
   end
   if bot.running then
     writeLock()
     if validPtr(read32(A.sb1)) then badFrames = 0 else badFrames = badFrames + 1 end
-    if badFrames > 30 then halt("El juego se reinicio: bot detenido") end
+    if badFrames > 30 then halt(TX"El juego se reinicio: bot detenido") end
   end
   if bot.running then
     local busy = runQueue()
