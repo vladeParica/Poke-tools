@@ -81,6 +81,53 @@ test('logReport reads Shiny Bot finds and Train Bot sessions, and rejects other 
   assert.equal(core.logReport('hola\nmundo').bot, null);
 });
 
+test('log stats read the bots logs in Spanish, English and Japanese alike', () => {
+  // Log lines built from the bots' own templates (shared/lang/<code>.json), so the parser
+  // follows any change to the translations.
+  const fs = require('fs');
+  const path = require('path');
+  const dict = (code) => code === 'es' ? null : JSON.parse(fs.readFileSync(path.join(__dirname, '..', '..', 'shared', 'lang', code + '.json'), 'utf8'));
+  const report = (code) => {
+    const d = dict(code);
+    const T = (s) => (d && d[s]) || s;
+    const fmt = (tpl, ...v) => T(tpl).replace(/%(\d*)([sdX])/g, () => String(v.shift()));
+    const mode = (m) => T(m);
+    const farm = LOG([
+      ['10:00:00', fmt('Farmeo iniciado (modo %s): %s Nv.%d', 'dinero', 'Charmander', 12)],
+      ['10:05:00', fmt('+$%d  (total $%d)', 480, 3480)],
+      ['10:06:00', fmt('%s subio al Nv.%d', 'Charmander', 13)],
+      ['10:07:00', fmt('%s consiguio %s', 'Meowth', 'Nugget')],
+      ['10:07:30', fmt('Guardado en la mochila: %s (tienes %d)', 'Nugget', 1)],
+      ['10:08:00', T('Al Centro Pokemon: ') + T('PS bajos')],
+      ['10:09:00', fmt('Vuelta %d: Buscapelea usado', 1)],
+      ['10:10:00', fmt('%s evoluciono a %s', 'Charmander', 'Charmeleon')],
+      ['10:11:00', fmt('%s aprendio %s (olvido %s)', 'Charmeleon', 'Ember', 'Growl')],
+      ['10:12:00', T('FARMEO COMPLETO: ') + 'x'],
+    ]);
+    const shiny = '[2026-10-30 10:00:00] [FireRed USA v1.0] [Instancia 1] '
+      + fmt('[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s', 'SHINY Star', 'Raikou', '4734A33E', 'Careful', '31/0/0/0/0/0', 1500, mode('Roamer RNG'), '') + '\n'
+      + '[2026-10-30 10:01:00] [FireRed USA v1.0] [Instancia 1] ' + fmt('Shiny descartado por filtros: %s PID %08X', 'Abra', '0000ABCD') + '\n'
+      + '[2026-10-30 10:02:00] [FireRed USA v1.0] [Instancia 1] ' + fmt('[SEMILLA] %04X conseguida tras %d pruebas', 'BC75', 3) + '\n';
+    const train = LOG([['09:00:00', fmt('Entrenamiento iniciado: %s Nv.%d  EVs %s', 'Abra', 10, '0/0/0/0/0/0')],
+      ['09:30:00', fmt('ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s', 'Kadabra', 20, '0/0/0/252/0/252')]]);
+    return { farm: core.logReport(farm), shiny: core.logReport(shiny), train: core.logReport(train) };
+  };
+  const es = report('es');
+  assert.equal(es.farm.sessions[0].earned, 480);
+  assert.equal(es.farm.sessions[0].mode, 'dinero');
+  assert.deepEqual(es.farm.sessions[0].items, { Nugget: 1 });
+  for (const code of ['en', 'ja']) {
+    const r = report(code);
+    assert.equal(r.farm.bot, 'farmbot', code);
+    const pick = (x) => { const s = x.sessions[0]; return [s.mode, s.species, s.earned, s.levels.map((l) => l.v), s.items, s.stored, s.heals, s.laps, s.evolutions, s.learned, !!s.done]; };
+    assert.deepEqual(pick(r.farm), pick(es.farm), code + ' farm');
+    assert.equal(r.shiny.bot, 'shinybot', code);
+    assert.deepEqual([r.shiny.finds.length, r.shiny.finds[0].tries, r.shiny.discarded, r.shiny.seeds], [1, 1500, 1, 1], code + ' shiny');
+    assert.equal(r.train.bot, 'trainbot', code);
+    assert.deepEqual([r.train.sessions[0].species, r.train.sessions[0].level, !!r.train.sessions[0].done], ['Abra', 10, true], code + ' train');
+  }
+});
+
 test('stripComments keeps // inside strings', () => {
   const p = core.parseConfig('{\n  // comment\n  "notify": {"discord": "https://x.y/z"}, // tail\n  "a": 1\n}');
   assert.ok(p.ok);

@@ -500,7 +500,14 @@ PT.i18n.add('ja', {
   'Gengar': 'ゲンガー',
   'Mewtwo': 'ミュウツー',
   'Charizard': 'リザードン',
-  'Game Boy Advance': 'ゲームボーイアドバンス'
+  'Game Boy Advance': 'ゲームボーイアドバンス',
+  // bot language option
+  'Idioma del bot': 'ボットの言語',
+  'Panel, consola y log del bot. El japonés va en romaji: el emulador no muestra kana.': 'ボットのパネル・コンソール・ログの言語。エミュレータがかなを表示できないため、日本語はローマ字になります。',
+  '"es", "en" o "ja" (romaji)': '"es"、"en"、"ja"（ローマ字）',
+  'Español': 'Español',
+  'English': 'English',
+  '日本語 (romaji)': '日本語（ローマ字）'
 }, {
   natures: {
     Hardy: 'がんばりや', Lonely: 'さみしがり', Brave: 'ゆうかん', Adamant: 'いじっぱり', Naughty: 'やんちゃ',

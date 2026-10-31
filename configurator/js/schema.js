@@ -127,7 +127,10 @@
           help: 'En VBA-rr v22 da "Error creating file": mejor vacío y guardar con Shift+F1.', comment: 'ranura 1-10; null = no guardar solo' },
         { key: 'logFile', half: true, type: 'text', def: 'shiny_log.txt', label: 'Archivo de log', comment: 'log de hallazgos' },
         { key: 'logDir', half: true, type: 'text', def: 'logs', label: 'Carpeta de logs', comment: 'subcarpeta para el log y archivos de trabajo' },
-        { key: 'sharedDir', half: true, type: 'text', def: null, nullable: true, label: 'Carpeta compartida', help: 'Vacío = la del script.', comment: 'null = la carpeta del script' }
+        { key: 'sharedDir', half: true, type: 'text', def: null, nullable: true, label: 'Carpeta compartida', help: 'Vacío = la del script.', comment: 'null = la carpeta del script' },
+        { key: 'language', type: 'enum', segmented: true, def: 'es', label: 'Idioma del bot',
+          options: [{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }, { value: 'ja', label: '日本語 (romaji)' }],
+          help: 'Panel, consola y log del bot. El japonés va en romaji: el emulador no muestra kana.', comment: '"es", "en" o "ja" (romaji)' }
       ] }
     ]
   };
@@ -192,7 +195,10 @@
           def: 'horizontal', half: true, label: 'Eje de la caminata', comment: '"horizontal" o "vertical"' },
         { key: 'walkFrames', type: 'int', min: 1, max: 120, def: 16, half: true, label: 'Frames por paso', comment: 'frames por paso' },
         { key: 'logFile', type: 'text', def: 'train_log.txt', half: true, label: 'Archivo de log', comment: 'log' },
-        { key: 'logDir', type: 'text', def: 'logs', half: true, label: 'Carpeta de logs', comment: 'subcarpeta de logs' }
+        { key: 'logDir', type: 'text', def: 'logs', half: true, label: 'Carpeta de logs', comment: 'subcarpeta de logs' },
+        { key: 'language', type: 'enum', segmented: true, def: 'es', label: 'Idioma del bot',
+          options: [{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }, { value: 'ja', label: '日本語 (romaji)' }],
+          help: 'Panel, consola y log del bot. El japonés va en romaji: el emulador no muestra kana.', comment: '"es", "en" o "ja" (romaji)' }
       ] }
     ]
   };
@@ -267,7 +273,10 @@
           def: 'horizontal', half: true, label: 'Eje de la caminata', comment: '"horizontal" o "vertical"' },
         { key: 'walkFrames', type: 'int', min: 1, max: 120, def: 16, half: true, label: 'Frames por paso', comment: 'frames por paso' },
         { key: 'logFile', type: 'text', def: 'farm_log.txt', half: true, label: 'Archivo de log', comment: 'log' },
-        { key: 'logDir', type: 'text', def: 'logs', half: true, label: 'Carpeta de logs', comment: 'subcarpeta de logs' }
+        { key: 'logDir', type: 'text', def: 'logs', half: true, label: 'Carpeta de logs', comment: 'subcarpeta de logs' },
+        { key: 'language', type: 'enum', segmented: true, def: 'es', label: 'Idioma del bot',
+          options: [{ value: 'es', label: 'Español' }, { value: 'en', label: 'English' }, { value: 'ja', label: '日本語 (romaji)' }],
+          help: 'Panel, consola y log del bot. El japonés va en romaji: el emulador no muestra kana.', comment: '"es", "en" o "ja" (romaji)' }
       ] }
     ]
   };

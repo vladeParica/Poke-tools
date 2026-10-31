@@ -432,7 +432,27 @@
   // shiny_log.txt / train_log.txt / farm_log.txt: one "[date] [game] [Instancia N] text"
   // line per event (see each bot's logLine). Builds the numbers the stats dialog shows.
   var LOG_LINE = /^\[(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)\] \[([^\]]*)\] (?:\[Instancia (\d+)\] )?(.*)$/;
-  var SHINY_FIND = /^\[(SHINY Square|SHINY Star|OBJETIVO)\] (.+?)  PID ([0-9A-F]{8})  (\S+)  IVs (\S+)  tras (\d+) intentos \(modo ([^)]+)\)/;
+  // The bots write their log in es, en or ja romaji (shared/lang/*.json); each pattern
+  // below accepts the three. The Shiny Bot find line keeps its [tag] and PID/IVs layout.
+  var SHINY_FIND = /^\[(SHINY Square|SHINY Star|OBJETIVO)\] (.+?)  PID ([0-9A-F]{8})  (\S+)  IVs (\S+)  (?:tras (\d+) intentos \(modo ([^)]+)\)|after (\d+) attempts \(([^)]+) mode\)|(\d+) kai de hakken \(([^)]+) mode\))/;
+  var RE = {
+    shinyMisc: /^\[(TID\/SID|SEMILLA|SEED)\]|^Shiny descartado|^Shiny skipped|^Irochigai wo jouken de miokuri/,
+    discarded: /^(Shiny descartado|Shiny skipped|Irochigai wo jouken de miokuri)/,
+    seed: /^\[(SEMILLA|SEED)\]/,
+    farmStart: /^(Farmeo iniciado|Farming started|Farm kaishi)/,
+    farmHead: /^(?:Farmeo iniciado \(modo (\w+)\)|Farming started \((\w+) mode\)|Farm kaishi \((\w+) mode\)): (.+) (?:Nv|Lv)\.(\d+)/,
+    farmDone: /^(FARMEO COMPLETO|FARMING DONE|FARM KANRYO)/,
+    trainStart: /^(Entrenamiento iniciado|Training started|Ikusei kaishi)/,
+    trainHead: /^(?:Entrenamiento iniciado|Training started|Ikusei kaishi): (.+) (?:Nv|Lv)\.(\d+)  EVs (\S+)/,
+    trainDone: /^(ENTRENAMIENTO COMPLETO|TRAINING DONE|IKUSEI KANRYO)/,
+    level: /^.+ (?:subio al Nv\.|grew to Lv\.|ga Lv\.)(\d+)(?: ni agatta)?$/,
+    item: /^.+? (?:consiguio (.+)|found (.+)|ga (.+) wo hirotta)$/,
+    stored: /^(Guardado en la mochila: |Stored in the bag: |Bag ni shimatta: )/,
+    heal: /^(Al Centro Pokemon|To the Pokemon Center|Pokemon Center e)/,
+    lap: /^(Vuelta|Lap|Shuukai) \d+:/,
+    evolved: / evoluciono a | evolved into | ni shinka shita$/,
+    learned: / aprendio | learned | wo oboeta /
+  };
   function logEvents(text) {
     var out = [];
     String(text || '').split(/\r?\n/).forEach(function (l) {
@@ -444,9 +464,9 @@
   function detectLog(ev) {
     for (var i = 0; i < ev.length; i++) {
       var s = ev[i].msg;
-      if (ev[i].inst !== null || SHINY_FIND.test(s) || /^\[(TID\/SID|SEMILLA)\]|^Shiny descartado/.test(s)) return 'shinybot';
-      if (/^Farmeo iniciado|^FARMEO COMPLETO|^\+\$\d+|^DIAG /.test(s)) return 'farmbot';
-      if (/^Entrenamiento iniciado|^ENTRENAMIENTO COMPLETO/.test(s)) return 'trainbot';
+      if (ev[i].inst !== null || SHINY_FIND.test(s) || RE.shinyMisc.test(s)) return 'shinybot';
+      if (RE.farmStart.test(s) || RE.farmDone.test(s) || /^\+\$\d+|^DIAG /.test(s)) return 'farmbot';
+      if (RE.trainStart.test(s) || RE.trainDone.test(s)) return 'trainbot';
     }
     return null;
   }
@@ -464,33 +484,33 @@
   function farmSession(s) {
     var r = { start: s.start, end: s.end, head: s.head, money: [], earned: 0, levels: [], items: {}, stored: 0, found: 0,
       heals: 0, laps: 0, evolutions: 0, learned: 0, done: '', stops: [] };
-    var m = /^Farmeo iniciado \(modo (\w+)\): (.+) Nv\.(\d+)/.exec(s.head);
-    if (m) { r.mode = m[1]; r.species = m[2]; r.levels.push({ t: s.start, v: +m[3] }); }
+    var m = RE.farmHead.exec(s.head);
+    if (m) { r.mode = m[1] || m[2] || m[3]; r.species = m[4]; r.levels.push({ t: s.start, v: +m[5] }); }
     s.events.forEach(function (e) {
       var x;
       if ((x = /^\+\$(\d+)  \(total \$(\d+)\)/.exec(e.msg))) {
         if (!r.money.length) r.money.push({ t: r.start, v: +x[2] - +x[1] });
         r.money.push({ t: e.t, v: +x[2] }); r.earned += +x[1];
-      } else if ((x = /^.+ subio al Nv\.(\d+)$/.exec(e.msg))) r.levels.push({ t: e.t, v: +x[1] });
-      else if ((x = /^.+ consiguio (.+)$/.exec(e.msg))) { r.found++; r.items[x[1]] = (r.items[x[1]] || 0) + 1; }
-      else if (/^Guardado en la mochila: /.test(e.msg)) r.stored++;
-      else if (/^Al Centro Pokemon/.test(e.msg)) r.heals++;
-      else if (/^Vuelta \d+:/.test(e.msg)) r.laps++;
-      else if (/ evoluciono a /.test(e.msg)) r.evolutions++;
-      else if (/ aprendio /.test(e.msg)) r.learned++;
-      else if (/^FARMEO COMPLETO/.test(e.msg)) r.done = e.msg;
+      } else if ((x = RE.level.exec(e.msg))) r.levels.push({ t: e.t, v: +x[1] });
+      else if (RE.stored.test(e.msg)) r.stored++;
+      else if (RE.heal.test(e.msg)) r.heals++;
+      else if (RE.lap.test(e.msg)) r.laps++;
+      else if (RE.evolved.test(e.msg)) r.evolutions++;
+      else if (RE.learned.test(e.msg)) r.learned++;
+      else if (RE.farmDone.test(e.msg)) r.done = e.msg;
+      else if ((x = RE.item.exec(e.msg))) { var it = x[1] || x[2] || x[3]; r.found++; r.items[it] = (r.items[it] || 0) + 1; }
     });
     return r;
   }
   function trainSession(s) {
     var r = { start: s.start, end: s.end, head: s.head, heals: 0, evolutions: 0, learned: 0, done: '', events: [] };
-    var m = /^Entrenamiento iniciado: (.+) Nv\.(\d+)  EVs (\S+)/.exec(s.head);
+    var m = RE.trainHead.exec(s.head);
     if (m) { r.species = m[1]; r.level = +m[2]; r.evs = m[3]; }
     s.events.forEach(function (e) {
-      if (/^Al Centro Pokemon/.test(e.msg)) r.heals++;
-      else if (/ evoluciono a /.test(e.msg)) { r.evolutions++; r.events.push(e); }
-      else if (/ aprendio /.test(e.msg)) { r.learned++; r.events.push(e); }
-      else if (/^ENTRENAMIENTO COMPLETO/.test(e.msg)) { r.done = e.msg; r.events.push(e); }
+      if (RE.heal.test(e.msg)) r.heals++;
+      else if (RE.evolved.test(e.msg)) { r.evolutions++; r.events.push(e); }
+      else if (RE.learned.test(e.msg)) { r.learned++; r.events.push(e); }
+      else if (RE.trainDone.test(e.msg)) { r.done = e.msg; r.events.push(e); }
     });
     return r;
   }
@@ -501,17 +521,18 @@
       r.finds = []; r.discarded = 0; r.sids = 0; r.seeds = 0;
       ev.forEach(function (e) {
         var m = SHINY_FIND.exec(e.msg);
-        if (m) r.finds.push({ t: e.t, kind: m[1], species: m[2], pid: m[3], nature: m[4], ivs: m[5], tries: +m[6], mode: m[7], inst: e.inst });
-        else if (/^Shiny descartado/.test(e.msg)) r.discarded++;
+        if (m) r.finds.push({ t: e.t, kind: m[1], species: m[2], pid: m[3], nature: m[4], ivs: m[5],
+          tries: +(m[6] || m[8] || m[10]), mode: m[7] || m[9] || m[11], inst: e.inst });
+        else if (RE.discarded.test(e.msg)) r.discarded++;
         else if (/^\[TID\/SID\]/.test(e.msg)) r.sids++;
-        else if (/^\[SEMILLA\]/.test(e.msg)) r.seeds++;
+        else if (RE.seed.test(e.msg)) r.seeds++;
       });
       r.shinies = r.finds.filter(function (f) { return f.kind !== 'OBJETIVO'; }).length;
       r.avgTries = r.finds.length ? Math.round(r.finds.reduce(function (a, f) { return a + f.tries; }, 0) / r.finds.length) : 0;
     } else if (bot === 'farmbot') {
-      r.sessions = sessions(ev, /^Farmeo iniciado/).map(farmSession);
+      r.sessions = sessions(ev, RE.farmStart).map(farmSession);
     } else if (bot === 'trainbot') {
-      r.sessions = sessions(ev, /^Entrenamiento iniciado/).map(trainSession);
+      r.sessions = sessions(ev, RE.trainStart).map(trainSession);
     }
     return r;
   }

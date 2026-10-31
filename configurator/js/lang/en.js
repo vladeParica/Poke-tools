@@ -499,5 +499,12 @@ PT.i18n.add('en', {
   'Gengar': 'Gengar',
   'Mewtwo': 'Mewtwo',
   'Charizard': 'Charizard',
-  'Game Boy Advance': 'Game Boy Advance'
+  'Game Boy Advance': 'Game Boy Advance',
+  // bot language option
+  'Idioma del bot': 'Bot language',
+  'Panel, consola y log del bot. El japonés va en romaji: el emulador no muestra kana.': "The bot's panel, console and log. Japanese is written in romaji: the emulator can't show kana.",
+  '"es", "en" o "ja" (romaji)': '"es", "en" or "ja" (romaji)',
+  'Español': 'Español',
+  'English': 'English',
+  '日本語 (romaji)': '日本語 (romaji)'
 });
