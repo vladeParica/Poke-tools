@@ -25,7 +25,8 @@ EVs and levels automatically in **Pokémon FireRed and LeafGreen** (GBA).
 | [**Farm Bot**](farmbot/) *(experimental)* | Farms items (Pickup, Thief), levels or money (trainer rematches with the VS Seeker) |
 | [**Configurator**](configurator/) | Visual editor for the bots' settings, with live validation and skins. Open `configurator/index.html` |
 
-> The bots' in-game text (panel, console, logs, JSON comments) is in **Spanish**.
+> The bots and the configurator speak **Spanish, English or Japanese**: set `"language"` in the
+> bot's JSON (`"es"`, `"en"`, `"ja"`; Japanese in romaji, since the emulator can't draw kana).
 
 ## Quick start
 

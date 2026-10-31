@@ -7,7 +7,10 @@ Thanks for wanting to improve the bots. Before you start, read the
 ## Rules
 - **Don't break what already works.** A change in one mode must not affect the others.
 - **The Shiny Bot only searches.** Other kinds of features go in a separate bot ([ADR-0003](docs/00-project/adr/0003-separate-bots.md)).
-- **Everything the player sees in the game is in Spanish** (panel, console, logs, JSON comments).
+- **Player-facing text is written in Spanish and translated** ([ADR-0014](docs/00-project/adr/0014-interface-in-spanish-english-and-japanese.md)):
+  in the bots wrap it as `TX"..."` and add it to `shared/lang/en.json` and `ja.json` (Japanese in
+  ASCII romaji; `python tools/lua_i18n.py check`); in the configurator use `tr()` and
+  `js/lang/*.js`. Never translate values the logic compares (modes, JSON keys, file names).
   Repository documentation, code comments and commit messages are in English.
 - **The repo is generic:** nothing from a specific save file (TID/SID, seeds computed for it).
   Use neutral values in examples (TID 12345 / SID 54321).

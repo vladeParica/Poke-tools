@@ -50,6 +50,7 @@
 | `stopOthers` | bool | `true` | Stop other instances on a match |
 | `sharedDir` | text | `null` = script folder | Folder shared between instances (`logDir` goes inside) |
 | `logDir` | text | `"logs"` | Subfolder for logs and working files |
+| `language` | text | `"es"` | Panel, console and log language: `"es"`, `"en"` or `"ja"` (Japanese in romaji) |
 | `resetOnLoad` | bool | `true` | Reset the game when the script loads |
 
 Obsolete, ignored: `rngMaxSearch`, `wildMaxSearch`, `reseedBeyond`.
@@ -78,6 +79,7 @@ Obsolete, ignored: `rngMaxSearch`, `wildMaxSearch`, `reseedBeyond`.
 | `routeFile` | text | `"FRLG_TrainRoute.txt"` | Route file |
 | `healMode` | `"nurse"` \| `"tile"` | `"nurse"` | Nurse or healing tile |
 | `logFile` / `logDir` | text | `"train_log.txt"` / `"logs"` | Log |
+| `language` | text | `"es"` | Panel, console and log language: `"es"`, `"en"` or `"ja"` (Japanese in romaji) |
 
 `notify.ntfy` must match `[A-Za-z0-9_-]+`; `notify.discord` must start with `https://`.
 Otherwise the notification isn't sent.
@@ -96,6 +98,7 @@ Otherwise the notification isn't sent.
 | `maxBattles` | number | `null` | Stop after this many battles (any mode) |
 | `species`, `avoidSpecies`, `healBelow`, `fleeBelow`, `minPP`, `learnMoves`, `wantedMoves`, `keepMoves`, `askTimeout`, `evolve`, `stopOnShiny`, `notify`, `walkAxis`, `walkFrames`, `routeFile`, `healMode` | | as in the Train Bot | `fleeBelow` doesn't apply to trainer battles |
 | `logFile` / `logDir` | text | `"farm_log.txt"` / `"logs"` | Log |
+| `language` | text | `"es"` | Panel, console and log language: `"es"`, `"en"` or `"ja"` (Japanese in romaji) |
 
 The trainer route file has the same format as the Center route; its `GO` and `BACK` start and
 end at the spot where the VS Seeker is used.
