@@ -419,10 +419,98 @@
     return { go: go.points, back: back.points, maps: maps, spot: spot, heal: go.points[go.points.length - 1] || null, issues: issues };
   }
 
+  // ---------------------------------------------------------------- logs
+  // shiny_log.txt / train_log.txt / farm_log.txt: one "[date] [game] [Instancia N] text"
+  // line per event (see each bot's logLine). Builds the numbers the stats dialog shows.
+  var LOG_LINE = /^\[(\d{4})-(\d\d)-(\d\d) (\d\d):(\d\d):(\d\d)\] \[([^\]]*)\] (?:\[Instancia (\d+)\] )?(.*)$/;
+  var SHINY_FIND = /^\[(SHINY Square|SHINY Star|OBJETIVO)\] (.+?)  PID ([0-9A-F]{8})  (\S+)  IVs (\S+)  tras (\d+) intentos \(modo ([^)]+)\)/;
+  function logEvents(text) {
+    var out = [];
+    String(text || '').split(/\r?\n/).forEach(function (l) {
+      var m = LOG_LINE.exec(l);
+      if (m) out.push({ t: new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]).getTime(), game: m[7], inst: m[8] ? +m[8] : null, msg: m[9] });
+    });
+    return out;
+  }
+  function detectLog(ev) {
+    for (var i = 0; i < ev.length; i++) {
+      var s = ev[i].msg;
+      if (ev[i].inst !== null || SHINY_FIND.test(s) || /^\[(TID\/SID|SEMILLA)\]|^Shiny descartado/.test(s)) return 'shinybot';
+      if (/^Farmeo iniciado|^FARMEO COMPLETO|^\+\$\d+|^DIAG /.test(s)) return 'farmbot';
+      if (/^Entrenamiento iniciado|^ENTRENAMIENTO COMPLETO/.test(s)) return 'trainbot';
+    }
+    return null;
+  }
+  // Splits a Train/Farm log into runs: each starts with "... iniciado" (events before the
+  // first start go to an "earlier" run).
+  function sessions(ev, startRe) {
+    var out = [];
+    ev.forEach(function (e) {
+      if (startRe.test(e.msg) || !out.length) out.push({ start: e.t, end: e.t, head: startRe.test(e.msg) ? e.msg : '', events: [] });
+      var s = out[out.length - 1];
+      s.events.push(e); s.end = e.t;
+    });
+    return out;
+  }
+  function farmSession(s) {
+    var r = { start: s.start, end: s.end, head: s.head, money: [], earned: 0, levels: [], items: {}, stored: 0, found: 0,
+      heals: 0, laps: 0, evolutions: 0, learned: 0, done: '', stops: [] };
+    var m = /^Farmeo iniciado \(modo (\w+)\): (.+) Nv\.(\d+)/.exec(s.head);
+    if (m) { r.mode = m[1]; r.species = m[2]; r.levels.push({ t: s.start, v: +m[3] }); }
+    s.events.forEach(function (e) {
+      var x;
+      if ((x = /^\+\$(\d+)  \(total \$(\d+)\)/.exec(e.msg))) {
+        if (!r.money.length) r.money.push({ t: r.start, v: +x[2] - +x[1] });
+        r.money.push({ t: e.t, v: +x[2] }); r.earned += +x[1];
+      } else if ((x = /^.+ subio al Nv\.(\d+)$/.exec(e.msg))) r.levels.push({ t: e.t, v: +x[1] });
+      else if ((x = /^.+ consiguio (.+)$/.exec(e.msg))) { r.found++; r.items[x[1]] = (r.items[x[1]] || 0) + 1; }
+      else if (/^Guardado en la mochila: /.test(e.msg)) r.stored++;
+      else if (/^Al Centro Pokemon/.test(e.msg)) r.heals++;
+      else if (/^Vuelta \d+:/.test(e.msg)) r.laps++;
+      else if (/ evoluciono a /.test(e.msg)) r.evolutions++;
+      else if (/ aprendio /.test(e.msg)) r.learned++;
+      else if (/^FARMEO COMPLETO/.test(e.msg)) r.done = e.msg;
+    });
+    return r;
+  }
+  function trainSession(s) {
+    var r = { start: s.start, end: s.end, head: s.head, heals: 0, evolutions: 0, learned: 0, done: '', events: [] };
+    var m = /^Entrenamiento iniciado: (.+) Nv\.(\d+)  EVs (\S+)/.exec(s.head);
+    if (m) { r.species = m[1]; r.level = +m[2]; r.evs = m[3]; }
+    s.events.forEach(function (e) {
+      if (/^Al Centro Pokemon/.test(e.msg)) r.heals++;
+      else if (/ evoluciono a /.test(e.msg)) { r.evolutions++; r.events.push(e); }
+      else if (/ aprendio /.test(e.msg)) { r.learned++; r.events.push(e); }
+      else if (/^ENTRENAMIENTO COMPLETO/.test(e.msg)) { r.done = e.msg; r.events.push(e); }
+    });
+    return r;
+  }
+  // Returns { bot, events, sessions | finds, ... } or { bot: null } for an unknown file.
+  function logReport(text) {
+    var ev = logEvents(text), bot = detectLog(ev), r = { bot: bot, lines: ev.length };
+    if (bot === 'shinybot') {
+      r.finds = []; r.discarded = 0; r.sids = 0; r.seeds = 0;
+      ev.forEach(function (e) {
+        var m = SHINY_FIND.exec(e.msg);
+        if (m) r.finds.push({ t: e.t, kind: m[1], species: m[2], pid: m[3], nature: m[4], ivs: m[5], tries: +m[6], mode: m[7], inst: e.inst });
+        else if (/^Shiny descartado/.test(e.msg)) r.discarded++;
+        else if (/^\[TID\/SID\]/.test(e.msg)) r.sids++;
+        else if (/^\[SEMILLA\]/.test(e.msg)) r.seeds++;
+      });
+      r.shinies = r.finds.filter(function (f) { return f.kind !== 'OBJETIVO'; }).length;
+      r.avgTries = r.finds.length ? Math.round(r.finds.reduce(function (a, f) { return a + f.tries; }, 0) / r.finds.length) : 0;
+    } else if (bot === 'farmbot') {
+      r.sessions = sessions(ev, /^Farmeo iniciado/).map(farmSession);
+    } else if (bot === 'trainbot') {
+      r.sessions = sessions(ev, /^Entrenamiento iniciado/).map(trainSession);
+    }
+    return r;
+  }
+
   var api = {
     simplify: simplify, stripComments: stripComments, parseConfig: parseConfig, normalize: normalize,
     validate: validate, serialize: serialize, unknownKeys: unknownKeys, detectBot: detectBot,
-    randomTopic: randomTopic, routeReport: routeReport, STAT_ALIASES: STAT_ALIASES, STAT_ORDER: STAT_ORDER
+    randomTopic: randomTopic, routeReport: routeReport, logReport: logReport, STAT_ALIASES: STAT_ALIASES, STAT_ORDER: STAT_ORDER
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else { root.PT = root.PT || {}; root.PT.core = api; }

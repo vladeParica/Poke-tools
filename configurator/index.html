@@ -26,10 +26,10 @@
 
     <div class="actions">
       <label class="skin-picker" title="Skin de la interfaz">
-        <span data-icon="palette"></span>
         <span class="sr-only">Skin</span>
         <select id="skin-select"></select>
       </label>
+      <button class="btn ghost icon" id="btn-stats" title="Estadísticas de los logs" aria-label="Estadísticas de los logs"><span data-icon="chart"></span></button>
       <button class="btn ghost icon" id="btn-skins" title="Apariencia: skins y fondo" aria-label="Apariencia: skins y fondo"><span data-icon="gear"></span></button>
       <button class="btn ghost" id="btn-folder" title="Abrir la carpeta donde está el bot" hidden><span data-icon="folder"></span><span class="lbl">Abrir carpeta</span></button>
       <button class="btn ghost" id="btn-open" title="Abrir un JSON existente"><span data-icon="upload"></span><span class="lbl">Abrir JSON</span></button>
@@ -121,6 +121,25 @@
     </form>
   </dialog>
   <input type="file" id="route-file" accept=".txt,text/plain" hidden>
+
+  <dialog id="stats-dialog" class="card wide">
+    <form method="dialog">
+      <header><span data-icon="chart" class="sec-icon"></span><span id="stats-title">Estadísticas</span></header>
+      <div class="body">
+        <div class="stats-drop" id="stats-drop">
+          <p class="help">Arrastra aquí un log de los bots (<code>shiny_log.txt</code>, <code>train_log.txt</code> o <code>farm_log.txt</code>, en la carpeta <code>logs</code>) o elígelo.</p>
+          <div class="row">
+            <button class="btn small" type="button" id="btn-stats-file"><span data-icon="upload"></span>Elegir log</button>
+            <button class="btn small" type="button" id="btn-stats-dir" hidden><span data-icon="folder"></span>Leer de la carpeta</button>
+            <select id="stats-session" aria-label="Sesión" hidden></select>
+          </div>
+        </div>
+        <div id="stats-out"></div>
+        <div class="row end"><button class="btn primary" value="close">Cerrar</button></div>
+      </div>
+    </form>
+  </dialog>
+  <input type="file" id="stats-file" accept=".txt,text/plain" hidden>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 

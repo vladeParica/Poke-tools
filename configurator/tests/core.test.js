@@ -34,6 +34,53 @@ test('the bundled example routes have no errors', () => {
   }
 });
 
+const LOG = (lines) => lines.map(([t, m]) => '[2026-10-30 ' + t + '] [FireRed USA v1.0] ' + m).join('\n') + '\n';
+
+test('logReport reads a Farm Bot log into sessions with money, levels and items', () => {
+  const r = core.logReport(LOG([
+    ['10:00:00', 'Farmeo iniciado (modo dinero): Charmander Nv.12'],
+    ['10:05:00', '+$480  (total $3480)'],
+    ['10:09:00', 'Charmander subio al Nv.13'],
+    ['10:10:00', '+$480  (total $3960)'],
+    ['10:12:00', 'Al Centro Pokemon: PS bajos'],
+    ['11:00:00', 'Farmeo iniciado (modo objetos): Meowth Nv.20'],
+    ['11:01:00', 'Meowth consiguio Nugget'],
+    ['11:02:00', 'Meowth consiguio Nugget'],
+    ['11:02:30', 'Guardado en la mochila: Nugget (tienes 2)'],
+    ['11:03:00', 'FARMEO COMPLETO: 2 objetos'],
+  ]));
+  assert.equal(r.bot, 'farmbot');
+  assert.equal(r.sessions.length, 2);
+  const [a, b] = r.sessions;
+  assert.equal(a.mode, 'dinero');
+  assert.equal(a.earned, 960);
+  assert.deepEqual(a.money.map((p) => p.v), [3000, 3480, 3960]);
+  assert.deepEqual(a.levels.map((p) => p.v), [12, 13]);
+  assert.equal(a.heals, 1);
+  assert.deepEqual(b.items, { Nugget: 2 });
+  assert.equal(b.stored, 1);
+  assert.match(b.done, /COMPLETO/);
+});
+
+test('logReport reads Shiny Bot finds and Train Bot sessions, and rejects other files', () => {
+  const s = core.logReport('[2026-10-30 10:00:00] [FireRed USA v1.0] [Instancia 1] [SHINY Star] Raikou  PID 4734A33E  Careful  IVs 22/6/0/0/0/0  tras 1500 intentos (modo Roamer RNG) | corrida iniciada 2026-10-30 09:00\n'
+    + '[2026-10-30 11:00:00] [FireRed USA v1.0] [Instancia 2] [OBJETIVO] Abra  PID 0000ABCD  Timid  IVs 31/0/31/31/31/31  tras 500 intentos (modo Estatico)\n');
+  assert.equal(s.bot, 'shinybot');
+  assert.equal(s.finds.length, 2);
+  assert.equal(s.shinies, 1);
+  assert.equal(s.avgTries, 1000);
+  assert.equal(s.finds[0].species, 'Raikou');
+  const t = core.logReport(LOG([
+    ['09:00:00', 'Entrenamiento iniciado: Abra Nv.10  EVs 0/0/0/0/0/0'],
+    ['09:30:00', 'Abra evoluciono a Kadabra'],
+    ['10:00:00', 'ENTRENAMIENTO COMPLETO: Kadabra Nv.20  EVs 0/0/0/252/0/252'],
+  ]));
+  assert.equal(t.bot, 'trainbot');
+  assert.equal(t.sessions[0].species, 'Abra');
+  assert.equal(t.sessions[0].evolutions, 1);
+  assert.equal(core.logReport('hola\nmundo').bot, null);
+});
+
 test('stripComments keeps // inside strings', () => {
   const p = core.parseConfig('{\n  // comment\n  "notify": {"discord": "https://x.y/z"}, // tail\n  "a": 1\n}');
   assert.ok(p.ok);

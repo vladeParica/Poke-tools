@@ -118,6 +118,13 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('route viewer draws every map', d.getElementById('route-dialog').open && d.querySelectorAll('#route-maps svg polyline').length >= 5
       && d.querySelectorAll('#route-maps figure').length === 5 && d.querySelector('#route-issues li.ok'));
     d.getElementById('route-dialog').close(); d.getElementById('tab-shinybot').click();
+    // log stats: a Farm Bot log turns into tiles, a money line and item bars
+    const L = (t, m) => '[2026-10-30 ' + t + '] [FireRed USA v1.0] ' + m;
+    w.PT.showLog('farm_log.txt', [L('10:00:00', 'Farmeo iniciado (modo dinero): Charmander Nv.12'), L('10:20:00', '+$480  (total $3480)'),
+      L('10:40:00', 'Charmander consiguio Nugget'), L('10:50:00', 'Charmander subio al Nv.13'), L('11:00:00', '+$480  (total $3960)')].join('\n'));
+    ok('log stats: tiles, money line and item bars', d.getElementById('stats-dialog').open && d.querySelectorAll('#stats-out .stat-tile').length >= 4
+      && d.querySelectorAll('#stats-out svg .series').length === 2 && d.querySelector('#stats-out .bar-row') && /\$960/.test(d.getElementById('stats-out').textContent));
+    d.getElementById('stats-dialog').close();
     // 8. skins
     const bd = d.querySelector('.panel > .backdrop');
     ok('artwork behind the form', bd && /firered-leafgreen\/normal\/pikachu\.png$/.test((bd.querySelector('img') || {}).src || '') &&

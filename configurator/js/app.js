@@ -749,6 +749,153 @@
   $('skin-select').addEventListener('change', function () { applySkin(this.value); });
   $('btn-skins').addEventListener('click', function () { openAppearance(false); });
 
+  // ---------------------------------------------------------------- log stats
+  // Reads a bot log (dropped, picked, or from the opened folder) and shows its numbers:
+  // tiles, a line per measure that changes over time, items as bars, finds as a table.
+  var STATS = { rep: null, name: '' };
+  var BOT_NAMES = { shinybot: 'Shiny Bot', trainbot: 'Train Bot', farmbot: 'Farm Bot' };
+  function openStats() {
+    $('btn-stats-dir').hidden = !S.dir;
+    $('stats-dialog').showModal();
+  }
+  function readLogFromDir() {
+    var c = cfg(), dir = (c.logDir || fieldDef('logDir').def || '').replace(/[\/\\]+$/, ''), file = c.logFile || fieldDef('logFile').def;
+    var where = dir ? S.dir.getDirectoryHandle(dir) : Promise.resolve(S.dir);
+    where.then(function (d) { return d.getFileHandle(file); }).then(function (fh) { return fh.getFile(); })
+      .then(function (f) { return f.text(); })
+      .then(function (t) { showLog(file, t); },
+        function () { toast('No encuentro ' + (dir ? dir + '/' : '') + file + ' en "' + S.dir.name + '": ¿ya corriste el bot?', 'warn'); });
+  }
+  function readLogFile(f) {
+    if (!f) return;
+    if (f.size > 20000000) { toast('Ese archivo es demasiado grande para un log', 'warn'); return; }
+    f.text().then(function (t) { showLog(f.name, t); });
+  }
+  function fmtDur(ms) {
+    var m = Math.round(ms / 60000);
+    return m < 60 ? m + ' min' : Math.floor(m / 60) + ' h ' + (m % 60) + ' min';
+  }
+  function fmtTime(t) { var d = new Date(t); return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function fmtDate(t) { var d = new Date(t); return d.getDate() + '/' + (d.getMonth() + 1) + ' ' + fmtTime(t); }
+  function fmtNum(n) { return Math.round(n).toLocaleString('es'); }
+  function perHour(n, ms) { return ms >= 600000 ? ' · ' + fmtNum(n * 3600000 / ms) + '/h' : ''; }
+  function tile(label, value, sub) {
+    return h('div', { class: 'stat-tile' }, h('span', { class: 'help', text: label }), h('b', { text: value }), sub ? h('span', { class: 'help', text: sub }) : null);
+  }
+  // One measure over time: 2px line, markers with a hover title, recessive grid.
+  function lineChart(title, pts, fmt) {
+    var W = 640, H = 190, L = 56, R = 14, T = 14, B = 28;
+    var t0 = pts[0].t, t1 = pts[pts.length - 1].t, v0 = Math.min.apply(null, pts.map(function (p) { return p.v; }));
+    var v1 = Math.max.apply(null, pts.map(function (p) { return p.v; }));
+    if (v1 === v0) v1 = v0 + 1;
+    var X = function (t) { return L + (t1 === t0 ? (W - L - R) / 2 : (t - t0) / (t1 - t0) * (W - L - R)); };
+    var Y = function (v) { return T + (1 - (v - v0) / (v1 - v0)) * (H - T - B); };
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'chart', role: 'img', 'aria-label': title });
+    [v0, (v0 + v1) / 2, v1].forEach(function (v) {
+      svg.appendChild(svgEl('line', { x1: L, x2: W - R, y1: Y(v), y2: Y(v), class: 'grid' }));
+      svg.appendChild(svgEl('text', { x: L - 8, y: Y(v) + 4, 'text-anchor': 'end', class: 'tick' })).textContent = fmt(v);
+    });
+    svg.appendChild(svgEl('text', { x: L, y: H - 8, class: 'tick' })).textContent = fmtTime(t0);
+    svg.appendChild(svgEl('text', { x: W - R, y: H - 8, 'text-anchor': 'end', class: 'tick' })).textContent = fmtTime(t1);
+    svg.appendChild(svgEl('polyline', { points: pts.map(function (p) { return X(p.t) + ',' + Y(p.v); }).join(' '), class: 'series' }));
+    var few = pts.length <= 60;
+    pts.forEach(function (p) {
+      var g = svgEl('g', { class: 'pt' });
+      if (few) g.appendChild(svgEl('circle', { cx: X(p.t), cy: Y(p.v), r: 4, class: 'mark' }));
+      g.appendChild(svgEl('circle', { cx: X(p.t), cy: Y(p.v), r: 11, class: 'hit' }));
+      g.appendChild(svgEl('title', {})).textContent = fmtTime(p.t) + ' · ' + fmt(p.v);
+      svg.appendChild(g);
+    });
+    return h('figure', { class: 'stat-chart' }, h('figcaption', { text: title }), svg);
+  }
+  function barList(title, counts) {
+    var rows = Object.keys(counts).map(function (k) { return [k, counts[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    var max = rows.length ? rows[0][1] : 1;
+    return h('figure', { class: 'stat-chart' }, h('figcaption', { text: title }),
+      h('div', { class: 'bars' }, rows.map(function (r) {
+        return h('div', { class: 'bar-row', title: r[0] + ': ' + r[1] },
+          h('span', { class: 'bar-label', text: r[0] }),
+          h('span', { class: 'bar-track' }, h('span', { class: 'bar', style: 'width:' + Math.max(2, r[1] / max * 100) + '%' })),
+          h('span', { class: 'bar-value', text: String(r[1]) }));
+      })));
+  }
+  function showLog(name, text) {
+    var rep = core.logReport(text);
+    STATS.rep = rep; STATS.name = name;
+    var sel = $('stats-session');
+    sel.hidden = !rep.sessions || rep.sessions.length < 2;
+    sel.innerHTML = '';
+    (rep.sessions || []).forEach(function (s, i) {
+      sel.appendChild(h('option', { value: String(i), text: fmtDate(s.start) + (s.mode ? ' · ' + s.mode : '') + (s.species ? ' · ' + s.species : '') }));
+    });
+    if (rep.sessions) sel.value = String(rep.sessions.length - 1);
+    renderStats();
+    if (!$('stats-dialog').open) openStats();
+  }
+  function renderStats() {
+    var rep = STATS.rep, out = $('stats-out');
+    out.innerHTML = '';
+    $('stats-title').textContent = 'Estadísticas' + (rep && rep.bot ? ': ' + BOT_NAMES[rep.bot] + ' (' + STATS.name + ')' : '');
+    if (!rep) return;
+    if (!rep.bot) {
+      out.appendChild(h('p', { class: 'help', text: 'No reconozco "' + STATS.name + '": elige un log de los bots (shiny_log.txt, train_log.txt o farm_log.txt).' }));
+      return;
+    }
+    if (rep.bot === 'shinybot') {
+      out.appendChild(h('div', { class: 'stat-tiles' },
+        tile('Encontrados', fmtNum(rep.finds.length)), tile('Shinies', fmtNum(rep.shinies)),
+        tile('Intentos de media', rep.finds.length ? fmtNum(rep.avgTries) : '–'), tile('Shinies descartados', fmtNum(rep.discarded), 'no cumplían tus filtros'),
+        rep.sids ? tile('TID/SID conseguidos', fmtNum(rep.sids)) : null, rep.seeds ? tile('Semillas conseguidas', fmtNum(rep.seeds)) : null));
+      if (!rep.finds.length) { out.appendChild(h('p', { class: 'help', text: 'Este log aún no tiene hallazgos.' })); return; }
+      var head = h('tr', null, ['Fecha', 'Pokémon', 'Tipo', 'Naturaleza', 'IVs', 'Intentos', 'Modo'].map(function (c) { return h('th', { text: c }); }));
+      var rows = rep.finds.slice().reverse().map(function (f) {
+        return h('tr', null, [fmtDate(f.t), f.species, f.kind === 'OBJETIVO' ? 'Objetivo' : f.kind.replace('SHINY', 'Shiny'), f.nature, f.ivs, fmtNum(f.tries), f.mode]
+          .map(function (c) { return h('td', { text: c }); }));
+      });
+      out.appendChild(h('div', { class: 'stat-table' }, h('table', null, h('thead', null, head), h('tbody', null, rows))));
+      return;
+    }
+    var s = rep.sessions[+$('stats-session').value || 0] || rep.sessions[rep.sessions.length - 1], dur = s.end - s.start;
+    if (rep.bot === 'farmbot') {
+      var lv = s.levels.length ? s.levels[s.levels.length - 1].v - s.levels[0].v : 0;
+      out.appendChild(h('div', { class: 'stat-tiles' },
+        tile('Duración', fmtDur(dur), fmtDate(s.start) + (s.mode ? ' · modo ' + s.mode : '')),
+        s.earned || s.mode === 'dinero' ? tile('Dinero ganado', '$' + fmtNum(s.earned), perHour(s.earned, dur).replace(' · ', '')) : null,
+        s.found || s.mode === 'objetos' || s.mode === 'robar' ? tile('Objetos', fmtNum(s.found), (s.stored ? s.stored + ' guardados' : '') + perHour(s.found, dur)) : null,
+        tile('Niveles', '+' + lv, s.species ? s.species + (s.levels.length ? ' Nv.' + s.levels[s.levels.length - 1].v : '') : ''),
+        tile('Curas', fmtNum(s.heals)), s.laps ? tile('Vueltas', fmtNum(s.laps)) : null));
+      if (s.done) out.appendChild(h('p', { class: 'stat-done' }, icon('check'), h('span', { text: s.done })));
+      var charts = h('div', { class: 'stat-charts' });
+      if (s.money.length > 1) charts.appendChild(lineChart('Dinero', s.money, function (v) { return '$' + fmtNum(v); }));
+      if (s.levels.length > 1) charts.appendChild(lineChart('Nivel del primero del equipo', s.levels, function (v) { return 'Nv.' + Math.round(v); }));
+      if (Object.keys(s.items).length) charts.appendChild(barList('Objetos conseguidos', s.items));
+      if (charts.children.length) out.appendChild(charts);
+      else out.appendChild(h('p', { class: 'help', text: 'En esta sesión no hubo cambios de dinero, nivel ni objetos todavía.' }));
+    } else {
+      out.appendChild(h('div', { class: 'stat-tiles' },
+        tile('Duración', fmtDur(dur), fmtDate(s.start)), tile('Pokémon', s.species || '?', s.level ? 'empezó en Nv.' + s.level : ''),
+        tile('Viajes al Centro', fmtNum(s.heals)), tile('Evoluciones', fmtNum(s.evolutions)), tile('Ataques aprendidos', fmtNum(s.learned))));
+      if (s.events.length) {
+        out.appendChild(h('ul', { class: 'stat-events' }, s.events.map(function (e) {
+          return h('li', null, h('span', { class: 'help', text: fmtTime(e.t) }), h('span', { text: e.msg }));
+        })));
+      }
+    }
+    hydrateIcons(out);
+  }
+  $('btn-stats').addEventListener('click', openStats);
+  $('btn-stats-file').addEventListener('click', function () { $('stats-file').value = ''; $('stats-file').click(); });
+  $('stats-file').addEventListener('change', function () { readLogFile(this.files[0]); });
+  $('btn-stats-dir').addEventListener('click', readLogFromDir);
+  $('stats-session').addEventListener('change', renderStats);
+  $('stats-drop').addEventListener('dragover', function (e) { e.preventDefault(); this.classList.add('over'); });
+  $('stats-drop').addEventListener('dragleave', function () { this.classList.remove('over'); });
+  $('stats-drop').addEventListener('drop', function (e) {
+    e.preventDefault(); this.classList.remove('over');
+    readLogFile(e.dataTransfer.files[0]);
+  });
+  PT.showLog = showLog;   // also used by the UI smoke test
+
   // ---------------------------------------------------------------- route viewer
   // Shows a route file: one grid per map, the way there and back, and what to fix.
   // Ready-made routes come from data.js; the player's own file is read from the opened
