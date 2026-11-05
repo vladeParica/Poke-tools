@@ -30,6 +30,10 @@ losing what was learned.
   attribution lines**. The `.githooks/commit-msg` hook checks it
   (enable with `git config core.hooksPath .githooks`).
 - **Never `git push` without the user's explicit OK** at that moment. Local commits are fine.
+- **Branches:** `main` (released) and `develop` (integration) are protected by rulesets: no
+  deletion, no force push, changes only through PRs with green CI and the code owner's approval
+  (`.github/CODEOWNERS`; admins can bypass). Work on a branch from `develop`, PR into `develop`,
+  then `develop` into `main`.
 - **The repo is generic:** nothing from a specific save file (TID/SID, seeds computed for
   it, team, Pokémon obtained). Examples use neutral values (TID 12345 / SID 54321).
 - **AI-DLC documentation** in `docs/` (phases 00–06, ADRs in `docs/00-project/adr/`, gates
