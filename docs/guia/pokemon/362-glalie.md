@@ -1,0 +1,92 @@
+# #362 Glalie
+
+[← Pokémon](README.md) · [Guía](../README.md)
+
+| Dato | Valor |
+|---|---|
+| Tipo | Hielo |
+| Habilidades | Fuerza Mental (Inner Focus) |
+| EVs al derrotarlo | 2 PS |
+| Ratio de captura | 75 |
+| Experiencia base | 187 |
+| Crecimiento | Medio (`GROWTH_MEDIUM_FAST`) |
+| Género | 50 % hembra |
+| Grupos huevo | Fairy / Mineral |
+| Objeto que puede llevar (salvaje) | Hielo Perpetuo (Never-Melt Ice) (raro) |
+
+## Stats base
+
+| PS | Ataque | Defensa | At. Esp. | Def. Esp. | Velocidad | Total |
+|---|---|---|---|---|---|---|
+| 80 | 80 | 80 | 80 | 80 | 80 | 480 |
+
+## Evolución
+
+- Evoluciona de [Snorunt](361-snorunt.md): nivel 42.
+
+## Ataques por nivel
+
+| Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
+|---|---|---|---|---|---|---|
+| 1 | Nieve Polvo (Powder Snow) | Hielo | Especial | 40 | 100 | 25 |
+| 1 | Malicioso (Leer) | Normal | Estado | — | 100 | 30 |
+| 1 | Doble Equipo (Double Team) | Normal | Estado | — | — | 15 |
+| 1 | Mordisco (Bite) | Siniestro | Especial | 60 | 100 | 25 |
+| 7 | Doble Equipo (Double Team) | Normal | Estado | — | — | 15 |
+| 10 | Mordisco (Bite) | Siniestro | Especial | 60 | 100 | 25 |
+| 16 | Viento Hielo (Icy Wind) | Hielo | Especial | 55 | 95 | 15 |
+| 19 | Golpe Cabeza (Headbutt) | Normal | Físico | 70 | 100 | 15 |
+| 25 | Protección (Protect) | Normal | Estado | — | — | 10 |
+| 28 | Triturar (Crunch) | Siniestro | Especial | 80 | 100 | 15 |
+| 34 | Rayo Hielo (Ice Beam) | Hielo | Especial | 95 | 100 | 10 |
+| 42 | Granizo (Hail) | Hielo | Estado | — | — | 10 |
+| 53 | Ventisca (Blizzard) | Hielo | Especial | 120 | 70 | 5 |
+| 61 | Frío Polar (Sheer Cold) | Hielo | Especial | variable | 30 | 5 |
+
+## MT y MO
+
+| MT/MO | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
+|---|---|---|---|---|---|---|
+| [MT03](../mts.md#tm03) | Hidropulso (Water Pulse) | Agua | Especial | 60 | 100 | 20 |
+| [MT06](../mts.md#tm06) | Tóxico (Toxic) | Veneno | Estado | — | 85 | 10 |
+| [MT07](../mts.md#tm07) | Granizo (Hail) | Hielo | Estado | — | — | 10 |
+| [MT10](../mts.md#tm10) | Poder Oculto (Hidden Power) | Normal | Físico | variable | 100 | 15 |
+| [MT12](../mts.md#tm12) | Mofa (Taunt) | Siniestro | Estado | — | 100 | 20 |
+| [MT13](../mts.md#tm13) | Rayo Hielo (Ice Beam) | Hielo | Especial | 95 | 100 | 10 |
+| [MT14](../mts.md#tm14) | Ventisca (Blizzard) | Hielo | Especial | 120 | 70 | 5 |
+| [MT15](../mts.md#tm15) | Hiperrayo (Hyper Beam) | Normal | Físico | 150 | 90 | 5 |
+| [MT16](../mts.md#tm16) | Pantalla de Luz (Light Screen) | Psíquico | Estado | — | — | 30 |
+| [MT17](../mts.md#tm17) | Protección (Protect) | Normal | Estado | — | — | 10 |
+| [MT18](../mts.md#tm18) | Danza Lluvia (Rain Dance) | Agua | Estado | — | — | 5 |
+| [MT20](../mts.md#tm20) | Velo Sagrado (Safeguard) | Normal | Estado | — | — | 25 |
+| [MT21](../mts.md#tm21) | Frustración (Frustration) | Normal | Físico | variable | 100 | 20 |
+| [MT26](../mts.md#tm26) | Terremoto (Earthquake) | Tierra | Físico | 100 | 100 | 10 |
+| [MT27](../mts.md#tm27) | Retribución (Return) | Normal | Físico | variable | 100 | 20 |
+| [MT30](../mts.md#tm30) | Bola Sombra (Shadow Ball) | Fantasma | Físico | 80 | 100 | 15 |
+| [MT32](../mts.md#tm32) | Doble Equipo (Double Team) | Normal | Estado | — | — | 15 |
+| [MT41](../mts.md#tm41) | Tormento (Torment) | Siniestro | Estado | — | 100 | 15 |
+| [MT42](../mts.md#tm42) | Fachada (Facade) | Normal | Físico | 70 | 100 | 20 |
+| [MT43](../mts.md#tm43) | Daño Secreto (Secret Power) | Normal | Físico | 70 | 100 | 20 |
+| [MT44](../mts.md#tm44) | Descanso (Rest) | Psíquico | Estado | — | — | 10 |
+| [MT45](../mts.md#tm45) | Atracción (Attract) | Normal | Estado | — | 100 | 15 |
+| [MO05](../mts.md#hm05) | Destello (Flash) | Normal | Estado | — | 70 | 20 |
+
+## Tutores de ataques
+
+| Tutor | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
+|---|---|---|---|---|---|---|
+| [ver](../tutores.md) | Golpe Cuerpo (Body Slam) | Normal | Físico | 85 | 100 | 15 |
+| [ver](../tutores.md) | Doble Filo (Double-Edge) | Normal | Físico | 120 | 100 | 15 |
+| [ver](../tutores.md) | Mimético (Mimic) | Normal | Estado | — | 100 | 10 |
+| [ver](../tutores.md) | Explosión (Explosion) | Normal | Físico | 250 | 100 | 5 |
+| [ver](../tutores.md) | Sustituto (Substitute) | Normal | Estado | — | — | 10 |
+
+## Dónde encontrarlo
+
+### Rojo Fuego
+
+No se encuentra directamente. Evoluciona de [Snorunt](361-snorunt.md).
+
+### Verde Hoja
+
+No se encuentra directamente. Evoluciona de [Snorunt](361-snorunt.md).

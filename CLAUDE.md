@@ -55,6 +55,7 @@ trainbot/   FRLG_TrainBot.lua (generated) + .json   src/train_body.lua, src/trai
 farmbot/    FRLG_FarmBot.lua (generated) + .json   src/farm_body.lua (fork of train_body)   tests/   examples/
 tools/rng/  RNG searches (C and Python) to find targets and seeds
 tools/package.py  release zip for one bot (tag <bot>-vX.Y; .github/workflows/release.yml)
+tools/guia/gen_guia.py  game guide docs/guia/ (Spanish, by request) generated from pret + PokeAPI names
 shared/     lang/en.json, lang/ja.json (bot text translations), langgen.py (build), tests/run_lang.py
 docs/       AI-DLC documentation per phase (00-project … 06-monitoring, architecture/)
 .ai-dlc/    documentation gates and templates
