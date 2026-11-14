@@ -93,7 +93,7 @@
         { key: 'afterSeedMode', type: 'enum', options: RNG, def: null, nullable: true, label: 'Modo después de la semilla',
           help: 'El modo RNG que se lanza al caer en la semilla.', comment: 'modo a lanzar al caer en la semilla' }
       ] },
-      { id: 'newgame', title: 'TID / SID', icon: 'mode-newgame', desc: 'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos.', showIf: modeIn(['Partida nueva']), fields: [
+      { id: 'newgame', title: 'TID / SID', icon: 'mode-newgame', desc: 'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos. Cómo se usa: partida nueva, pon tu nombre y el del rival; cuando Oak diga «His name is [RIVAL]!», no pulses A: pulsa 0 y luego 7.', showIf: modeIn(['Partida nueva']), fields: [
         { key: 'newGameTSV', type: 'hexlist', digits: 4, def: null, nullable: true, label: 'TSV buscados (TID xor SID)',
           help: 'Vacío = los que hacen shiny a un Ditto 6×31 (9630, B378, 79F8).', comment: 'TID xor SID en hex; null = Ditto 6x31' }
       ] },

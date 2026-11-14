@@ -23,6 +23,13 @@ pip install -r requirements-dev.txt
 git config core.hooksPath .githooks
 ```
 
+## Branches
+- **`main`** holds what is released; **`develop`** collects the work in progress.
+- Branch from `develop` (`feat/...`, `fix/...`, `docs/...`) and open the PR **into `develop`**.
+  When `develop` is ready to release, a PR from `develop` into `main`.
+- Both branches are protected: no direct pushes, no force pushes and they can't be deleted.
+  A PR needs CI green and the approval of the code owner (`.github/CODEOWNERS`).
+
 ## Workflow
 1. Edit **`*/src/*`**, never the generated `.lua` files ([ADR-0002](docs/00-project/adr/0002-single-generated-script.md)).
 2. Rebuild: `python shinybot/build.py` and `python trainbot/build.py`.

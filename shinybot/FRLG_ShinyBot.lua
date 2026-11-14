@@ -322,6 +322,7 @@ local LANG = {
     ["Necesita curarse ("] = "Needs healing (",
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "No party Pokemon has the Pickup ability",
     ["Niveles +%d desde el inicio%s"] = "Levels +%d since the start%s",
+    ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
@@ -363,6 +364,7 @@ local LANG = {
     ["PS bajos"] = "low HP",
     ["PS muy bajos"] = "very low HP",
     ["Partida nueva"] = "New game",
+    ["Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando"] = "New game: name your character and your rival, and press 7 while Oak is still talking",
     ["Paso %d de %d   intento %d"] = "Step %d of %d   attempt %d",
     ["Pasos hasta el encuentro: %d%s"] = "Steps to the encounter: %d%s",
     ["Planta"] = "Grass",
@@ -801,6 +803,7 @@ local LANG = {
     ["Necesita curarse ("] = "Kaifuku ga hitsuyou (",
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "Temochi ni tokusei Monohiroi no Pokemon ga inai",
     ["Niveles +%d desde el inicio%s"] = "Kaishi kara Lv +%d%s",
+    ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
@@ -842,6 +845,7 @@ local LANG = {
     ["PS bajos"] = "HP ga hikui",
     ["PS muy bajos"] = "HP ga totemo hikui",
     ["Partida nueva"] = "Saisho kara",
+    ["Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando"] = "Saisho kara: shujinkou to rival no namae wo kimete, Oak ga hanashite iru aida ni 7 wo oshite",
     ["Paso %d de %d   intento %d"] = "%d ho me / %d   shikou %d",
     ["Pasos hasta el encuentro: %d%s"] = "Encount made: %d ho%s",
     ["Planta"] = "Kusa",
@@ -2644,6 +2648,13 @@ local function stepNewGame()
       retryOrNext(hit)
     elseif bot.t > CONFIG.resetTimeout then
       bot.timeouts = bot.timeouts + 1
+      -- No SID at all after two full tries: the mode was started too early (before naming
+      -- the rival) and the A presses never reach the end of Oak's speech.
+      if bot.timeouts >= 2 and not rng.delay then
+        stopBot()
+        bot.msg = TX"No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"
+        print(bot.msg); return
+      end
       bot.st = "wait"; rngLoad()
     end
   end
@@ -3162,6 +3173,11 @@ local function startBot()
       bot.msg = TX"El roamer ya esta activo: usa un save de ANTES del evento"
       print(bot.msg); return
     end
+  end
+  -- New game: the TID only exists once you name your character (the seed word is 0 before)
+  if bot.mode == 9 and read16(0x02020000) == 0 then
+    bot.msg = TX"Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando"
+    print(bot.msg); return
   end
   bot.running, bot.found, bot.msg = true, false, ""
   bot.encounters, bot.timeouts, bot.startFrame = 0, 0, emu.framecount()

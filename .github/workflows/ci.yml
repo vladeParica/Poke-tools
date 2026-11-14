@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
   workflow_call:   # the release workflow runs the full CI before publishing
 
@@ -60,6 +60,7 @@ jobs:
           python run_wild.py
           python run_far.py
           python run_cfg.py
+          python run_newgame.py
 
   trainbot:
     name: Train Bot simulator

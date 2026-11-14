@@ -53,6 +53,11 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - GPL-3.0 license, `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
 - Project logo (`assets/logo.svg`) and social preview image.
 
+### Fixed
+- Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
+  and, if no SID appears after two tries (started before naming the rival), it stops with a
+  message saying when to press 7 instead of retrying forever.
+
 ### Changed
 - Train Bot examples moved to `trainbot/examples/configs/` with per-stat names
   (`FRLG_TrainBot_Speed_Diglett.json`, `FRLG_TrainBot_SpAtk_Tower.json`).
