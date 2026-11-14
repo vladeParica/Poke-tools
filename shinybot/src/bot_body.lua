@@ -1609,6 +1609,13 @@ local function stepNewGame()
       retryOrNext(hit)
     elseif bot.t > CONFIG.resetTimeout then
       bot.timeouts = bot.timeouts + 1
+      -- No SID at all after two full tries: the mode was started too early (before naming
+      -- the rival) and the A presses never reach the end of Oak's speech.
+      if bot.timeouts >= 2 and not rng.delay then
+        stopBot()
+        bot.msg = TX"No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"
+        print(bot.msg); return
+      end
       bot.st = "wait"; rngLoad()
     end
   end
@@ -2127,6 +2134,11 @@ local function startBot()
       bot.msg = TX"El roamer ya esta activo: usa un save de ANTES del evento"
       print(bot.msg); return
     end
+  end
+  -- New game: the TID only exists once you name your character (the seed word is 0 before)
+  if bot.mode == 9 and read16(0x02020000) == 0 then
+    bot.msg = TX"Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando"
+    print(bot.msg); return
   end
   bot.running, bot.found, bot.msg = true, false, ""
   bot.encounters, bot.timeouts, bot.startFrame = 0, 0, emu.framecount()

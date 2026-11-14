@@ -475,5 +475,7 @@
   "Modo: %s": "Mode: %s",
   "Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara": "Chui: kono version no menu wa mi-kakunin: dougu wo hazusu toki wa ichiji teishi shite shirasemasu",
   "Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta": "Trainer route yomikomi: iki %d ho, kaeri %d",
-  "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Betsu no Lua window de Farm Bot ka Train Bot ga ugoite iru: hitotsu dake ni shite"
+  "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Betsu no Lua window de Farm Bot ka Train Bot ga ugoite iru: hitotsu dake ni shite",
+  "Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando": "Saisho kara: shujinkou to rival no namae wo kimete, Oak ga hanashite iru aida ni 7 wo oshite",
+  "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite"
 }

@@ -265,7 +265,7 @@ PT.i18n.add('en', {
   'El modo RNG que se lanza al caer en la semilla.': 'The RNG mode launched when the seed is hit.',
   'modo a lanzar al caer en la semilla': 'mode to launch when the seed is hit',
   'TID / SID': 'TID / SID',
-  'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos.': 'New game mode only: resets until TID xor SID is one of these.',
+  'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos. Cómo se usa: partida nueva, pon tu nombre y el del rival; cuando Oak diga «His name is [RIVAL]!», no pulses A: pulsa 0 y luego 7.': 'New game mode only: resets until TID xor SID is one of these. How to use it: new game, name your character and your rival; when Oak says "His name is [RIVAL]!", do not press A: press 0, then 7.',
   'TSV buscados (TID xor SID)': 'wanted TSVs (TID xor SID)',
   'Vacío = los que hacen shiny a un Ditto 6×31 (9630, B378, 79F8).': 'Empty = the ones that make a 6×31 Ditto shiny (9630, B378, 79F8).',
   'TID xor SID en hex; null = Ditto 6x31': 'TID xor SID in hex; null = 6x31 Ditto',
