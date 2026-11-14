@@ -53,6 +53,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - GPL-3.0 license, `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
 - Project logo (`assets/logo.svg`) and social preview image.
 
+- Shiny Bot, Static/Gift/Roamer RNG without the Teachy TV: on a far target the bot saves a
+  state shortly before it, and the tries after the first one start there instead of waiting
+  from the base again.
+
 ### Fixed
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
