@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/129.png" alt="Magikarp" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/129.png" alt="Magikarp shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Agua |
@@ -22,15 +24,15 @@
 
 ## Evolución
 
-- Evoluciona a [Gyarados](130-gyarados.md): nivel 20.
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/130.png" alt="Gyarados" width="32" height="32"> [Gyarados](130-gyarados.md): nivel 20.
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Salpicadura (Splash) | Normal | Estado | — | — | 40 |
-| 15 | Placaje (Tackle) | Normal | Físico | 35 | 95 | 35 |
-| 30 | Azote (Flail) | Normal | Físico | variable | 100 | 15 |
+| 1 | [Salpicadura (Splash)](../ataques.md#mv-splash) | Normal | Estado | — | — | 40 |
+| 15 | [Placaje (Tackle)](../ataques.md#mv-tackle) | Normal | Físico | 35 | 95 | 35 |
+| 30 | [Azote (Flail)](../ataques.md#mv-flail) | Normal | Físico | variable | 100 | 15 |
 
 ## MT y MO
 

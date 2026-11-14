@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/10.png" alt="Caterpie" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/10.png" alt="Caterpie shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Bicho |
@@ -22,14 +24,14 @@
 
 ## Evolución
 
-- Evoluciona a [Metapod](011-metapod.md): nivel 7.
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/11.png" alt="Metapod" width="32" height="32"> [Metapod](011-metapod.md): nivel 7.
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Placaje (Tackle) | Normal | Físico | 35 | 95 | 35 |
-| 1 | Disparo Demora (String Shot) | Bicho | Estado | — | 95 | 40 |
+| 1 | [Placaje (Tackle)](../ataques.md#mv-tackle) | Normal | Físico | 35 | 95 | 35 |
+| 1 | [Disparo Demora (String Shot)](../ataques.md#mv-string-shot) | Bicho | Estado | — | 95 | 40 |
 
 ## MT y MO
 

@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/265.png" alt="Wurmple" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/265.png" alt="Wurmple shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Bicho |
@@ -22,16 +24,16 @@
 
 ## Evolución
 
-- Evoluciona a [Silcoon](266-silcoon.md): nivel 7 (según su personalidad).
-- Evoluciona a [Cascoon](268-cascoon.md): nivel 7 (según su personalidad).
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/266.png" alt="Silcoon" width="32" height="32"> [Silcoon](266-silcoon.md): nivel 7 (según su personalidad).
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/268.png" alt="Cascoon" width="32" height="32"> [Cascoon](268-cascoon.md): nivel 7 (según su personalidad).
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Placaje (Tackle) | Normal | Físico | 35 | 95 | 35 |
-| 1 | Disparo Demora (String Shot) | Bicho | Estado | — | 95 | 40 |
-| 5 | Picotazo Veneno (Poison Sting) | Veneno | Físico | 15 | 100 | 35 |
+| 1 | [Placaje (Tackle)](../ataques.md#mv-tackle) | Normal | Físico | 35 | 95 | 35 |
+| 1 | [Disparo Demora (String Shot)](../ataques.md#mv-string-shot) | Bicho | Estado | — | 95 | 40 |
+| 5 | [Picotazo Veneno (Poison Sting)](../ataques.md#mv-poison-sting) | Veneno | Físico | 15 | 100 | 35 |
 
 ## MT y MO
 

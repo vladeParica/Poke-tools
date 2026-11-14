@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/14.png" alt="Kakuna" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/14.png" alt="Kakuna shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Bicho / Veneno |
@@ -22,15 +24,15 @@
 
 ## Evolución
 
-- Evoluciona de [Weedle](013-weedle.md): nivel 7.
-- Evoluciona a [Beedrill](015-beedrill.md): nivel 10.
+- Evoluciona de <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/13.png" alt="Weedle" width="32" height="32"> [Weedle](013-weedle.md): nivel 7.
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/15.png" alt="Beedrill" width="32" height="32"> [Beedrill](015-beedrill.md): nivel 10.
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Fortaleza (Harden) | Normal | Estado | — | — | 30 |
-| 7 | Fortaleza (Harden) | Normal | Estado | — | — | 30 |
+| 1 | [Fortaleza (Harden)](../ataques.md#mv-harden) | Normal | Estado | — | — | 30 |
+| 7 | [Fortaleza (Harden)](../ataques.md#mv-harden) | Normal | Estado | — | — | 30 |
 
 ## MT y MO
 

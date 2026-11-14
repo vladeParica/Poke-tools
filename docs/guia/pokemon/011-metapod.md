@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/11.png" alt="Metapod" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/11.png" alt="Metapod shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Bicho |
@@ -22,15 +24,15 @@
 
 ## Evolución
 
-- Evoluciona de [Caterpie](010-caterpie.md): nivel 7.
-- Evoluciona a [Butterfree](012-butterfree.md): nivel 10.
+- Evoluciona de <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/10.png" alt="Caterpie" width="32" height="32"> [Caterpie](010-caterpie.md): nivel 7.
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/12.png" alt="Butterfree" width="32" height="32"> [Butterfree](012-butterfree.md): nivel 10.
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Fortaleza (Harden) | Normal | Estado | — | — | 30 |
-| 7 | Fortaleza (Harden) | Normal | Estado | — | — | 30 |
+| 1 | [Fortaleza (Harden)](../ataques.md#mv-harden) | Normal | Estado | — | — | 30 |
+| 7 | [Fortaleza (Harden)](../ataques.md#mv-harden) | Normal | Estado | — | — | 30 |
 
 ## MT y MO
 

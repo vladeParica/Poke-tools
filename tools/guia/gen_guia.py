@@ -335,9 +335,12 @@ def names(g):
               'GRASS', 'ELECTRIC', 'PSYCHIC', 'ICE', 'DRAGON', 'DARK', 'MYSTERY']:
         i = tid.get(t.lower())
         g.N['ty', t] = (ty_en.get(i), ty_es.get(i)) if i else (t.title(), None)
+    ident = {v: k for k, v in iid.items()}
+    g.item_ident = {}                               # pret item -> PokeAPI identifier (for its icon)
     for it, d in g.item.items():
         i = iid.get(it.lower().replace('_', '-')) or en_to_id.get(norm(d['english']))
         if i:
+            g.item_ident[it] = ident[i]
             g.N['it', it] = (it_en.get(i), it_es.get(i))
         else:
             g.unmatched['items'].append(it)
@@ -368,6 +371,91 @@ def slug(g, sp):
 
 def splink(g, sp, base='pokemon/'):
     return '[%s](%s%s.md)' % (nm(g, 'sp', sp), base, slug(g, sp))
+
+
+# ------------------------------------------------------------------ sprites (linked, never stored)
+# Images come from the PokeAPI sprites repository and are only linked, like the configurator
+# backgrounds (ADR-0013): the browser loads them when the page is viewed. Every URL is checked
+# once (cached in pret_cache/pokeapi/sprites.json); one that doesn't exist gets no image.
+SPR = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/'
+
+
+def poke_url(g, sp, shiny=False):
+    return SPR + 'pokemon/versions/generation-iii/firered-leafgreen/%s%d.png' % ('shiny/' if shiny else '', dex(g, sp))
+
+
+def item_urls(g, it):
+    """Candidate icons of an item, best first: TMs and HMs use the disc of their move's type."""
+    if it in g.tm:
+        t = g.moves[g.tm[it]]['type'].lower()
+        kind = it[:2].lower()
+        return [SPR + 'items/%s-%s.png' % (kind, t), SPR + 'items/%s-normal.png' % kind]
+    return [SPR + 'items/%s.png' % g.item_ident[it]] if it in g.item_ident else []
+
+
+def check_sprites(g):
+    import concurrent.futures
+    path = os.path.join(PAPI, 'sprites.json')
+    try:
+        with open(path, encoding='utf-8') as f:
+            cache = json.load(f)
+    except (OSError, ValueError):
+        cache = {}
+    urls = {poke_url(g, s, sh) for s in g.info if dex(g, s) for sh in (False, True)}
+    urls |= {u for it in list(g.item) + list(g.tm) for u in item_urls(g, it)}
+    todo = sorted(u for u in urls if u not in cache)
+
+    def head(u):
+        try:
+            req = urllib.request.Request(u, method='HEAD')
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return u, r.status == 200
+        except urllib.error.HTTPError as e:
+            return u, False if e.code == 404 else None
+        except OSError:
+            return u, None                     # offline: unknown, not cached, no image this time
+    if todo:
+        print('checking %d sprite URLs...' % len(todo))
+        with concurrent.futures.ThreadPoolExecutor(16) as ex:
+            for u, ok in ex.map(head, todo):
+                if ok is not None:
+                    cache[u] = ok
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, indent=0, sort_keys=True)
+    g.sprite_ok = {u for u, ok in cache.items() if ok}
+
+
+def img(url, alt, size):
+    return '<img src="%s" alt="%s" width="%d" height="%d">' % (url, alt.replace('"', ''), size, size)
+
+
+def pimg(g, sp, size=32, shiny=False):
+    u = poke_url(g, sp, shiny)
+    return img(u, short(g, 'sp', sp) + (' shiny' if shiny else ''), size) if u in g.sprite_ok else ''
+
+
+def iimg(g, it, size=24):
+    u = next((u for u in item_urls(g, it) if u in g.sprite_ok), None)
+    return img(u, short(g, 'it', it), size) if u else ''
+
+
+def ipre(g, it, size=24):
+    """Icon followed by a space, or nothing."""
+    i = iimg(g, it, size)
+    return i + ' ' if i else ''
+
+
+def ppre(g, sp, size=32):
+    i = pimg(g, sp, size)
+    return i + ' ' if i else ''
+
+
+def mv_anchor(mv):
+    return 'mv-' + mv.lower().replace('_', '-')
+
+
+def mvlink(g, mv, base=''):
+    return '[%s](%sataques.md#%s)' % (nm(g, 'mv', mv), base, mv_anchor(mv))
 
 
 def map_name(g, mapdir):
@@ -636,10 +724,10 @@ def fmt_power(m):
     return '—' if m['power'] == 0 else ('variable' if m['power'] == 1 else str(m['power']))
 
 
-def move_row(g, mv, first):
+def move_row(g, mv, first, base=''):
     m = g.moves[mv]
     acc = '—' if m['acc'] == 0 else str(m['acc'])
-    return '| %s | %s | %s | %s | %s | %s | %d |' % (first, nm(g, 'mv', mv), tyn(g, m['type']), cat(g, mv), fmt_power(m), acc, m['pp'])
+    return '| %s | %s | %s | %s | %s | %s | %d |' % (first, mvlink(g, mv, base), tyn(g, m['type']), cat(g, mv), fmt_power(m), acc, m['pp'])
 
 
 MOVE_HEAD = '| %s | Ataque | Tipo | Categoría | Potencia | Precisión | PP |\n|---|---|---|---|---|---|---|'
@@ -801,12 +889,15 @@ def obtain(g, ver):
 def page_pokemon(g, sp, enc, obt):
     i = g.info[sp]
     L = ['# #%03d %s' % (dex(g, sp), nm(g, 'sp', sp)), '', '[← Pokémon](README.md) · ' + NAV % '../', '']
+    pics = [p for p in (pimg(g, sp, 96), pimg(g, sp, 96, shiny=True)) if p]
+    if pics:
+        L += [' '.join(pics), '']
     t1, t2 = i['types']
     types = tyn(g, t1) + ('' if t2 == t1 else ' / ' + tyn(g, t2))
     abil = ' / '.join(nm(g, 'ab', a) for a in dict.fromkeys(i['abilities']) if a != 'NONE')
     evs = ', '.join('%d %s' % (v, STAT_ES[k]) for k, v in enumerate(i['ev']) if v) or 'ninguno'
-    items = ['%s (común)' % nm(g, 'it', i['items'][0])] if i['items'][0] != 'NONE' else []
-    items += ['%s (raro)' % nm(g, 'it', i['items'][1])] if i['items'][1] != 'NONE' else []
+    items = ['%s%s (común)' % (ipre(g, i['items'][0]), nm(g, 'it', i['items'][0]))] if i['items'][0] != 'NONE' else []
+    items += ['%s%s (raro)' % (ipre(g, i['items'][1]), nm(g, 'it', i['items'][1]))] if i['items'][1] != 'NONE' else []
     eggs = ' / '.join(dict.fromkeys(e.replace('_', ' ').title() for e in i['eggs']))
     L += ['| Dato | Valor |', '|---|---|', '| Tipo | %s |' % types, '| Habilidades | %s |' % abil,
           '| EVs al derrotarlo | %s |' % evs, '| Ratio de captura | %d |' % i['catch'],
@@ -820,18 +911,19 @@ def page_pokemon(g, sp, enc, obt):
     if sp in g.prev:
         p = g.prev[sp]
         how = [evo_text(g, m, a) for m, a, t in g.evo[p] if t == sp]
-        L.append('- Evoluciona de %s: %s.' % (splink(g, p, ''), '; '.join(how)))
+        L.append('- Evoluciona de %s%s: %s.' % (ppre(g, p), splink(g, p, ''), '; '.join(how)))
     for m, a, t in g.evo.get(sp, []):
-        L.append('- Evoluciona a %s: %s.' % (splink(g, t, ''), evo_text(g, m, a)))
+        L.append('- Evoluciona a %s%s: %s.' % (ppre(g, t), splink(g, t, ''), evo_text(g, m, a)))
     if sp not in g.prev and sp not in g.evo:
         L.append('No evoluciona.')
     L += ['', '## Ataques por nivel', '', MOVE_HEAD % 'Nv']
-    L += [move_row(g, mv, str(lv)) for lv, mv in g.lvl.get(sp, [])]
+    L += [move_row(g, mv, str(lv), '../') for lv, mv in g.lvl.get(sp, [])]
     L += ['', '## MT y MO', '']
     tms = g.tmlearn.get(sp, [])
     if tms:
         L.append(MOVE_HEAD % 'MT/MO')
-        L += [move_row(g, g.tm[t], '[%s](../mts.md#%s)' % (t.replace('TM', 'MT').replace('HM', 'MO'), t.lower())) for t in tms]
+        L += [move_row(g, g.tm[t], '%s[%s](../mts.md#%s)' % (ipre(g, t), t.replace('TM', 'MT').replace('HM', 'MO'), t.lower()), '../')
+              for t in tms]
     else:
         L.append('No aprende ninguna MT ni MO.')
     L += ['', '## Tutores de ataques', '']
@@ -840,7 +932,7 @@ def page_pokemon(g, sp, enc, obt):
         tut.append(['FRENZY_PLANT', 'BLAST_BURN', 'HYDRO_CANNON'][g.capebrink.index(sp)])
     if tut:
         L.append(MOVE_HEAD % 'Tutor')
-        L += [move_row(g, mv, '[ver](../tutores.md)') for mv in tut]
+        L += [move_row(g, mv, '[ver](../tutores.md)', '../') for mv in tut]
     else:
         L.append('Ningún tutor le enseña ataques.')
     L += ['', '## Dónde encontrarlo', '']
@@ -872,10 +964,11 @@ def all_pokemon(g):
     sps = sorted((s for s in g.info if dex(g, s)), key=lambda s: dex(g, s))
     for sp in sps:
         page_pokemon(g, sp, enc, obt)
-    L = ['# Pokémon', '', NAV % '../', '', '| N.º | Pokémon | Tipo |', '|---|---|---|']
+    L = ['# Pokémon', '', NAV % '../', '', '| N.º | | Pokémon | Tipo |', '|---|---|---|---|']
     for sp in sps:
         t1, t2 = g.info[sp]['types']
-        L.append('| %03d | %s | %s |' % (dex(g, sp), splink(g, sp, ''), tyn(g, t1) + ('' if t1 == t2 else ' / ' + tyn(g, t2))))
+        L.append('| %03d | %s | %s | %s |' % (dex(g, sp), pimg(g, sp, 40), splink(g, sp, ''),
+                                             tyn(g, t1) + ('' if t1 == t2 else ' / ' + tyn(g, t2))))
     write('pokemon/README.md', '\n'.join(L))
     return enc, obt
 
@@ -932,8 +1025,8 @@ def page_mts(g):
         mv = g.tm[t]
         m = g.moves[mv]
         one = (('Sí' if t.startswith('TM') else 'No') if g.tm_consumed else NV)
-        L.append('| <a id="%s"></a>%s | %s | %s | %s | %s | %s | %d | %s | %s |' % (
-            t.lower(), t.replace('TM', 'MT').replace('HM', 'MO'), nm(g, 'mv', mv), tyn(g, m['type']), cat(g, mv), fmt_power(m),
+        L.append('| <a id="%s"></a>%s%s | %s | %s | %s | %s | %s | %d | %s | %s |' % (
+            t.lower(), ipre(g, t), t.replace('TM', 'MT').replace('HM', 'MO'), mvlink(g, mv), tyn(g, m['type']), cat(g, mv), fmt_power(m),
             '—' if m['acc'] == 0 else m['acc'], m['pp'], one, sources_cell(src, t)))
     write('mts.md', '\n'.join(L))
     return src
@@ -948,7 +1041,7 @@ def page_objetos(g, src):
     stones = sorted({p[5:] for v in g.evo.values() for m, p, t in v if m == 'EVO_ITEM'})
     for title, lst in (('Vitaminas y caramelos', VITAMINS), ('Piedras evolutivas', stones)):
         L += ['## ' + title, '', '| Objeto | Cómo se consigue |', '|---|---|']
-        L += ['| %s | %s |' % (nm(g, 'it', it), sources_cell(src, it)) for it in lst]
+        L += ['| %s%s | %s |' % (ipre(g, it), nm(g, 'it', it), sources_cell(src, it)) for it in lst]
         L.append('')
     L += ['## Tiendas', '']
     marts = merge(g.RFR.marts, g.RLG.marts, lambda x: (x['map'], x['label']))
@@ -960,13 +1053,14 @@ def page_objetos(g, src):
         # several lists on one map (a stock that grows, or two counters): name each by its pret label
         which = ' — `%s`' % x['label'] if per_map[x['map']] > 1 else ''
         L += ['### %s%s%s' % (map_name(g, x['map']), which, vtag(vs)), '', '| Objeto | Precio |', '|---|---|']
-        L += ['| %s%s | %s |' % (nm(g, 'it', it), vtag(v2), price(g, it)) for it, v2 in its]
+        L += ['| %s%s%s | %s |' % (ipre(g, it), nm(g, 'it', it), vtag(v2), price(g, it)) for it, v2 in its]
         L.append('')
     coins = merge(g.RFR.coins, g.RLG.coins, lambda c: (c['prize'], c['coins']))
     L += ['### Casino de Azulona: premios con fichas', '', '| Premio | Fichas |', '|---|---|']
     for c, vs in coins:
         p = c['prize']
-        name = (splink(g, p[8:]) + (' Nv %s' % c.get('lvl') if c.get('lvl') else '')) if p.startswith('SPECIES_') else nm(g, 'it', p[5:])
+        name = ((ppre(g, p[8:]) + splink(g, p[8:]) + (' Nv %s' % c.get('lvl') if c.get('lvl') else '')) if p.startswith('SPECIES_')
+                else ipre(g, p[5:]) + nm(g, 'it', p[5:]))
         L.append('| %s%s | %d |' % (name, vtag(vs), c['coins']))
     L += ['', '## Por mapa', '']
     per = defaultdict(lambda: defaultdict(list))
@@ -974,8 +1068,8 @@ def page_objetos(g, src):
         for x, vs in merge(getattr(g.RFR, kind), getattr(g.RLG, kind), lambda y: json.dumps(y, sort_keys=True, default=str)):
             extra = ' (x %d, y %d)' % tuple(x['xy']) if x.get('xy') else ''
             how, who = (gift_kind(g, x)[0], ' — ' + gift_kind(g, x)[1]) if kind == 'gifts' else (name, '')
-            per[map_name(g, x['map'])][how].append('%s%s%s%s%s' % (nm(g, 'it', x['item']), ' ×%d' % x['qty'] if x['qty'] > 1 else '',
-                                                                  extra, who, vtag(vs)))
+            per[map_name(g, x['map'])][how].append('%s%s%s%s%s%s' % (ipre(g, x['item'], 20), nm(g, 'it', x['item']),
+                                                                    ' ×%d' % x['qty'] if x['qty'] > 1 else '', extra, who, vtag(vs)))
     for mp in sorted(per):
         L += ['### ' + mp, '']
         for name in ('Suelo', 'Oculto', 'Regalo', 'Compra', 'Canje'):
@@ -1004,7 +1098,7 @@ def page_tutores(g):
         if any(re.match(r'goto_if_set FLAG_TUTOR_', s) for s in g.RFR.labels.get(x['label'], [])):
             req.append('una sola vez por partida')
         who = sorted((s for s in g.info if tut in g.tutorlearn.get(s, [])), key=lambda s: dex(g, s))
-        L.append('| %s | %s | %s%s | %s | %s |' % (nm(g, 'mv', tut), tyn(g, g.moves[tut]['type']), map_name(g, x['map']), vtag(vs),
+        L.append('| %s | %s | %s%s | %s | %s |' % (mvlink(g, tut), tyn(g, g.moves[tut]['type']), map_name(g, x['map']), vtag(vs),
                                                   '; '.join(req) or 'ninguno', ', '.join(splink(g, s) for s in who)))
     L += ['', '## Ataques definitivos de los iniciales', '']
     cb = [k for k in g.RFR.labels if k.endswith('_EventScript_StarterTutor')]
@@ -1015,7 +1109,7 @@ def page_tutores(g):
                  where, g.capebrink_friend if g.capebrink_friend is not None else NV))
     L += ['', MOVE_HEAD % 'Pokémon']
     for sp, mv in zip(g.capebrink, ['FRENZY_PLANT', 'BLAST_BURN', 'HYDRO_CANNON']):
-        L.append(move_row(g, mv, splink(g, sp)))
+        L.append(move_row(g, mv, ppre(g, sp) + splink(g, sp)))
     write('tutores.md', '\n'.join(L))
 
 
@@ -1025,8 +1119,9 @@ def party_table(g, tr):
     for p in t['party']:
         mv = p['moves'] if p['moves'] else default_moves(g, p['species'], p['lvl'])
         note = '' if p['moves'] else ' *(por defecto)*'
-        L.append('| %s | %d | %s%s | %s |' % (splink(g, p['species']), p['lvl'], ', '.join(short(g, 'mv', m) for m in mv), note,
-                                              nm(g, 'it', p['item']) if p['item'] else '—'))
+        mvs = ', '.join('[%s](ataques.md#%s)' % (short(g, 'mv', m), mv_anchor(m)) for m in mv)
+        L.append('| %s%s | %d | %s%s | %s |' % (ppre(g, p['species']), splink(g, p['species']), p['lvl'], mvs, note,
+                                                (ipre(g, p['item']) + nm(g, 'it', p['item'])) if p['item'] else '—'))
     return L
 
 
@@ -1057,8 +1152,8 @@ def page_entrenadores(g):
     for badge, tr, x in sorted(leaders):
         t = g.trainers[tr]
         gifts = [y for y in R.gifts if y['map'] == x['map'] and y['who'] == x['who']]
-        prize = ', '.join('[%s](mts.md#%s) (%s)' % (nm(g, 'it', y['item']), y['item'].lower(), short(g, 'mv', g.tm[y['item']]))
-                          if y['item'] in g.tm else nm(g, 'it', y['item']) for y in gifts)
+        prize = ', '.join(ipre(g, y['item']) + ('[%s](mts.md#%s) (%s)' % (nm(g, 'it', y['item']), y['item'].lower(), short(g, 'mv', g.tm[y['item']]))
+                                                if y['item'] in g.tm else nm(g, 'it', y['item'])) for y in gifts)
         L += ['### %s — %s' % (t['name'].title(), map_name(g, x['map'])), '',
               '- Medalla n.º %s' % (badge if badge != 99 else NV),
               '- Premio: %s%s' % (money(g, tr), ', ' + prize if prize else ''),
@@ -1140,14 +1235,64 @@ def page_diferencias(g, enc, obt):
          'entre partidas.', '']
     for v, o in (('FR', 'LG'), ('LG', 'FR')):
         ex = sorted(have[v] - have[o], key=lambda s: dex(g, s))
-        L += ['## Solo en %s (%d)' % (VER_NAME[v], len(ex)), '', '| N.º | Pokémon | Cómo |', '|---|---|---|']
+        L += ['## Solo en %s (%d)' % (VER_NAME[v], len(ex)), '', '| N.º | | Pokémon | Cómo |', '|---|---|---|---|']
         for sp in ex:
             how = sorted({r[1] for r in enc[v].get(sp, [])} | {r[1].split(' (')[0].split(':')[0] for r in obt[v].get(sp, [])})
             if not how and sp in g.prev:
                 how = ['evolución de ' + short(g, 'sp', g.prev[sp])]
-            L.append('| %03d | %s | %s |' % (dex(g, sp), splink(g, sp), ', '.join(how)))
+            L.append('| %03d | %s | %s | %s |' % (dex(g, sp), pimg(g, sp, 40), splink(g, sp), ', '.join(how)))
         L.append('')
     write('diferencias.md', '\n'.join(L))
+
+
+def page_ataques(g):
+    lvl, tmw, tut = defaultdict(list), defaultdict(list), defaultdict(list)
+    sps = sorted((s for s in g.info if dex(g, s)), key=lambda s: dex(g, s))
+    for sp in sps:
+        levels = defaultdict(list)
+        for lv, mv in g.lvl.get(sp, []):
+            levels[mv].append(lv)
+        for mv, lvs in levels.items():
+            lvl[mv].append((sp, lvs))
+        for t in g.tmlearn.get(sp, []):
+            tmw[g.tm[t]].append(sp)
+        for mv in g.tutorlearn.get(sp, []):
+            tut[mv].append(sp)
+    for sp, mv in zip(g.capebrink, ['FRENZY_PLANT', 'BLAST_BURN', 'HYDRO_CANNON']):
+        tut[mv].append(sp)
+    tm_of = {mv: t for t, mv in g.tm.items()}
+    moves = sorted((m for m in g.moves if m != 'NONE'), key=lambda m: norm(short(g, 'mv', m)))
+
+    def tmcell(mv):
+        t = tm_of.get(mv)
+        return '%s[%s](mts.md#%s)' % (ipre(g, t), t.replace('TM', 'MT').replace('HM', 'MO'), t.lower()) if t else '—'
+    L = ['# Ataques', '', NAV % '', '',
+         'Todos los ataques del juego y qué Pokémon los aprenden: por nivel (con el nivel), por MT/MO y por tutor. '
+         'Datos de `battle_moves.h`, `level_up_learnsets.h`, `tmhm_learnsets.h` y `tutor_learnsets.h`.', '',
+         '| Ataque | Tipo | Categoría | Potencia | Precisión | PP | MT/MO | Por nivel | Por MT/MO | Por tutor |',
+         '|---|---|---|---|---|---|---|---|---|---|']
+    for mv in moves:
+        m = g.moves[mv]
+        L.append('| [%s](#%s) | %s | %s | %s | %s | %d | %s | %d | %d | %d |' % (
+            nm(g, 'mv', mv), mv_anchor(mv), tyn(g, m['type']), cat(g, mv), fmt_power(m), '—' if m['acc'] == 0 else m['acc'],
+            m['pp'], tmcell(mv), len(lvl[mv]), len(tmw[mv]), len(tut[mv])))
+    L += ['', '## Quién aprende cada ataque', '']
+    for mv in moves:
+        m = g.moves[mv]
+        L += ['### <a id="%s"></a>%s' % (mv_anchor(mv), nm(g, 'mv', mv)), '',
+              '%s · %s · potencia %s · precisión %s · %d PP%s' % (
+                  tyn(g, m['type']), cat(g, mv), fmt_power(m), '—' if m['acc'] == 0 else m['acc'], m['pp'],
+                  ' · ' + tmcell(mv) if mv in tm_of else ''), '']
+        if lvl[mv]:
+            L.append('- **Por nivel:** ' + ', '.join('%s (Nv %s)' % (splink(g, sp), ', '.join(map(str, lvs))) for sp, lvs in lvl[mv]))
+        if tmw[mv]:
+            L.append('- **Por %s:** ' % tm_of[mv].replace('TM', 'MT').replace('HM', 'MO') + ', '.join(splink(g, sp) for sp in tmw[mv]))
+        if tut[mv]:
+            L.append('- **Por [tutor](tutores.md):** ' + ', '.join(splink(g, sp) for sp in tut[mv]))
+        if not (lvl[mv] or tmw[mv] or tut[mv]):
+            L.append('Ningún Pokémon lo aprende por nivel, MT/MO ni tutor.')
+        L.append('')
+    write('ataques.md', '\n'.join(L))
 
 
 def page_index(g, rev):
@@ -1158,6 +1303,7 @@ def page_index(g, rev):
          '| Sección | Contenido |', '|---|---|',
          '| [Pokémon](pokemon/README.md) | Una página por especie: tipos, habilidades, stats, EVs, captura, crecimiento, '
          'evolución, ataques, MT/MO, tutores y dónde encontrarlo en cada versión |',
+         '| [Ataques](ataques.md) | Todos los ataques y qué Pokémon los aprenden por nivel (con el nivel), por MT/MO y por tutor |',
          '| [MT y MO](mts.md) | Todas, con su ataque y cómo se consigue cada una |',
          '| [Objetos](objetos.md) | Suelo, ocultos, regalos y tiendas por mapa; vitaminas y piedras evolutivas |',
          '| [Tutores](tutores.md) | Tutores de ataques y los ataques definitivos de los iniciales |',
@@ -1176,7 +1322,10 @@ def page_index(g, rev):
          '- **Físico o especial**: en la 3.ª generación depende del tipo del ataque (`IS_TYPE_PHYSICAL` en `include/battle.h`).',
          '- **Potencia "variable"**: pret pone potencia 1 a los ataques que calculan el daño a su manera.',
          '- **Probabilidad** de un encuentro: la de ese método (andando, Surf, Golpe Roca o cada caña), sumando los '
-         'huecos de la especie.', '']
+         'huecos de la especie.',
+         '- **Imágenes**: los sprites de Rojo Fuego/Verde Hoja y los iconos de objetos del repositorio '
+         '[PokeAPI/sprites](https://github.com/PokeAPI/sprites). Solo se enlazan: no se guardan en este repositorio '
+         'y se cargan al ver la página (como los fondos del configurador, ADR-0013). Sin conexión no se ven.', '']
     if unmatched:
         L += ['Objetos sin nombre en español en PokeAPI: ' + ', '.join('`%s`' % u for u in unmatched) + '.', '']
     write('README.md', '\n'.join(L))
@@ -1210,13 +1359,13 @@ def verify(g, seed=None):
     lv, mv = rnd.choice(g.lvl[sp])
     raw = re.search(r'LEVEL_UP_MOVE\(\s*%d,\s*MOVE_%s\)' % (lv, mv), ls)
     check('%s aprende %s al Nv %d' % (sp, mv, lv),
-          bool(raw) and ('| %d | %s |' % (lv, nm(g, 'mv', mv))) in page('pokemon/%s.md' % slug(g, sp)),
+          bool(raw) and ('| %d | [%s](' % (lv, nm(g, 'mv', mv))) in page('pokemon/%s.md' % slug(g, sp)),
           'src/data/pokemon/level_up_learnsets.h')
     bm = rd('src/data/battle_moves.h')
     mv = rnd.choice([m for m in g.moves if m != 'NONE' and g.moves[m]['power'] > 1 and any(x == m for s in g.lvl.values() for _, x in s)])
     pw = re.search(r'\[MOVE_%s\]\s*=\s*\{.*?\.power\s*=\s*(\d+)' % mv, bm, re.S).group(1)
     sp = next(s for s in g.info if dex(g, s) and any(x == mv for _, x in g.lvl.get(s, [])))
-    row = next(l for l in page('pokemon/%s.md' % slug(g, sp)).split('\n') if (' %s |' % nm(g, 'mv', mv)) in l)
+    row = next(l for l in page('pokemon/%s.md' % slug(g, sp)).split('\n') if ('[%s](' % nm(g, 'mv', mv)) in l)
     check('%s: potencia %s (en la página de %s)' % (mv, pw, sp), (' | %s | ' % pw) in row, 'src/data/battle_moves.h')
     tl = rd('src/data/pokemon/tmhm_learnsets.h')
     sp = rnd.choice([s for s in g.tmlearn if dex(g, s)])
@@ -1226,7 +1375,7 @@ def verify(g, seed=None):
     items = json.loads(rd('src/data/items.json'))['items']
     it = rnd.choice(sorted({i for lst in g.RFR.mart_items.values() for i in lst}))
     raw = next(x['price'] for x in items if x['itemId'] == 'ITEM_' + it)
-    check('precio de %s en las tiendas: %d' % (it, raw), ('| %s | %d ₽ |' % (nm(g, 'it', it), raw)) in page('objetos.md'),
+    check('precio de %s en las tiendas: %d' % (it, raw), (' %s | %d ₽ |' % (nm(g, 'it', it), raw)) in page('objetos.md'),
           'src/data/items.json')
     tp = rd('src/data/trainer_parties.h')
     leaders = [k for k in g.trainers if g.trainers[k]['cls'] == 'LEADER' and any(b['trainer'] == k for b in g.RFR.battles)]
@@ -1234,14 +1383,15 @@ def verify(g, seed=None):
     last = g.trainers[tr]['party'][-1]
     check('%s: último Pokémon %s Nv %d' % (tr, last['species'], last['lvl']),
           re.search(r'\.lvl = %d,\s*\.species = SPECIES_%s' % (last['lvl'], last['species']), tp) is not None and
-          ('| %s | %d |' % (splink(g, last['species']), last['lvl'])) in page('entrenadores.md'), 'src/data/trainer_parties.h')
+          (' %s | %d |' % (splink(g, last['species']), last['lvl'])) in page('entrenadores.md'), 'src/data/trainer_parties.h')
     x = rnd.choice(g.RFR.ground)
     mj = json.loads(rd('data/maps/%s/map.json' % x['map']))
     ok = any(o.get('x') == x['xy'][0] and o.get('y') == x['xy'][1] and 'ITEM_BALL' in o.get('graphics_id', '') for o in mj['object_events'])
     sec = page('objetos.md').split('\n### %s\n' % map_name(g, x['map']))
     sec = sec[-1].split('\n### ')[0] if len(sec) > 1 else ''
     check('%s en el suelo de %s (x %d, y %d)' % (x['item'], x['map'], x['xy'][0], x['xy'][1]),
-          ok and ('- Suelo: %s' % nm(g, 'it', x['item'])) in sec and ('(x %d, y %d)' % tuple(x['xy'])) in sec,
+          ok and any(ln.startswith('- Suelo: ') and (nm(g, 'it', x['item']) + ' ') in ln and ('(x %d, y %d)' % tuple(x['xy'])) in ln
+                     for ln in sec.split('\n')),
           'data/maps/%s/map.json' % x['map'])
     res.append('--- casos conocidos')
     mts = page('mts.md')
@@ -1251,7 +1401,9 @@ def verify(g, seed=None):
     row38 = next(l for l in mts.split('\n') if 'id="tm38"' in l)
     check('MT38 Llamarada la da Blaine', 'Regalo (Blaine)' in row38 and 'Llamarada' in row38, 'data/maps/CinnabarIsland_Gym/scripts.inc')
     p = page('pokemon/%s.md' % slug(g, 'CHARMANDER'))
-    check('Charmander aprende Lanzallamas al Nv 31', '| 31 | Lanzallamas (Flamethrower) |' in p, 'src/data/pokemon/level_up_learnsets.h')
+    check('Charmander aprende Lanzallamas al Nv 31', '| 31 | [Lanzallamas (Flamethrower)](' in p, 'src/data/pokemon/level_up_learnsets.h')
+    check('Lanzallamas en la página de ataques: Charmander al Nv 31', '[Charmander](pokemon/004-charmander.md) (Nv 31)' in page('ataques.md'),
+          'src/data/pokemon/level_up_learnsets.h')
     p = page('pokemon/%s.md' % slug(g, 'GASTLY'))
     check('Gastly da 1 EV de At. Esp.', '| EVs al derrotarlo | 1 At. Esp. |' in p, 'src/data/pokemon/species_info.h')
     return res
@@ -1261,7 +1413,9 @@ def main():
     rev = fetch()
     g = load()
     g.PHYS = physical_types(g)
+    check_sprites(g)
     enc, obt = all_pokemon(g)
+    page_ataques(g)
     src = page_mts(g)
     page_objetos(g, src)
     page_tutores(g)

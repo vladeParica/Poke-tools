@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/132.png" alt="Ditto" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/132.png" alt="Ditto shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Normal |
@@ -12,7 +14,7 @@
 | Crecimiento | Medio (`GROWTH_MEDIUM_FAST`) |
 | Género | Sin género |
 | Grupos huevo | Ditto |
-| Objeto que puede llevar (salvaje) | Polvo Metálico (Metal Powder) (raro) |
+| Objeto que puede llevar (salvaje) | <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/metal-powder.png" alt="Polvo Metálico" width="24" height="24"> Polvo Metálico (Metal Powder) (raro) |
 
 ## Stats base
 
@@ -28,7 +30,7 @@ No evoluciona.
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Transformación (Transform) | Normal | Estado | — | — | 10 |
+| 1 | [Transformación (Transform)](../ataques.md#mv-transform) | Normal | Estado | — | — | 10 |
 
 ## MT y MO
 

@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/201.png" alt="Unown" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/201.png" alt="Unown shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Psíquico |
@@ -28,7 +30,7 @@ No evoluciona.
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Poder Oculto (Hidden Power) | Normal | Físico | variable | 100 | 15 |
+| 1 | [Poder Oculto (Hidden Power)](../ataques.md#mv-hidden-power) | Normal | Físico | variable | 100 | 15 |
 
 ## MT y MO
 

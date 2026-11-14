@@ -54,8 +54,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - Project logo (`assets/logo.svg`) and social preview image.
 
 - **Game guide** in Spanish (`docs/guia/`): a page per Pokémon, TMs/HMs, items and shops, move
-  tutors, trainers, EV spots and version exclusives, generated from pret/pokefirered with
-  `tools/guia/gen_guia.py` (names from PokeAPI); `--check` compares random values with pret.
+  tutors, trainers, EV spots, version exclusives and every move with who learns it (by level,
+  TM/HM or tutor), generated from pret/pokefirered with `tools/guia/gen_guia.py` (names from
+  PokeAPI); `--check` compares random values with pret. Sprites and item icons are linked from
+  PokeAPI/sprites, never stored (ADR-0013).
 
 ### Fixed
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)

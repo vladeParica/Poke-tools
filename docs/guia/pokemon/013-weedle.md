@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/13.png" alt="Weedle" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/13.png" alt="Weedle shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Bicho / Veneno |
@@ -22,14 +24,14 @@
 
 ## Evolución
 
-- Evoluciona a [Kakuna](014-kakuna.md): nivel 7.
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/14.png" alt="Kakuna" width="32" height="32"> [Kakuna](014-kakuna.md): nivel 7.
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Picotazo Veneno (Poison Sting) | Veneno | Físico | 15 | 100 | 35 |
-| 1 | Disparo Demora (String Shot) | Bicho | Estado | — | 95 | 40 |
+| 1 | [Picotazo Veneno (Poison Sting)](../ataques.md#mv-poison-sting) | Veneno | Físico | 15 | 100 | 35 |
+| 1 | [Disparo Demora (String Shot)](../ataques.md#mv-string-shot) | Bicho | Estado | — | 95 | 40 |
 
 ## MT y MO
 

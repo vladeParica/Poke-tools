@@ -2,6 +2,8 @@
 
 [← Pokémon](README.md) · [Guía](../README.md)
 
+<img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/7.png" alt="Squirtle" width="96" height="96"> <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/shiny/7.png" alt="Squirtle shiny" width="96" height="96">
+
 | Dato | Valor |
 |---|---|
 | Tipo | Agua |
@@ -22,65 +24,65 @@
 
 ## Evolución
 
-- Evoluciona a [Wartortle](008-wartortle.md): nivel 16.
+- Evoluciona a <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-iii/firered-leafgreen/8.png" alt="Wartortle" width="32" height="32"> [Wartortle](008-wartortle.md): nivel 16.
 
 ## Ataques por nivel
 
 | Nv | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| 1 | Placaje (Tackle) | Normal | Físico | 35 | 95 | 35 |
-| 4 | Agitacola (Tail Whip) | Normal | Estado | — | 100 | 30 |
-| 7 | Burbuja (Bubble) | Agua | Especial | 20 | 100 | 30 |
-| 10 | Refugio (Withdraw) | Agua | Estado | — | — | 40 |
-| 13 | Pistola Agua (Water Gun) | Agua | Especial | 40 | 100 | 25 |
-| 18 | Mordisco (Bite) | Siniestro | Especial | 60 | 100 | 25 |
-| 23 | Giro Rápido (Rapid Spin) | Normal | Físico | 20 | 100 | 40 |
-| 28 | Protección (Protect) | Normal | Estado | — | — | 10 |
-| 33 | Danza Lluvia (Rain Dance) | Agua | Estado | — | — | 5 |
-| 40 | Cabezazo (Skull Bash) | Normal | Físico | 100 | 100 | 15 |
-| 47 | Hidrobomba (Hydro Pump) | Agua | Especial | 120 | 80 | 5 |
+| 1 | [Placaje (Tackle)](../ataques.md#mv-tackle) | Normal | Físico | 35 | 95 | 35 |
+| 4 | [Agitacola (Tail Whip)](../ataques.md#mv-tail-whip) | Normal | Estado | — | 100 | 30 |
+| 7 | [Burbuja (Bubble)](../ataques.md#mv-bubble) | Agua | Especial | 20 | 100 | 30 |
+| 10 | [Refugio (Withdraw)](../ataques.md#mv-withdraw) | Agua | Estado | — | — | 40 |
+| 13 | [Pistola Agua (Water Gun)](../ataques.md#mv-water-gun) | Agua | Especial | 40 | 100 | 25 |
+| 18 | [Mordisco (Bite)](../ataques.md#mv-bite) | Siniestro | Especial | 60 | 100 | 25 |
+| 23 | [Giro Rápido (Rapid Spin)](../ataques.md#mv-rapid-spin) | Normal | Físico | 20 | 100 | 40 |
+| 28 | [Protección (Protect)](../ataques.md#mv-protect) | Normal | Estado | — | — | 10 |
+| 33 | [Danza Lluvia (Rain Dance)](../ataques.md#mv-rain-dance) | Agua | Estado | — | — | 5 |
+| 40 | [Cabezazo (Skull Bash)](../ataques.md#mv-skull-bash) | Normal | Físico | 100 | 100 | 15 |
+| 47 | [Hidrobomba (Hydro Pump)](../ataques.md#mv-hydro-pump) | Agua | Especial | 120 | 80 | 5 |
 
 ## MT y MO
 
 | MT/MO | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| [MT01](../mts.md#tm01) | Puño Certero (Focus Punch) | Lucha | Físico | 150 | 100 | 20 |
-| [MT03](../mts.md#tm03) | Hidropulso (Water Pulse) | Agua | Especial | 60 | 100 | 20 |
-| [MT06](../mts.md#tm06) | Tóxico (Toxic) | Veneno | Estado | — | 85 | 10 |
-| [MT07](../mts.md#tm07) | Granizo (Hail) | Hielo | Estado | — | — | 10 |
-| [MT10](../mts.md#tm10) | Poder Oculto (Hidden Power) | Normal | Físico | variable | 100 | 15 |
-| [MT13](../mts.md#tm13) | Rayo Hielo (Ice Beam) | Hielo | Especial | 95 | 100 | 10 |
-| [MT14](../mts.md#tm14) | Ventisca (Blizzard) | Hielo | Especial | 120 | 70 | 5 |
-| [MT17](../mts.md#tm17) | Protección (Protect) | Normal | Estado | — | — | 10 |
-| [MT18](../mts.md#tm18) | Danza Lluvia (Rain Dance) | Agua | Estado | — | — | 5 |
-| [MT21](../mts.md#tm21) | Frustración (Frustration) | Normal | Físico | variable | 100 | 20 |
-| [MT23](../mts.md#tm23) | Cola Férrea (Iron Tail) | Acero | Físico | 100 | 75 | 15 |
-| [MT27](../mts.md#tm27) | Retribución (Return) | Normal | Físico | variable | 100 | 20 |
-| [MT28](../mts.md#tm28) | Excavar (Dig) | Tierra | Físico | 60 | 100 | 10 |
-| [MT31](../mts.md#tm31) | Demolición (Brick Break) | Lucha | Físico | 75 | 100 | 15 |
-| [MT32](../mts.md#tm32) | Doble Equipo (Double Team) | Normal | Estado | — | — | 15 |
-| [MT42](../mts.md#tm42) | Fachada (Facade) | Normal | Físico | 70 | 100 | 20 |
-| [MT43](../mts.md#tm43) | Daño Secreto (Secret Power) | Normal | Físico | 70 | 100 | 20 |
-| [MT44](../mts.md#tm44) | Descanso (Rest) | Psíquico | Estado | — | — | 10 |
-| [MT45](../mts.md#tm45) | Atracción (Attract) | Normal | Estado | — | 100 | 15 |
-| [MO03](../mts.md#hm03) | Surf | Agua | Especial | 95 | 100 | 15 |
-| [MO04](../mts.md#hm04) | Fuerza (Strength) | Normal | Físico | 80 | 100 | 15 |
-| [MO06](../mts.md#hm06) | Golpe Roca (Rock Smash) | Lucha | Físico | 20 | 100 | 15 |
-| [MO07](../mts.md#hm07) | Cascada (Waterfall) | Agua | Especial | 80 | 100 | 15 |
-| [MO08](../mts.md#hm08) | Buceo (Dive) | Agua | Especial | 60 | 100 | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png" alt="MT01" width="24" height="24"> [MT01](../mts.md#tm01) | [Puño Certero (Focus Punch)](../ataques.md#mv-focus-punch) | Lucha | Físico | 150 | 100 | 20 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png" alt="MT03" width="24" height="24"> [MT03](../mts.md#tm03) | [Hidropulso (Water Pulse)](../ataques.md#mv-water-pulse) | Agua | Especial | 60 | 100 | 20 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-poison.png" alt="MT06" width="24" height="24"> [MT06](../mts.md#tm06) | [Tóxico (Toxic)](../ataques.md#mv-toxic) | Veneno | Estado | — | 85 | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png" alt="MT07" width="24" height="24"> [MT07](../mts.md#tm07) | [Granizo (Hail)](../ataques.md#mv-hail) | Hielo | Estado | — | — | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT10" width="24" height="24"> [MT10](../mts.md#tm10) | [Poder Oculto (Hidden Power)](../ataques.md#mv-hidden-power) | Normal | Físico | variable | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png" alt="MT13" width="24" height="24"> [MT13](../mts.md#tm13) | [Rayo Hielo (Ice Beam)](../ataques.md#mv-ice-beam) | Hielo | Especial | 95 | 100 | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ice.png" alt="MT14" width="24" height="24"> [MT14](../mts.md#tm14) | [Ventisca (Blizzard)](../ataques.md#mv-blizzard) | Hielo | Especial | 120 | 70 | 5 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT17" width="24" height="24"> [MT17](../mts.md#tm17) | [Protección (Protect)](../ataques.md#mv-protect) | Normal | Estado | — | — | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-water.png" alt="MT18" width="24" height="24"> [MT18](../mts.md#tm18) | [Danza Lluvia (Rain Dance)](../ataques.md#mv-rain-dance) | Agua | Estado | — | — | 5 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT21" width="24" height="24"> [MT21](../mts.md#tm21) | [Frustración (Frustration)](../ataques.md#mv-frustration) | Normal | Físico | variable | 100 | 20 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-steel.png" alt="MT23" width="24" height="24"> [MT23](../mts.md#tm23) | [Cola Férrea (Iron Tail)](../ataques.md#mv-iron-tail) | Acero | Físico | 100 | 75 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT27" width="24" height="24"> [MT27](../mts.md#tm27) | [Retribución (Return)](../ataques.md#mv-return) | Normal | Físico | variable | 100 | 20 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-ground.png" alt="MT28" width="24" height="24"> [MT28](../mts.md#tm28) | [Excavar (Dig)](../ataques.md#mv-dig) | Tierra | Físico | 60 | 100 | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-fighting.png" alt="MT31" width="24" height="24"> [MT31](../mts.md#tm31) | [Demolición (Brick Break)](../ataques.md#mv-brick-break) | Lucha | Físico | 75 | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT32" width="24" height="24"> [MT32](../mts.md#tm32) | [Doble Equipo (Double Team)](../ataques.md#mv-double-team) | Normal | Estado | — | — | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT42" width="24" height="24"> [MT42](../mts.md#tm42) | [Fachada (Facade)](../ataques.md#mv-facade) | Normal | Físico | 70 | 100 | 20 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT43" width="24" height="24"> [MT43](../mts.md#tm43) | [Daño Secreto (Secret Power)](../ataques.md#mv-secret-power) | Normal | Físico | 70 | 100 | 20 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-psychic.png" alt="MT44" width="24" height="24"> [MT44](../mts.md#tm44) | [Descanso (Rest)](../ataques.md#mv-rest) | Psíquico | Estado | — | — | 10 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/tm-normal.png" alt="MT45" width="24" height="24"> [MT45](../mts.md#tm45) | [Atracción (Attract)](../ataques.md#mv-attract) | Normal | Estado | — | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hm-water.png" alt="MO03" width="24" height="24"> [MO03](../mts.md#hm03) | [Surf](../ataques.md#mv-surf) | Agua | Especial | 95 | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hm-normal.png" alt="MO04" width="24" height="24"> [MO04](../mts.md#hm04) | [Fuerza (Strength)](../ataques.md#mv-strength) | Normal | Físico | 80 | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hm-fighting.png" alt="MO06" width="24" height="24"> [MO06](../mts.md#hm06) | [Golpe Roca (Rock Smash)](../ataques.md#mv-rock-smash) | Lucha | Físico | 20 | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hm-water.png" alt="MO07" width="24" height="24"> [MO07](../mts.md#hm07) | [Cascada (Waterfall)](../ataques.md#mv-waterfall) | Agua | Especial | 80 | 100 | 15 |
+| <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/hm-water.png" alt="MO08" width="24" height="24"> [MO08](../mts.md#hm08) | [Buceo (Dive)](../ataques.md#mv-dive) | Agua | Especial | 60 | 100 | 10 |
 
 ## Tutores de ataques
 
 | Tutor | Ataque | Tipo | Categoría | Potencia | Precisión | PP |
 |---|---|---|---|---|---|---|
-| [ver](../tutores.md) | Megapuño (Mega Punch) | Normal | Físico | 80 | 85 | 20 |
-| [ver](../tutores.md) | Megapatada (Mega Kick) | Normal | Físico | 120 | 75 | 5 |
-| [ver](../tutores.md) | Golpe Cuerpo (Body Slam) | Normal | Físico | 85 | 100 | 15 |
-| [ver](../tutores.md) | Doble Filo (Double-Edge) | Normal | Físico | 120 | 100 | 15 |
-| [ver](../tutores.md) | Contraataque (Counter) | Lucha | Físico | variable | 100 | 20 |
-| [ver](../tutores.md) | Sísmico (Seismic Toss) | Lucha | Físico | variable | 100 | 20 |
-| [ver](../tutores.md) | Mimético (Mimic) | Normal | Estado | — | 100 | 10 |
-| [ver](../tutores.md) | Sustituto (Substitute) | Normal | Estado | — | — | 10 |
+| [ver](../tutores.md) | [Megapuño (Mega Punch)](../ataques.md#mv-mega-punch) | Normal | Físico | 80 | 85 | 20 |
+| [ver](../tutores.md) | [Megapatada (Mega Kick)](../ataques.md#mv-mega-kick) | Normal | Físico | 120 | 75 | 5 |
+| [ver](../tutores.md) | [Golpe Cuerpo (Body Slam)](../ataques.md#mv-body-slam) | Normal | Físico | 85 | 100 | 15 |
+| [ver](../tutores.md) | [Doble Filo (Double-Edge)](../ataques.md#mv-double-edge) | Normal | Físico | 120 | 100 | 15 |
+| [ver](../tutores.md) | [Contraataque (Counter)](../ataques.md#mv-counter) | Lucha | Físico | variable | 100 | 20 |
+| [ver](../tutores.md) | [Sísmico (Seismic Toss)](../ataques.md#mv-seismic-toss) | Lucha | Físico | variable | 100 | 20 |
+| [ver](../tutores.md) | [Mimético (Mimic)](../ataques.md#mv-mimic) | Normal | Estado | — | 100 | 10 |
+| [ver](../tutores.md) | [Sustituto (Substitute)](../ataques.md#mv-substitute) | Normal | Estado | — | — | 10 |
 
 ## Dónde encontrarlo
 

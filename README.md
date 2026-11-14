@@ -43,7 +43,8 @@ Load **only one script at a time**. How to use each bot: [Shiny Bot](shinybot/RE
 ## Game guide
 
 [**Guía de Rojo Fuego y Verde Hoja**](docs/guia/README.md) *(in Spanish)*: one page per Pokémon
-(stats, EVs, moves, TMs, tutors and where to find it in each version), every TM and HM, items
+(sprites, stats, EVs, moves, TMs, tutors and where to find it in each version), every move and who
+learns it, every TM and HM, items
 and shops, move tutors, gym leaders, Elite Four and rival, EV training spots and version
 exclusives. It is generated from the pret/pokefirered data by `python tools/guia/gen_guia.py`.
 
