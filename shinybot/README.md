@@ -31,6 +31,13 @@ The in-game mode names are in Spanish (shown in parentheses).
 | 9 | New game (*Partida nueva*) | Restarts until it gets the TID/SID you want |
 | 10 | Initial seed (*Semilla inicial*) | Hits a seed on the title screen, then launches `afterSeedMode` |
 
+**New game (mode 9), step by step:** start a new game, name your character and your rival,
+and press **7** while Oak is still talking right after the rival's name (before the last
+text box). The bot needs the TID, which only exists once your character has a name, and it
+reaches the SID by pressing A through the end of Oak's speech. Started earlier (before naming
+the rival), the presses get stuck on the naming keyboard: the bot now stops after two tries
+and says so instead of retrying forever.
+
 For far targets, **register the Teachy TV on SELECT**: the bot opens it to advance the RNG
 about 313 times per frame.
 

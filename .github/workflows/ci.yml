@@ -60,6 +60,7 @@ jobs:
           python run_wild.py
           python run_far.py
           python run_cfg.py
+          python run_newgame.py
 
   trainbot:
     name: Train Bot simulator

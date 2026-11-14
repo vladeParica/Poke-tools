@@ -475,5 +475,7 @@
   "Modo: %s": "Mode: %s",
   "Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara": "Warning: menus not verified in this version: to take items the bot will pause and tell you",
   "Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta": "Trainer route loaded: %d steps there, %d back",
-  "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Another Farm Bot or a Train Bot is running in another Lua window: leave only one"
+  "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Another Farm Bot or a Train Bot is running in another Lua window: leave only one",
+  "Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando": "New game: name your character and your rival, and press 7 while Oak is still talking",
+  "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "The SID didn't appear: press 7 right after naming your rival, while Oak is talking"
 }

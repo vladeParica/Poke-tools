@@ -1,5 +1,7 @@
 REG_ITEM = rawget(_G, "REG_ITEM")
 USER_RESET_AT = rawget(_G, "USER_RESET_AT")
+NG_NEVER = rawget(_G, "NG_NEVER")   -- new game started too early: the A presses never create the SID
+STOP_PRINT = rawget(_G, "STOP_PRINT")   -- end the run as soon as the bot prints this text
 -- Minimal VBA-rr + FRLG game simulator to test the bot logic
 local MODE_TO_TEST, SHINY_AT, CLEAR_ON_RESET, RNG = ...
 SHINY_AT = SHINY_AT or 3
@@ -186,7 +188,7 @@ local function gameFrame()
       g.aCount = g.aCount + 1
       if g.aCount == 1 then g.firstA = frame end
       if RNG and MODE_TO_TEST ~= "newgame" and g.aCount == 6 then g.genAt = frame + 25 + ((g.firstA % 4 == 0) and 1 or 0) end
-      if MODE_TO_TEST == "newgame" and g.aCount == 3 then g.ngAt = frame + 90 + ((g.firstA % 4 == 0) and 1 or 0) end
+      if MODE_TO_TEST == "newgame" and g.aCount == 3 and not NG_NEVER then g.ngAt = frame + 90 + ((g.firstA % 4 == 0) and 1 or 0) end
       if not RNG and g.aCount == 6 then
         g.made = g.made + 1
         local pid = randPid(g.made == SHINY_AT)
@@ -226,7 +228,8 @@ emu = {
     if realFrame > MAXF then error("TIMEOUT") end
   end,
 }
-_G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end io.write("  | " .. table.concat(t, " ") .. "\n") end
+_G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] = tostring(select(i, ...)) end io.write("  | " .. table.concat(t, " ") .. "\n")
+  if STOP_PRINT and table.concat(t, " "):find(STOP_PRINT, 1, true) then error("STOPPED: " .. STOP_PRINT) end end
 io = { open = function() return nil end, write = io.write }
 
 -- press 8 (change mode) as many times as needed and 7 to start
