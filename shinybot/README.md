@@ -50,6 +50,10 @@ keyboard, so after two tries without a SID it stops and says when to press 7.
 For far targets, **register the Teachy TV on SELECT**: the bot opens it to advance the RNG
 about 313 times per frame.
 
+Without the Teachy TV (modes 5–7), the first try still waits at normal speed, but the bot saves
+a state about 1800 advances before the target: the following tries load that state instead of
+waiting from the start again.
+
 ## Configuration
 
 The easiest way is the [configurator](../configurator/README.md). Everything lives in `FRLG_ShinyBot.json`, commented line by line (in Spanish): `shiny`,

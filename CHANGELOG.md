@@ -58,6 +58,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   TM/HM or tutor), generated from pret/pokefirered with `tools/guia/gen_guia.py` (names from
   PokeAPI); `--check` compares random values with pret. Sprites and item icons are linked from
   PokeAPI/sprites, never stored (ADR-0013).
+- Shiny Bot, Static/Gift/Roamer RNG without the Teachy TV: on a far target the bot saves a
+  state shortly before it, and the tries after the first one start there instead of waiting
+  from the base again.
 
 ### Fixed
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
