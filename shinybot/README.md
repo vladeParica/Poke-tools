@@ -31,12 +31,21 @@ The in-game mode names are in Spanish (shown in parentheses).
 | 9 | New game (*Partida nueva*) | Restarts until it gets the TID/SID you want |
 | 10 | Initial seed (*Semilla inicial*) | Hits a seed on the title screen, then launches `afterSeedMode` |
 
-**New game (mode 9), step by step:** start a new game, name your character and your rival,
-and press **7** while Oak is still talking right after the rival's name (before the last
-text box). The bot needs the TID, which only exists once your character has a name, and it
-reaches the SID by pressing A through the end of Oak's speech. Started earlier (before naming
-the rival), the presses get stuck on the naming keyboard: the bot now stops after two tries
-and says so instead of retrying forever.
+### New game (mode 9): where to start the bot
+
+1. Set `"mode": "Partida nueva"` and the `newGameTSV` you want in the JSON.
+2. Start a **new game** and name your character. That fixes the TID.
+3. Name your rival.
+4. When Oak says *"That's right! I remember now! His name is [RIVAL]!"*, **don't press A**.
+5. Press **0** to reload the config, then **7**.
+
+The bot presses A through the rest of Oak's speech (the SID is created at the end of it),
+reloads and tries other frames until TID xor SID falls in a `newGameTSV` range. Then it pauses
+the game: save a state (Shift+F1) and keep playing.
+
+If you press 7 too early, the bot tells you: before naming your character there is no TID yet
+(TID 0) and it refuses to start; before naming the rival, its presses land on the naming
+keyboard, so after two tries without a SID it stops and says when to press 7.
 
 For far targets, **register the Teachy TV on SELECT**: the bot opens it to advance the RNG
 about 313 times per frame.

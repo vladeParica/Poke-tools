@@ -37,6 +37,9 @@
   "mode": "Salvaje RNG",
 
   // Partida nueva: rangos de "TID xor SID" que quieres (en hex).
+  // Como se usa: partida nueva, pon tu nombre (fija el TID) y el del rival. Cuando Oak
+  // diga "That's right! I remember now! His name is [RIVAL]!", NO pulses A: pulsa 0
+  // (recargar la config) y luego 7.
   // null = los que hacen shiny a un Ditto 6x31:
   //   "9630" Ruta 14 / Mansion (semillas 448B, BC75)
   //   "B378" Ruta 14 / Mansion / Cueva Celeste (38F2, BDD1)

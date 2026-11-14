@@ -266,7 +266,7 @@ PT.i18n.add('ja', {
   'El modo RNG que se lanza al caer en la semilla.': 'シードを当てたあとに開始する乱数モード。',
   'modo a lanzar al caer en la semilla': 'シードを当てたあとに開始するモード',
   'TID / SID': 'TID / SID',
-  'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos.': 'さいしょからモードのみ: TID xor SID がこのどれかになるまでやり直します。',
+  'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos. Cómo se usa: partida nueva, pon tu nombre y el del rival; cuando Oak diga «His name is [RIVAL]!», no pulses A: pulsa 0 y luego 7.': 'さいしょからモードのみ: TID xor SID がこのどれかになるまでやり直します。つかいかた: さいしょから はじめて、じぶんと ライバルの なまえを きめる。オーキドが「His name is [RIVAL]!」と いったら A を おさずに、0 を おして から 7 を おす。',
   'TSV buscados (TID xor SID)': '狙う TSV (TID xor SID)',
   'Vacío = los que hacen shiny a un Ditto 6×31 (9630, B378, 79F8).': '空欄 = 6V メタモンが色違いになる値（9630、B378、79F8）。',
   'TID xor SID en hex; null = Ditto 6x31': 'TID xor SID (16進数); null = 6V メタモン',
