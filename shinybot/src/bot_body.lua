@@ -896,7 +896,8 @@ local function ivsFromCalls(i1, i2)
            floor(i2 / 32) % 32, floor(i2 / 1024) % 32, i2 % 32 }
 end
 
-local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000 }
+local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000,
+              nearLead = 1800, nearGap = 3000, nearMin = 60 }
 local rngState = nil
 local wr = { r = {}, built = 0 }   -- r[k] = k-th call to Random() from the base seed
 
@@ -911,9 +912,17 @@ end
 
 local pendingZero = 0
 local function rngLoad()
-  savestate.load(rngState)
+  -- A state saved shortly before the target (see saveNear) skips the long wait from the base.
+  -- Advances keep counting from the base, so targets and tries are unchanged.
+  local n = rng.near
+  if n and n.base == rngState and rng.pressAt and rng.pressAt >= n.adv + rng.nearMin then
+    savestate.load(n.state)
+    rng.seed, rng.adv, rng.prevAdv = n.seed, n.adv, n.adv
+  else
+    savestate.load(rngState)
+    rng.seed, rng.adv, rng.prevAdv = rng.seed0, 0, 0
+  end
   queue = {}
-  rng.seed, rng.adv, rng.prevAdv = rng.seed0, 0, 0
   bot.armed = false
   monWatch = {}
   if kind() == 2 or kind() == 1 then
@@ -1432,6 +1441,17 @@ local function retryOrNext(hit)
   end
 end
 
+-- Far target without the Teachy TV: save a state nearLead advances before pressing, so the
+-- tries after the first one reload there instead of waiting from the base again.
+local function saveNear()
+  local from = (rng.near and rng.near.base == rngState) and rng.near.adv or 0
+  if rng.adv < rng.pressAt - rng.nearLead or rng.adv - from < rng.nearGap then return end
+  local st = savestate.create()
+  savestate.save(st)
+  rng.near = { base = rngState, state = st, adv = rng.adv, seed = rng.seed }
+  print(string.format(TX"Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui", rng.adv))
+end
+
 local function stepRng()
   if isReseedState() then stepReseed(); return end
   if bot.st == "far" then stepFar(); return end
@@ -1446,6 +1466,8 @@ local function stepRng()
       bot.t = 0
       pushPressSchedule()
       bot.st = "pressed"
+    elseif rng.target then
+      saveNear()
     end
   elseif bot.st == "pressed" then
     local mon = targetReady()

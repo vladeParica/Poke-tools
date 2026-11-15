@@ -477,5 +477,6 @@
   "Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta": "Trainer route loaded: %d steps there, %d back",
   "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Another Farm Bot or a Train Bot is running in another Lua window: leave only one",
   "Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando": "New game: name your character and your rival, and press 7 while Oak is still talking",
-  "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "The SID didn't appear: press 7 right after naming your rival, while Oak is talking"
+  "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
+  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "State saved near the target (advance %d): the tries start from here"
 }
