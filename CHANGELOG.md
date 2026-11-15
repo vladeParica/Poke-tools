@@ -63,6 +63,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   from the base again.
 
 ### Fixed
+- Shiny Bot, *Salvaje RNG* with `species` on LeafGreen 1.1: the bot read the encounter table
+  from the FireRed 1.0 address, which falls 17 headers inside LeafGreen 1.1's table, so maps such
+  as Viridian Forest "had no encounters". It now uses each build's address (pret symbols) and
+  always starts from the first header; the error message also names the map.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.
