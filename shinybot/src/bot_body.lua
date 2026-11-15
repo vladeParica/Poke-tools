@@ -1018,8 +1018,9 @@ local function validHeaderTable(base)
 end
 
 local function findWildTable()
-  if wildTableBase ~= nil then return wildTableBase end
-  wildTableBase = false
+  -- only a table that was found is remembered: a failed search (e.g. the script ran before
+  -- the ROM was loaded) is tried again next time
+  if wildTableBase then return wildTableBase end
   if validHeaderTable(0x083C9CB8) then wildTableBase = 0x083C9CB8; return wildTableBase end
   for a = 0x08300000, 0x08500000, 4 do
     if read8(a) < 0x30 and read8(a + 2) == 0 and read8(a + 3) == 0 and validHeaderTable(a) then
@@ -1935,7 +1936,16 @@ local function wildSetup()
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
-    bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    -- say what failed: the table itself, or this map (group.number) has no such encounters
+    local sb1 = read32(A.sb1)
+    if not findWildTable() then
+      bot.msg = TX"No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"
+    elseif validPtr(sb1) then
+      bot.msg = string.format(TX"Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas", read8(sb1 + 4), read8(sb1 + 5),
+                              wr.water and TX"de agua" or TX"de hierba")
+    else
+      bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    end
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   bot.st = "wbuild"

@@ -259,6 +259,7 @@ local LANG = {
     ["Estatico"] = "Static",
     ["Estatico RNG"] = "Static RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "This ROM is not FireRed / LeafGreen. The bot won't run.",
+    ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "This map (%d.%d) has no %s encounters: start the mode in the grass or cave where you hunt",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARMING DONE: ",
@@ -324,6 +325,7 @@ local LANG = {
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "No party Pokemon has the Pickup ability",
     ["Niveles +%d desde el inicio%s"] = "Levels +%d since the start%s",
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
+    ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "Couldn't find the encounter table in the ROM: reload the script with the game already running",
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
@@ -469,7 +471,9 @@ local LANG = {
     ["combate "] = "battle ",
     ["cursor inesperado"] = "unexpected cursor",
     ["daria EVs de "] = "would give EVs in ",
+    ["de agua"] = "water",
     ["de camino"] = "on the way",
+    ["de hierba"] = "grass",
     ["debilitado"] = "fainted",
     ["dinero"] = "money",
     ["el archivo debe ser un objeto { ... }"] = "the file must be an object { ... }",
@@ -741,6 +745,7 @@ local LANG = {
     ["Estatico"] = "Symbol",
     ["Estatico RNG"] = "Symbol RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "Kono ROM wa FireRed / LeafGreen dewa arimasen. Bot wa ugokimasen.",
+    ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "Kono map (%d.%d) ni wa %s no deai ga nai: kusamura ka doukutsu de mode wo hajimete",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
@@ -806,6 +811,7 @@ local LANG = {
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "Temochi ni tokusei Monohiroi no Pokemon ga inai",
     ["Niveles +%d desde el inicio%s"] = "Kaishi kara Lv +%d%s",
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
+    ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "ROM ni deai table ga nai: game wo kidou shite kara script wo saiyomikomi shite",
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
@@ -951,7 +957,9 @@ local LANG = {
     ["combate "] = "battle ",
     ["cursor inesperado"] = "yoki shinai cursor",
     ["daria EVs de "] = "doryokuchi wo kureru: ",
+    ["de agua"] = "mizu",
     ["de camino"] = "idou chuu",
+    ["de hierba"] = "kusa",
     ["debilitado"] = "hinshi",
     ["dinero"] = "okozukai",
     ["el archivo debe ser un objeto { ... }"] = "file wa object { ... } de aru hitsuyou ga aru",
@@ -2059,8 +2067,9 @@ local function validHeaderTable(base)
 end
 
 local function findWildTable()
-  if wildTableBase ~= nil then return wildTableBase end
-  wildTableBase = false
+  -- only a table that was found is remembered: a failed search (e.g. the script ran before
+  -- the ROM was loaded) is tried again next time
+  if wildTableBase then return wildTableBase end
   if validHeaderTable(0x083C9CB8) then wildTableBase = 0x083C9CB8; return wildTableBase end
   for a = 0x08300000, 0x08500000, 4 do
     if read8(a) < 0x30 and read8(a + 2) == 0 and read8(a + 3) == 0 and validHeaderTable(a) then
@@ -2976,7 +2985,16 @@ local function wildSetup()
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
-    bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    -- say what failed: the table itself, or this map (group.number) has no such encounters
+    local sb1 = read32(A.sb1)
+    if not findWildTable() then
+      bot.msg = TX"No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"
+    elseif validPtr(sb1) then
+      bot.msg = string.format(TX"Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas", read8(sb1 + 4), read8(sb1 + 5),
+                              wr.water and TX"de agua" or TX"de hierba")
+    else
+      bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    end
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   bot.st = "wbuild"
