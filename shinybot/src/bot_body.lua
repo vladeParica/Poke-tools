@@ -86,6 +86,7 @@ local gameCode = read8(0x080000AE)
 local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
 local gameName = (gameCode == 0x52 and "FireRed") or (gameCode == 0x47 and "LeafGreen") or nil
+--@@INCLUDE game@@
 
 local A = {}
 local gMainVerified = false
@@ -1031,12 +1032,9 @@ local function wildEntryOk(a)
   return any
 end
 
--- gWildMonHeaders per USA build (pret symbols branch). Each address is checked to be the
--- FIRST header: in LeafGreen 1.1 the FireRed 1.0 address falls on its 18th header, and the
--- maps before it (Viridian Forest among them) were missing.
-local WILD_HEADERS = { [0x52] = { [false] = 0x083C9CB8, [true] = 0x083C9D28 },   -- FireRed 1.0 / 1.1
-                       [0x47] = { [false] = 0x083C9AF4, [true] = 0x083C9B64 } }  -- LeafGreen 1.0 / 1.1
-
+-- gWildMonHeaders per USA build: Game.wildHeaders (shared/lua/game.lua). Each address is
+-- checked to be the FIRST header: in LeafGreen 1.1 the FireRed 1.0 address falls on its
+-- 18th header, and the maps before it (Viridian Forest among them) were missing.
 local function wildTableStart(a)
   while wildEntryOk(a - 20) do a = a - 20 end
   return a
@@ -1046,7 +1044,7 @@ local function findWildTable()
   -- only a table that was found is remembered: a failed search (e.g. the script ran before
   -- the ROM was loaded) is tried again next time
   if wildTableBase then return wildTableBase end
-  local known = gameLang == 0x45 and WILD_HEADERS[gameCode] and WILD_HEADERS[gameCode][gameRev1]
+  local known = Game.wildHeaders
   if known and validHeaderTable(known) and not wildEntryOk(known - 20) then
     wildTableBase = known; return known
   end

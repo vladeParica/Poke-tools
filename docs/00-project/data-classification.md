@@ -16,7 +16,7 @@
 | Logs (`logs/*.txt`), locks (`*.lock`, `*.flag`) | Script folder | **Internal** | Generated; ignored by git |
 | Recorded routes (`FRLG_TrainRoute*.txt`) | Script folder | **Public** | Map coordinates only; the ones in `trainbot/examples/routes/` are shared on purpose |
 | Configuration (`*.json`) | Script folder | **Internal** | Examples are public; personal ones may contain `notify` |
-| Game data (species, moves tables…) | `shinybot/src/tables2.lua`, `trainbot/src/train_tables.lua` | **Public** | Derived from pret/pokefirered and Devon Studios (see [credits](credits.md)) |
+| Game data (species, moves tables…) | `shinybot/src/tables2.lua`, `shared/gamedata/gamedata.json` | **Public** | Derived from pret/pokefirered and Devon Studios (see [credits](credits.md)) |
 
 **Levels:** Public < Internal < Confidential < Restricted.
 

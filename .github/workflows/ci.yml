@@ -114,6 +114,8 @@ jobs:
         run: python tools/lua_i18n.py check
       - name: Same results in every language (Farm Bot and Train Bot scenarios)
         run: python shared/tests/run_lang.py
+      - name: Unit tests of the shared decision rules (shared/lua/rules.lua)
+        run: python shared/tests/test_rules.py
 
   configurator:
     name: Configurator

@@ -31,8 +31,13 @@ git config core.hooksPath .githooks
   A PR needs CI green and the approval of the code owner (`.github/CODEOWNERS`).
 
 ## Workflow
-1. Edit **`*/src/*`**, never the generated `.lua` files ([ADR-0002](docs/00-project/adr/0002-single-generated-script.md)).
-2. Rebuild: `python shinybot/build.py` and `python trainbot/build.py`.
+1. Edit **`*/src/*`** or **`shared/lua/*`** (code several bots share), never the generated `.lua`
+   files ([ADR-0002](docs/00-project/adr/0002-single-generated-script.md),
+   [ADR-0015](docs/00-project/adr/0015-single-game-data-extractor-and-shared-lua-modules.md)).
+   A decision that can be written without reading memory goes in `shared/lua/rules.lua`, with a
+   case in `shared/tests/test_rules.py`. Game data comes from `shared/gamedata/gamedata.json`
+   (`python tools/gamedata/gamedata.py`); never type it by hand.
+2. Rebuild: `python shinybot/build.py`, `python trainbot/build.py` and `python farmbot/build.py`.
 3. Run the simulator tests ([test strategy](docs/04-testing/test-strategy.md)) and compare
    with each scenario's expected result.
 4. If you change the JSON, the route format or the keys, update the
