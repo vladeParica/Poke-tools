@@ -74,11 +74,17 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - Train Bot and Farm Bot: a wild Pokémon that doesn't let you run (Shadow Tag, Arena Trap, Magnet
   Pull, Mean Look, Wrap…) made the bot choose RUN forever. It now checks the game's own rules
   (pret `IsRunningFromBattleImpossible`) and fights; after 3 failed RUNs for any other reason too.
+- Train Bot: after reaching part of the goal it kept looking for battles forever when no
+  opponent there gave the missing EVs (e.g. a plan in phases: Attack on Route 24, Speed later).
+  It now ends the phase ("FASE TERMINADA", with the EVs still missing) when no species in
+  `species` helps any more, or after 40 battles in a row without a useful opponent.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.
 
 ### Changed
+- Train Bot: when training (or a phase) ends it first goes to heal at the Center, if a route is
+  recorded, and then pauses.
 - Train Bot examples moved to `trainbot/examples/configs/` with per-stat names
   (`FRLG_TrainBot_Speed_Diglett.json`, `FRLG_TrainBot_SpAtk_Tower.json`).
 - Pokémon Tower route renamed to `FRLG_TrainRoute_Tower.txt`.

@@ -493,5 +493,8 @@
   "atrapado por un ataque": "trapped by a move",
   "no logra huir": "running keeps failing",
   "No puede huir de %s (%s): pelea": "Can't run from %s (%s): fighting",
-  "no puede huir": "can't run"
+  "no puede huir": "can't run",
+  "FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies": "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
+  "FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona": "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
+  "fin del entrenamiento": "end of training"
 }

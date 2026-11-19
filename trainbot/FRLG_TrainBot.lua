@@ -245,6 +245,8 @@ local LANG = {
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARMING DONE: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "%d %s EVs missing but each battle gives %d: set allowOvershoot or use another method",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -482,6 +484,7 @@ local LANG = {
     ["falta ',' o ']'"] = "missing ',' or ']'",
     ["falta ',' o '}'"] = "missing ',' or '}'",
     ["falta ':'"] = "missing ':'",
+    ["fin del entrenamiento"] = "end of training",
     ["huir"] = "run",
     ["la mochila no tiene espacio para "] = "the bag has no room for ",
     ["la pantalla del equipo no responde"] = "the party screen doesn't respond",
@@ -742,6 +745,8 @@ local LANG = {
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE KANRYOU: 'species' no dono Pokemon mo nokori no EV (%s) wo kurenai. Basho to shurui wo kaete",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "Doryokuchi ga %d (%s) tarinai ga 1 kai %d: allowOvershoot ka betsu no houhou wo",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -979,6 +984,7 @@ local LANG = {
     ["falta ',' o ']'"] = "',' ka ']' ga nai",
     ["falta ',' o '}'"] = "',' ka '}' ga nai",
     ["falta ':'"] = "':' ga nai",
+    ["fin del entrenamiento"] = "kunren shuuryou",
     ["huir"] = "nigeru",
     ["la mochila no tiene espacio para "] = "bag ni aki ga nai: ",
     ["la pantalla del equipo no responde"] = "temochi gamen ga hannou shinai",
@@ -3378,6 +3384,48 @@ function PK.sendOut()
   if cur == bot.sendSlot then tap("A", 20)
   elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
 end
+-- EVs still missing, as text ("252 Vel, 6 PS")
+function PK.missing(m)
+  local t = {}
+  for st = 1, 6 do
+    local i = EV_OF_STAT[st]
+    local need = tcfg.target and (tcfg.target[i] - m.evs[i]) or 0
+    if need > 0 then t[#t + 1] = need .. " " .. TX(STAT_LABEL[st]) end
+  end
+  return table.concat(t, ", ")
+end
+-- This spot is finished although training isn't: a plan in phases (e.g. Attack on Route 24,
+-- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
+-- or many battles in a row had no useful opponent. Returns the message, or nil.
+PK.USELESS_LIMIT = 40
+function PK.phaseDone(m)
+  if not tcfg.target then return nil end
+  if tcfg.only then
+    for sp in pairs(tcfg.only) do if shouldFight(m, sp) then return nil end end
+    return string.format(TX"FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies",
+      PK.missing(m))
+  end
+  if (bot.useless or 0) >= PK.USELESS_LIMIT then
+    return string.format(TX"FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona",
+      bot.useless, PK.missing(m))
+  end
+  return nil
+end
+-- Training (or this phase) is over: heal first if a route to the Center is recorded, then pause
+function PK.finish(m, done, phaseMsg)
+  if route.go and not bot.finishHealed and not partyHealed() then
+    bot.finishHealed = true                    -- one trip: then it stops whatever happens
+    beginHeal(TX"fin del entrenamiento")
+    return
+  end
+  stopBot()
+  bot.done, bot.finishHealed = done, nil
+  bot.msg = done and string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+    table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")) or phaseMsg
+  logLine(bot.msg)
+  notify(bot.msg)
+  emu.pause()
+end
 -- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
 -- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each):
 -- Smoke Ball or Run Away always escape; Shadow Tag traps; Arena Trap unless Flying or
@@ -3531,18 +3579,11 @@ local function afterBattleDecide()
     logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
     bot.leadSpecies = m.species
   end
+  local done = trainingDone(m)
+  local phase = (not done) and PK.phaseDone(m) or nil
   -- Pickup: take the items first (also when training is about to end, so none are left)
-  if tcfg.pickup and PK.check(trainingDone(m)) then return end
-  if trainingDone(m) then
-    stopBot()
-    bot.done = true
-    bot.msg = string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
-      table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/"))
-    logLine(bot.msg)
-    notify(bot.msg)
-    emu.pause()
-    return
-  end
+  if tcfg.pickup and PK.check(done or phase ~= nil) then return end
+  if done or phase then PK.finish(m, done, phase); return end
   -- With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
   -- and going over is not allowed, it could never finish.
   if tcfg.target and not CONFIG.allowOvershoot then
@@ -3620,6 +3661,7 @@ local function startBot()
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
   bot.pkSeen, bot.pkItems, bot.pkFound = {}, 0, 0
+  bot.useless, bot.finishHealed = 0, nil
   if tcfg.pickup then
     local n = #PK.slots()
     if n == 0 then logLine(TX"pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6")
@@ -3679,7 +3721,11 @@ local function stepBattle()
       local m = lead()
       if bot.forceRun then bot.fight, bot.lastWhy = false, TX"camino al Centro"
       elseif m then bot.fight, bot.lastWhy = shouldFight(m, foe.species) end
-      if bot.fight then bot.fought = bot.fought + 1 else bot.fled = bot.fled + 1 end
+      if bot.fight then bot.fought = bot.fought + 1; bot.useless = 0
+      else
+        bot.fled = bot.fled + 1
+        if not bot.forceRun then bot.useless = (bot.useless or 0) + 1 end    -- no useful opponent here
+      end
     end
   end
   if #queue > 0 then return end

@@ -40,6 +40,16 @@ Use the [configurator](../configurator/README.md) or edit `FRLG_TrainBot.json`, 
 
 Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
 
+## When it stops
+
+- **Training complete** (EVs and level reached): it heals at the Center (if a route is recorded)
+  and pauses.
+- **Phase complete**: if you train in phases (e.g. Attack on Route 24 with
+  `"species": ["Bellsprout", "Weepinbell"]`, Speed later somewhere else), when no species in
+  `species` gives a missing EV any more it heals and pauses with "FASE TERMINADA" and the EVs
+  still missing. Without a `species` list, the same after 40 battles in a row without a useful
+  opponent. Change the area and the species, and press 7.
+
 ## Pickup while training
 
 Optional, off by default. Fill party slots 2 to 6 with Pokémon that have **Pickup** (Meowth),

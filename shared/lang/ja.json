@@ -493,5 +493,8 @@
   "atrapado por un ataque": "waza de tsukamatta",
   "no logra huir": "nigerarenai",
   "No puede huir de %s (%s): pelea": "%s kara nigerarenai (%s): tatakau",
-  "no puede huir": "nigerarenai"
+  "no puede huir": "nigerarenai",
+  "FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies": "PHASE KANRYOU: 'species' no dono Pokemon mo nokori no EV (%s) wo kurenai. Basho to shurui wo kaete",
+  "FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona": "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
+  "fin del entrenamiento": "kunren shuuryou"
 }
