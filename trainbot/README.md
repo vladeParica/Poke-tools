@@ -34,10 +34,30 @@ Use the [configurator](../configurator/README.md) or edit `FRLG_TrainBot.json`, 
 - **Battle:** `healBelow`, `fleeBelow`, `minPP`.
 - **Moves:** `learnMoves` (`auto`, `never`, `ask`), `wantedMoves`, `keepMoves`, `askTimeout`.
 - **Other:** `evolve`, `stopOnShiny`, `healMode` (`nurse` or `tile`), `routeFile`.
+- **Pickup (optional):** `pickup`, `pickupTakeAt`. See [below](#pickup-while-training).
 - **Phone notifications:** `notify` with ntfy or a Discord webhook.
 - **Language:** `language` (`"es"`, `"en"` or `"ja"` in romaji) for the panel, console and log.
 
 Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contracts.md).
+
+## Pickup while training
+
+Optional, off by default. Fill party slots 2 to 6 with Pokémon that have **Pickup** (Meowth),
+keep the one you train first, and set `"pickup": "auto"`:
+
+- Pickup works only after a **won** battle, which is what training does. Each Pickup Pokémon
+  that holds nothing may find an item.
+- When the Pickup Pokémon hold items (all of them, or `pickupTakeAt` of them), the bot opens
+  START → POKéMON → the Pokémon → ITEM → TAKE and stores each item in the bag. Every step is
+  checked in memory.
+- Before training ends it takes whatever is left, so nothing stays on them.
+- The first Pokémon is never touched: it may be holding a Macho Brace on purpose.
+- Pickup Pokémon don't fight, so they gain no EVs or experience.
+
+The menu automation is the Farm Bot's and works on the **USA** versions (FireRed/LeafGreen 1.0
+and 1.1). On other versions, or with `"pickup": "pause"`, the bot pauses and notifies you so you
+take the items yourself. It is tested only in the simulator: keep an eye on the first trips and
+make room in the bag.
 
 ## Examples
 

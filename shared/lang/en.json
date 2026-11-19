@@ -478,5 +478,11 @@
   "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Another Farm Bot or a Train Bot is running in another Lua window: leave only one",
   "Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando": "New game: name your character and your rival, and press 7 while Oak is still talking",
   "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
-  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "State saved near the target (advance %d): the tries start from here"
+  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "State saved near the target (advance %d): the tries start from here",
+  "pickup debe ser \"auto\", \"pause\" o null": "pickup must be \"auto\", \"pause\" or null",
+  "pickupTakeAt debe ser un numero del 1 al 5": "pickupTakeAt must be a number from 1 to 5",
+  "Guardado en la mochila: %s": "Stored in the bag: %s",
+  "pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6": "pickup is on, but there is no Pokemon with Pickup in slots 2 to 6",
+  "Recogida: %d Pokemon en el equipo": "Pickup: %d Pokemon in the party",
+  "Recogida: %d encontrados, %d guardados": "Pickup: %d found, %d stored"
 }

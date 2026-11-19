@@ -62,6 +62,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   state shortly before it, and the tries after the first one start there instead of waiting
   from the base again.
 
+- Train Bot: optional **Pickup while training** (`pickup`, `pickupTakeAt`): with Pickup Pokémon
+  (Meowth) in slots 2–6, the bot takes the items they find through the party menu and stores
+  them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
+
 ### Fixed
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a

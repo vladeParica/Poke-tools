@@ -61,6 +61,14 @@
 
   "stopOnShiny": true,  // pausar si aparece un shiny salvaje (para que lo captures)
 
+  // ---------------------- RECOGIDA (opcional) ---------------------
+  // Pon Pokemon con Recogida (Meowth) en los puestos 2 a 6: tras cada combate
+  // ganado pueden encontrar un objeto. El bot se lo quita y lo guarda en la mochila.
+  // "auto" = lo quita por el menu (versiones USA), "pause" = pausa y te avisa,
+  // null = desactivado. El primer Pokemon (el que entrena) nunca se toca.
+  "pickup": null,
+  "pickupTakeAt": null,   // quitarlos cuando tantos lleven objeto (1 a 5); null = todos
+
   // ---------------------- AVISOS AL CELULAR -----------------------
   // Te avisa cuando termina, encuentra un shiny, quiere aprender un ataque
   // (modo "ask") o se detiene por algun problema.

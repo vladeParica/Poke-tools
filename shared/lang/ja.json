@@ -478,5 +478,11 @@
   "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Betsu no Lua window de Farm Bot ka Train Bot ga ugoite iru: hitotsu dake ni shite",
   "Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando": "Saisho kara: shujinkou to rival no namae wo kimete, Oak ga hanashite iru aida ni 7 wo oshite",
   "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
-  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "Mokuhyou no chikaku de state wo hozon (%d): kore kara no shikou wa koko kara"
+  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "Mokuhyou no chikaku de state wo hozon (%d): kore kara no shikou wa koko kara",
+  "pickup debe ser \"auto\", \"pause\" o null": "pickup wa \"auto\", \"pause\" ka null",
+  "pickupTakeAt debe ser un numero del 1 al 5": "pickupTakeAt wa 1 kara 5 no kazu",
+  "Guardado en la mochila: %s": "Bag ni shimatta: %s",
+  "pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6": "pickup wa ON da ga, 2-6 ban ni Monohiroi no Pokemon ga inai",
+  "Recogida: %d Pokemon en el equipo": "Monohiroi: temochi ni %d hiki",
+  "Recogida: %d encontrados, %d guardados": "Monohiroi: %d ko mitsuketa, %d ko shimatta"
 }

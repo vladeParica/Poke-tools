@@ -168,6 +168,14 @@
         { key: 'evolve', type: 'bool', def: false, half: true, label: 'Dejar evolucionar', comment: 'false = cancela las evoluciones' },
         { key: 'stopOnShiny', type: 'bool', def: true, half: true, label: 'Pausar con un shiny salvaje', comment: 'pausar si aparece un shiny' }
       ] },
+      { id: 'pickup', title: 'Recogida', icon: 'mode-coin', desc: 'Opcional: pon Pokémon con Recogida (Meowth) en los puestos 2 a 6. Tras cada combate ganado pueden encontrar un objeto; el bot se lo quita y lo guarda en la mochila. El primer Pokémon nunca se toca.', fields: [
+        { key: 'pickup', type: 'enum', options: [{ value: 'auto', label: 'El bot los quita' }, { value: 'pause', label: 'Pausar y avisarme' }],
+          def: null, nullable: true, label: 'Objetos de Recogida',
+          help: 'Vacío = desactivado. El bot usa START > POKÉMON > OBJETO > QUITAR (solo versiones USA).', comment: '"auto", "pause" o null = desactivado' },
+        { key: 'pickupTakeAt', type: 'int', min: 1, max: 5, def: null, nullable: true, half: true, label: 'Quitarlos cuando lleven objeto',
+          help: 'Cuántos deben llevar objeto para ir al menú. Vacío = todos.', showIf: function (c) { return c.pickup != null; },
+          comment: 'null = cuando todos lleven objeto' }
+      ] },
       { id: 'moves', title: 'Ataques', icon: 'spark', desc: 'Qué hacer cuando quiere aprender un ataque nuevo y ya tiene cuatro.', fields: [
         { key: 'learnMoves', type: 'enum', segmented: true, def: 'auto', label: 'Ataques nuevos',
           options: [{ value: 'auto', label: 'Automático' }, { value: 'never', label: 'Nunca' }, { value: 'ask', label: 'Preguntarme' }],
