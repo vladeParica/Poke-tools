@@ -50,11 +50,12 @@ losing what was learned.
 
 ```
 shinybot/   FRLG_ShinyBot.lua (generated) + .json   src/bot_body.lua, src/tables2.lua   tests/
-trainbot/   FRLG_TrainBot.lua (generated) + .json   src/train_body.lua, src/train_tables.lua
-            tools/gen_tables.py (pret data)   tests/   examples/ (configs/, routes/)
+trainbot/   FRLG_TrainBot.lua (generated) + .json   src/train_body.lua   tests/   examples/ (configs/, routes/)
 farmbot/    FRLG_FarmBot.lua (generated) + .json   src/farm_body.lua (fork of train_body)   tests/   examples/
 tools/rng/  RNG searches (C and Python) to find targets and seeds
 tools/package.py  release zip for one bot (tag <bot>-vX.Y; .github/workflows/release.yml)
+tools/gamedata/  the ONE pret extractor -> shared/gamedata/gamedata.json; to_lua.py renders the bots' tables
+shared/buildlib.py  builds every bot: --@@INCLUDE name@@ (shared/lua/), --@@DATA@@, --@@TABLES@@, --@@LANG@@ (ADR-0015)
 tools/guia/gen_guia.py  game guide docs/guia/ (Spanish, by request) generated from pret + PokeAPI names
 shared/     lang/en.json, lang/ja.json (bot text translations), langgen.py (build), tests/run_lang.py
 docs/       AI-DLC documentation per phase (00-project … 06-monitoring, architecture/)
@@ -65,7 +66,8 @@ assets/     logo and social preview image
 ```
 
 Build: `python shinybot/build.py`, `python trainbot/build.py`, `python farmbot/build.py`.
-Train Bot data: `python trainbot/tools/gen_tables.py`, which downloads pokefirered to `tools/pret_cache/`.
+Game data: `python tools/gamedata/gamedata.py` refreshes `shared/gamedata/gamedata.json` from pret (sparse clone in
+`trainbot/tools/pret_cache/pokefirered`); the bots' tables are rendered from it at build time (ADR-0015).
 
 ## Tests (simulator)
 

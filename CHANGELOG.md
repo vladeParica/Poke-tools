@@ -67,6 +67,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Train Bot and Farm Bot: Bulbasaur had no game data (its row was stored under index 0), so a
+  wild Bulbasaur counted as "no data" and a trained one had no types for the damage formula.
 - Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the
   forced "choose a Pokémon" screen (it can't be closed with B, the cursor starts on the fainted
   lead) left the bot in a loop. It now sends out the healthy Pokémon with the highest level,
@@ -91,6 +93,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   message saying when to press 7 instead of retrying forever.
 
 ### Changed
+- Game data comes from one extractor, `tools/gamedata/gamedata.py`, which reads pret once into
+  `shared/gamedata/gamedata.json`; the bots' tables are rendered from it at build time and the
+  guide reads it too. `trainbot/tools/gen_tables.py` and `trainbot/src/train_tables.lua` are gone
+  (ADR-0015).
 - Train Bot: when training (or a phase) ends it first goes to heal at the Center, if a route is
   recorded, and then pauses.
 - Train Bot examples moved to `trainbot/examples/configs/` with per-stat names

@@ -5,9 +5,9 @@ names come from the PokeAPI CSV tables, matched by national number, move/ability
 identifier. Nothing is typed by hand: a value that can't be read from those sources is
 written as "sin verificar".
 
-The first run makes a sparse clone of pokefirered in trainbot/tools/pret_cache/pokefirered
-(next to the files trainbot/tools/gen_tables.py downloads) and downloads the PokeAPI tables to
-trainbot/tools/pret_cache/pokeapi. Later runs reuse them.
+pret is read through tools/gamedata/pret.py (a sparse clone in trainbot/tools/pret_cache, shared
+with the game data extractor, ADR-0015); the PokeAPI tables are downloaded to
+trainbot/tools/pret_cache/pokeapi. Later runs reuse both.
 
 Usage:  python tools/guia/gen_guia.py            (writes docs/guia/)
         python tools/guia/gen_guia.py --check    (also prints the verification report)
@@ -16,104 +16,37 @@ import csv
 import json
 import os
 import re
-import subprocess
 import sys
 import urllib.request
 from collections import defaultdict
 
-ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-CACHE = os.path.join(ROOT, 'trainbot', 'tools', 'pret_cache')
-PRET = os.path.join(CACHE, 'pokefirered')
+# pret access is shared with the game data extractor (ADR-0015)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'gamedata'))
+import gamedata  # noqa: E402
+import pret  # noqa: E402
+from pret import CACHE, PRET, ROOT, asm_version, c_version, defines, rd  # noqa: E402,F401
+
 PAPI = os.path.join(CACHE, 'pokeapi')
 OUT = os.path.join(ROOT, 'docs', 'guia')
-PRET_REPO = 'https://github.com/pret/pokefirered.git'
 PAPI_URL = 'https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/'
-SPARSE = ['/data/maps/', '/data/scripts/', '/data/event_scripts.s', '/src/data/', '/include/constants/',
-          '/src/battle_main.c', '/src/battle_script_commands.c', '/src/party_menu.c',
-          '/src/field_specials.c', '/src/pokemon.c', '/src/roamer.c', '/include/battle.h']
 PAPI_FILES = ['pokemon_species_names', 'move_names', 'item_names', 'items', 'ability_names', 'type_names',
               'types']
 ES, EN = '7', '9'               # PokeAPI language ids
 VERS = ('FR', 'LG')
 VER_NAME = {'FR': 'Rojo Fuego', 'LG': 'Verde Hoja'}
-VER_SYM = {'FR': 'FIRERED', 'LG': 'LEAFGREEN'}
 NV = 'sin verificar'
 
 
 # ------------------------------------------------------------------ sources
 def fetch():
-    if not os.path.isdir(os.path.join(PRET, '.git')):
-        os.makedirs(CACHE, exist_ok=True)
-        print('cloning pret/pokefirered (sparse)...')
-        subprocess.check_call(['git', 'clone', '-q', '--depth', '1', '--filter=blob:none', '--sparse',
-                               PRET_REPO, PRET])
-    env = dict(os.environ, MSYS_NO_PATHCONV='1')    # Git Bash would rewrite the /paths
-    subprocess.check_call(['git', '-C', PRET, 'sparse-checkout', 'set', '--no-cone'] + SPARSE, env=env)
+    rev = pret.fetch()
     os.makedirs(PAPI, exist_ok=True)
     for f in PAPI_FILES:
         p = os.path.join(PAPI, f + '.csv')
         if not os.path.exists(p):
             print('downloading PokeAPI', f)
             urllib.request.urlretrieve(PAPI_URL + f + '.csv', p)
-    rev = subprocess.check_output(['git', '-C', PRET, 'rev-parse', 'HEAD'], text=True).strip()
     return rev
-
-
-def rd(rel):
-    with open(os.path.join(PRET, rel), encoding='utf-8') as f:
-        return f.read()
-
-
-def defines(rel, prefix):
-    d = {}
-    for m in re.finditer(r'#define\s+(' + prefix + r'\w+)\s+(\S+)', rd(rel)):
-        v = m.group(2)
-        try:
-            d[m.group(1)] = int(v, 0)
-        except ValueError:
-            if v in d:
-                d[m.group(1)] = d[v]
-    return d
-
-
-def c_version(text, ver):
-    """Keeps the #if defined(FIRERED)/#else branches of one version."""
-    out, stack = [], []
-    for line in text.split('\n'):
-        s = line.strip()
-        m = re.match(r'#if\s+defined\s*\(?\s*(FIRERED|LEAFGREEN)\s*\)?', s)
-        if m:
-            stack.append(m.group(1) == VER_SYM[ver]); continue
-        m = re.match(r'#elif\s+defined\s*\(?\s*(FIRERED|LEAFGREEN)\s*\)?', s)
-        if m and stack:
-            stack[-1] = m.group(1) == VER_SYM[ver]; continue
-        if s.startswith('#else') and stack:
-            stack[-1] = not stack[-1]; continue
-        if s.startswith('#endif') and stack:
-            stack.pop(); continue
-        if all(stack):
-            out.append(line)
-    return '\n'.join(out)
-
-
-def asm_version(text, ver):
-    """Keeps the .ifdef FIRERED / .else / .ifdef LEAFGREEN branches of one version."""
-    out, stack = [], []
-    for line in text.split('\n'):
-        s = line.strip()
-        m = re.match(r'\.ifdef\s+(FIRERED|LEAFGREEN)\b', s)
-        if m:
-            stack.append(m.group(1) == VER_SYM[ver]); continue
-        m = re.match(r'\.ifndef\s+(FIRERED|LEAFGREEN)\b', s)
-        if m:
-            stack.append(m.group(1) != VER_SYM[ver]); continue
-        if s.startswith('.else') and stack:
-            stack[-1] = not stack[-1]; continue
-        if s.startswith('.endif') and stack:
-            stack.pop(); continue
-        if all(stack):
-            out.append(line)
-    return '\n'.join(out)
 
 
 def csv_rows(name):
@@ -143,71 +76,33 @@ def load():
     body = re.sub(r'//[^\n]*|/\*.*?\*/', '', body, flags=re.S)
     nat = [x.strip() for x in body.split(',') if x.strip().startswith('NATIONAL_DEX_')]
     g.nat = {n[len('NATIONAL_DEX_'):]: i for i, n in enumerate(nat)}          # OLD_NAME -> number
-    g.sp_name = {m.group(1): m.group(2) for m in re.finditer(
-        r'\[SPECIES_(\w+)\]\s*=\s*_\("([^"]*)"\)', rd('src/data/text/species_names.h'))}
-    g.mv_name = {m.group(1): m.group(2) for m in re.finditer(
-        r'\[MOVE_(\w+)\]\s*=\s*_\("([^"]*)"\)', rd('src/data/text/move_names.h'))}
-    g.ab_name = {}
-    for m in re.finditer(r'\[ABILITY_(\w+)\]\s*=\s*(\w+)', rd('src/data/text/abilities.h')):
-        g.ab_name[m.group(1)] = m.group(2)
-    abtext = {m.group(1): m.group(2) for m in re.finditer(r'static const u8 (\w+)\[\]\s*=\s*_\("([^"]*)"\)',
-                                                           rd('src/data/text/abilities.h'))}
-    g.ab_name = {k: abtext.get(v, k) for k, v in g.ab_name.items()}
-    # species info
+    # species, moves, learnsets, TM/HM, tutors and evolutions: the shared game data (ADR-0015)
+    D = gamedata.load()
+    const = {i: s['const'] for i, s in D['species'].items()}
+    g.sp_name = {s['const']: s['name'] for s in D['species'].values()}
+    g.mv_name = {m['const']: m['name'] for m in D['moves'].values()}
+    g.ab_name = {a['const']: a['const'] for a in D['abilities'].values()}
     g.info = {}
-    # entry by entry: "[SPECIES_NONE] = {0}," has no block of its own
-    for m in re.finditer(r'\[SPECIES_(\w+)\]\s*=\s*\n\s*\{(.*?)\n    \}', rd('src/data/pokemon/species_info.h'), re.S):
-        b = m.group(2)
-
-        def f(k, b=b):
-            x = re.search(r'\.' + k + r'\s*=\s*([^,\n]+)', b)
-            return x.group(1).strip() if x else None
-        t = re.search(r'\.types\s*=\s*\{(\w+),\s*(\w+)\}', b)
-        if not t:
-            continue
-        ab = re.search(r'\.abilities\s*=\s*\{(\w+),\s*(\w+)\}', b)
-        eg = re.search(r'\.eggGroups\s*=\s*\{(\w+),\s*(\w+)\}', b)
-        g.info[m.group(1)] = dict(
-            stats=[int(f(k)) for k in ('baseHP', 'baseAttack', 'baseDefense', 'baseSpAttack', 'baseSpDefense', 'baseSpeed')],
-            ev=[int(f('evYield_' + k)) for k in ('HP', 'Attack', 'Defense', 'SpAttack', 'SpDefense', 'Speed')],
-            types=[t.group(1)[5:], t.group(2)[5:]], catch=int(f('catchRate')), exp=int(f('expYield')),
-            growth=f('growthRate'), gender=f('genderRatio'), abilities=[ab.group(1)[8:], ab.group(2)[8:]],
-            eggs=[eg.group(1)[10:], eg.group(2)[10:]], items=[f('itemCommon')[5:], f('itemRare')[5:]])
-    # moves
-    g.moves = {}
-    for m in re.finditer(r'\[MOVE_(\w+)\]\s*=\s*\{(.*?)\n    \}', rd('src/data/battle_moves.h'), re.S):
-        b = m.group(2)
-
-        def f(k, b=b):
-            return re.search(r'\.' + k + r'\s*=\s*([^,]+),', b).group(1).strip()
-        g.moves[m.group(1)] = dict(power=int(f('power')), type=f('type')[5:], acc=int(f('accuracy')),
-                                   pp=int(f('pp')), effect=f('effect'))
-    # learnsets
-    ptr = {m.group(1): m.group(2) for m in re.finditer(
-        r'\[SPECIES_(\w+)\]\s*=\s*(\w+)', rd('src/data/pokemon/level_up_learnset_pointers.h'))}
-    sets = {}
-    for m in re.finditer(r'static const u16 (\w+)\[\]\s*=\s*\{(.*?)\};', rd('src/data/pokemon/level_up_learnsets.h'), re.S):
-        sets[m.group(1)] = [(int(a), b) for a, b in re.findall(r'LEVEL_UP_MOVE\(\s*(\d+),\s*MOVE_(\w+)\)', m.group(2))]
-    g.lvl = {sp: sets.get(lb, []) for sp, lb in ptr.items()}
-    g.tm = {}            # 'TM01' -> move
-    g.tmlearn = defaultdict(list)
-    parts = re.split(r'\[SPECIES_(\w+)\]\s*=', rd('src/data/pokemon/tmhm_learnsets.h'))
-    for sp, body in zip(parts[1::2], parts[2::2]):
-        for kind, num, mv in re.findall(r'TMHM\(((?:TM|HM))(\d\d)_(\w+)\)', body):
-            g.tm[kind + num] = mv
-            g.tmlearn[sp].append(kind + num)
-    tl = rd('src/data/pokemon/tutor_learnsets.h')
-    g.tutor_moves = re.findall(r'\[TUTOR_MOVE_\w+\]\s*=\s*MOVE_(\w+)', tl)
-    g.tutorlearn = defaultdict(list)
-    for m in re.finditer(r'\[SPECIES_(\w+)\]\s*=\s*([^\[]*?),\s*\n', tl, re.S):
-        g.tutorlearn[m.group(1)] = re.findall(r'TUTOR\(MOVE_(\w+)\)', m.group(2))
-    # evolutions
+    for s in D['species'].values():
+        b, e = s['base'], s['ev']
+        g.info[s['const']] = dict(
+            stats=[b['hp'], b['atk'], b['def'], b['spa'], b['spd'], b['spe']],
+            ev=[e['hp'], e['atk'], e['def'], e['spa'], e['spd'], e['spe']],
+            types=list(s['types']), catch=s['catchRate'], exp=s['expYield'], growth=s['growthRate'],
+            gender=s['genderRatio'], abilities=list(s['abilities']), eggs=list(s['eggGroups']), items=list(s['items']))
+    g.moves = {m['const']: dict(power=m['power'], type=m['type'], acc=m['accuracy'], pp=m['pp'],
+                                effect='EFFECT_' + m['effect']) for m in D['moves'].values()}
+    g.lvl = {const[i]: [tuple(x) for x in v] for i, v in D['learnsets'].items() if i in const}
+    g.tm = dict(D['tm'])
+    g.tmlearn = defaultdict(list, {const[i]: list(v) for i, v in D['tmLearnsets'].items() if i in const})
+    g.tutor_moves = list(D['tutorMoves'])
+    g.tutorlearn = defaultdict(list, {const[i]: list(v) for i, v in D['tutorLearnsets'].items() if i in const})
     g.evo = defaultdict(list)
     g.prev = {}
-    for m in re.finditer(r'\[SPECIES_(\w+)\]\s*=\s*\{(\{.*?\})\}', rd('src/data/pokemon/evolution.h'), re.S):
-        for meth, par, tgt in re.findall(r'\{(EVO_\w+),\s*(\w+),\s*SPECIES_(\w+)\}', m.group(2)):
-            g.evo[m.group(1)].append((meth, par, tgt))
-            g.prev[tgt] = m.group(1)
+    for i, evs in D['evolutions'].items():
+        for meth, par, tgt in evs:
+            g.evo[const[i]].append(('EVO_' + meth, par, tgt))
+            g.prev[tgt] = const[i]
     # evolution methods the FR/LG code actually checks (cases that never set targetSpecies are disabled)
     pc = rd('src/pokemon.c')
     g.evo_off = set()
@@ -215,10 +110,9 @@ def load():
         code = re.sub(r'/\*.*?\*/', '', m.group(2), flags=re.S)
         if 'targetSpecies' not in code:
             g.evo_off.add(m.group(1))
-    # items
-    items = json.loads(rd('src/data/items.json'))['items']
-    g.item = {it['itemId'][5:]: it for it in items}
-    g.item_order = [it['itemId'][5:] for it in items]
+    # items (same fields as items.json: english name, price)
+    g.item = {it['const']: {'itemId': 'ITEM_' + it['const'], 'english': it['name'], 'price': it['price'],
+                            'pocket': it['pocket'], 'holdEffect': it['holdEffect']} for it in D['items'].values()}
     # TMs are consumed, HMs are not (party_menu.c removes the item only below ITEM_HM01)
     g.tm_consumed = bool(re.search(r'if \(gSpecialVar_ItemId < ITEM_HM01\)\s*RemoveBagItem', rd('src/party_menu.c')))
     # trainers

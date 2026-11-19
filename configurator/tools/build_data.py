@@ -8,6 +8,7 @@ import glob
 import json
 import os
 import re
+import sys
 
 ROOT = os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))
 OUT = os.path.join(ROOT, 'configurator', 'js', 'data.js')
@@ -72,7 +73,10 @@ def strip_comments(text):
 
 tables = read('shinybot', 'src', 'tables2.lua')
 shiny = read('shinybot', 'src', 'bot_body.lua')
-train_tables = read('trainbot', 'src', 'train_tables.lua')
+# the game data tables exactly as build.py puts them in the bots (ADR-0015)
+sys.path.insert(0, os.path.join(ROOT, 'tools', 'gamedata'))
+from to_lua import train_tables as render_tables  # noqa: E402
+train_tables = render_tables()
 
 natures = lua_strings(lua_block(tables, 'natureNamesList'))
 species = lua_strings(lua_block(tables, 'speciesNamesList'))
