@@ -3625,12 +3625,13 @@ function PK.overshoot(m, species)
   return nil
 end
 
--- After a battle: decide what comes next
-local function afterBattleDecide()
-  local m = leadOk()
-  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
-  -- EVs gained in the last battle
-  if bot.prevEvs then
+-- After a battle: decide what comes next. Chain of responsibility: each step looks at the
+-- lead and either takes over (returns true: it started something or stopped the bot) or lets
+-- the next one decide. The order matters: pickup before finishing, finishing before healing.
+PK.AFTER = {
+  -- 1. EVs gained in the last battle (for the panel)
+  function(m)
+    if not bot.prevEvs then return false end
     local parts = {}
     for st = 1, 6 do
       local i = EV_OF_STAT[st]
@@ -3642,19 +3643,29 @@ local function afterBattleDecide()
       bot.lastGain = table.concat(parts, ", ") .. (bot.lastFoe and (" (" .. speciesName(bot.lastFoe.species) .. ")") or "")
     end
     for i = 1, 6 do bot.prevEvs[i] = m.evs[i] end
-  end
-  if m.species ~= bot.leadSpecies then
-    logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
-    bot.leadSpecies = m.species
-  end
-  local done = trainingDone(m)
-  local phase = (not done) and PK.phaseDone(m) or nil
-  -- Pickup: take the items first (also when training is about to end, so none are left)
-  if tcfg.pickup and PK.check(done or phase ~= nil) then return end
-  if done or phase then PK.finish(m, done, phase); return end
-  -- With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
-  -- and going over is not allowed, it could never finish.
-  if tcfg.target and not CONFIG.allowOvershoot then
+    return false
+  end,
+  -- 2. it evolved
+  function(m)
+    if m.species ~= bot.leadSpecies then
+      logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+      bot.leadSpecies = m.species
+    end
+    return false
+  end,
+  -- 3. Pickup items (also when training is about to end, so none are left), then the end of
+  --    training or of this phase
+  function(m)
+    local done = trainingDone(m)
+    local phase = (not done) and PK.phaseDone(m) or nil
+    if tcfg.pickup and PK.check(done or phase ~= nil) then return true end
+    if done or phase then PK.finish(m, done, phase); return true end
+    return false
+  end,
+  -- 4. With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
+  --    and going over is not allowed, it could never finish
+  function(m)
+    if not tcfg.target or CONFIG.allowOvershoot then return false end
     local mult = ((m.pokerus ~= 0) and 2 or 1) * ((m.item == ITEM_MACHO_BRACE) and 2 or 1)
     for s = 1, 6 do
       local i = EV_OF_STAT[s]
@@ -3662,25 +3673,38 @@ local function afterBattleDecide()
       if need > 0 and need < mult and evTotal(m) < 510 then
         halt(string.format(TX"Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo",
           need, TX(STAT_LABEL[s]), mult))
-        return
+        return true
       end
     end
-  end
-  local why = needHeal(m)
-  if why then beginHeal(why); return end
-  -- If it is not at the training spot (e.g. it lost and woke up at the Center)
-  local p = playerPos()
-  if bot.spot and p and not (p.g == bot.spot.g and p.n == bot.spot.n and math.abs(p.x - bot.spot.x) <= 2
-     and math.abs(p.y - bot.spot.y) <= 2) then
+    return false
+  end,
+  -- 5. heal
+  function(m)
+    local why = needHeal(m)
+    if why then beginHeal(why); return true end
+    return false
+  end,
+  -- 6. not at the training spot (e.g. it lost and woke up at the Center)
+  function()
+    local p = playerPos()
+    if not (bot.spot and p and not (p.g == bot.spot.g and p.n == bot.spot.n and math.abs(p.x - bot.spot.x) <= 2
+       and math.abs(p.y - bot.spot.y) <= 2)) then return false end
     if route.back then
       for k = 1, #route.back do
-        if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return end
+        if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return true end
       end
     end
     halt(TX"El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
-    return
+    return true
+  end,
+}
+local function afterBattleDecide()
+  local m = leadOk()
+  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
+  for _, step in ipairs(PK.AFTER) do
+    if step(m) then return end
   end
-  startWalk()
+  startWalk()                               -- nothing to do: look for the next battle
 end
 
 PK.resume = afterBattleDecide
@@ -4328,6 +4352,13 @@ print(TX"7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stat
 reportConfig(cfgOk, cfgMsg, cfgProblems)
 if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
 
+-- State pattern: the function that runs every frame in each state (bot.st)
+local STEP = {
+  walk = stepWalk, battle = stepBattle, after = stepAfter, manual = stepManual,
+  heal_go = stepHealGo, nurse = stepNurse, heal_tile = stepHealTile, nurse_exit = stepNurseExit,
+  heal_back = stepHealBack, learn_pick = stepLearnPick, take = Menus.stepTake,
+}
+
 local badFrames = 0
 while true do
   gFrame = gFrame + 1
@@ -4343,18 +4374,8 @@ while true do
   end
   if bot.running then
     local busy = runQueue()
-    local st = bot.st
-    if st == "walk" then stepWalk()
-    elseif st == "battle" then stepBattle()
-    elseif st == "after" then stepAfter()
-    elseif st == "manual" then stepManual()
-    elseif st == "heal_go" then stepHealGo()
-    elseif st == "nurse" then stepNurse()
-    elseif st == "heal_tile" then stepHealTile()
-    elseif st == "nurse_exit" then stepNurseExit()
-    elseif st == "heal_back" then stepHealBack()
-    elseif st == "learn_pick" then stepLearnPick()
-    elseif st == "take" then Menus.stepTake() end
+    local step = STEP[bot.st]
+    if step then step() end
     if not busy then runQueue() end
   end
   draw()

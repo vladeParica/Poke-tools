@@ -4206,7 +4206,6 @@ end
 local taskActive, s8, menuActions = Menus.taskActive, Menus.s8, Menus.actions
 
 beginTake = function(held) Menus.beginTake(held, tcfg.take == "pause", afterBattleDecide) end
-local stepTake = Menus.stepTake
 
 -- ------------------- Money: rematches with the VS Seeker --------------------
 beginTrainerLoop = function()
@@ -4547,6 +4546,15 @@ reportConfig(cfgOk, cfgMsg, cfgProblems)
 if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
 if troute.go then print(string.format(TX"Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta", #troute.go, #troute.back)) end
 
+-- State pattern: the function that runs every frame in each state (bot.st)
+local STEP = {
+  walk = stepWalk, battle = stepBattle, after = stepAfter, manual = stepManual,
+  heal_go = stepHealGo, nurse = stepNurse, heal_tile = stepHealTile, nurse_exit = stepNurseExit,
+  heal_back = stepHealBack, learn_pick = stepLearnPick, take = Menus.stepTake,
+  tr_charge = stepTrCharge, tr_use = stepTrUse,
+  tr_go = function() stepTrRoute(false) end, tr_back = function() stepTrRoute(true) end,
+}
+
 local badFrames = 0
 while true do
   gFrame = gFrame + 1
@@ -4562,22 +4570,8 @@ while true do
   end
   if bot.running then
     local busy = runQueue()
-    local st = bot.st
-    if st == "walk" then stepWalk()
-    elseif st == "battle" then stepBattle()
-    elseif st == "after" then stepAfter()
-    elseif st == "manual" then stepManual()
-    elseif st == "heal_go" then stepHealGo()
-    elseif st == "nurse" then stepNurse()
-    elseif st == "heal_tile" then stepHealTile()
-    elseif st == "nurse_exit" then stepNurseExit()
-    elseif st == "heal_back" then stepHealBack()
-    elseif st == "learn_pick" then stepLearnPick()
-    elseif st == "take" then stepTake()
-    elseif st == "tr_charge" then stepTrCharge()
-    elseif st == "tr_use" then stepTrUse()
-    elseif st == "tr_go" then stepTrRoute(false)
-    elseif st == "tr_back" then stepTrRoute(true) end
+    local step = STEP[bot.st]
+    if step then step() end
     if not busy then runQueue() end
   end
   draw()
