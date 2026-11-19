@@ -1160,6 +1160,10 @@ end
 PK.USELESS_LIMIT = 40
 function PK.phaseDone(m)
   if not tcfg.target then return nil end
+  -- 510 in total: the missing EVs can't fit any more
+  if evTotal(m) >= 510 and not evsDone(m) then
+    return string.format(TX"FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)", PK.missing(m))
+  end
   if tcfg.only then
     for sp in pairs(tcfg.only) do if shouldFight(m, sp) then return nil end end
     return string.format(TX"FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies",
@@ -1185,6 +1189,23 @@ function PK.finish(m, done, phaseMsg)
   logLine(bot.msg)
   notify(bot.msg)
   emu.pause()
+end
+-- The stat (STAT_LABEL index) that beating this species would push past the goal, or nil.
+-- Same rule as shouldFight; used when it can't run, so it never fights its way past the EVs.
+function PK.overshoot(m, species)
+  if not tcfg.target then return nil end
+  local g = evGain(m, species)
+  if not g then return nil end
+  local room = 510 - evTotal(m)
+  for i = 1, 6 do
+    if g[i] > 0 and room > 0 and m.evs[i] < 255 then
+      local after = m.evs[i] + math.min(g[i], 255 - m.evs[i], room)
+      if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
+        return ({ 1, 2, 3, 6, 4, 5 })[i]
+      end
+    end
+  end
+  return nil
 end
 -- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
 -- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each):
@@ -1569,6 +1590,15 @@ local function stepBattle()
       local why = PK.trapped()
       if not why and bot.runTries >= 3 then why = TX"no logra huir" end
       if why then
+        -- the trained Pokemon is the one out (none was sent out for it): would fighting push its
+        -- EVs past the goal? Then don't fight: pause, the player finishes it (catching gives no EVs)
+        local l = lead()
+        local over = not bot.sendSlot and l and bot.foe and PK.overshoot(l, bot.foe.species)
+        if over then
+          halt(string.format(TX"%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7",
+            speciesName(bot.foe.species), why, TX(STAT_LABEL[over])))
+          return
+        end
         bot.trapped = true
         logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
       end

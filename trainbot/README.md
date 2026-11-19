@@ -48,7 +48,11 @@ Full reference in [docs/02-design/api-contracts.md](../docs/02-design/api-contra
   `"species": ["Bellsprout", "Weepinbell"]`, Speed later somewhere else), when no species in
   `species` gives a missing EV any more it heals and pauses with "FASE TERMINADA" and the EVs
   still missing. Without a `species` list, the same after 40 battles in a row without a useful
-  opponent. Change the area and the species, and press 7.
+  opponent. Change the area and the species, and press 7. It also stops when the Pokémon has 510
+  EVs in total and the missing ones can't fit.
+- **A wild Pokémon won't let it run** (Arena Trap, Shadow Tag, Mean Look…): it fights, unless
+  beating it would push an EV past your goal; then it pauses and notifies you to finish the
+  battle yourself (catching it gives no EVs). EVs never go past the goal unless `allowOvershoot`.
 
 ## Pickup while training
 

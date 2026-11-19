@@ -57,9 +57,13 @@ def main():
          lambda r: 'PAUSED' in r['err'] and 'ENTRENAMIENTO COMPLETO' in r['log']
          and r['log'].rfind('fin del entrenamiento') < r['log'].rfind('ENTRENAMIENTO COMPLETO')),
     ]
+    cases.append(('510', {'evs': {'atk': 252, 'spe': 252, 'hp': 6}, 'healBelow': 40},
+                  lambda r: 'PAUSED' in r['err'] and 'ya tiene 510 EVs' in r['log'] and '3 PS' in r['log']
+                  and r['fought'] == 0, 'full510'))
     bad = 0
-    for name, cfg, check in cases:
-        r = run('evs', cfg, route)
+    for case in cases:
+        name, cfg, check = case[:3]
+        r = run(case[3] if len(case) > 3 else 'evs', cfg, route)
         ok = check(r)
         bad += not ok
         print('%s %-10s err=%-24s battles=%-3d fought=%-3d ran=%-3d heals=%d evs=%s' % (

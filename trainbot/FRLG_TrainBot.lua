@@ -102,6 +102,7 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s is evolving into %s",
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
     ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
@@ -247,6 +248,7 @@ local LANG = {
     ["FARMEO COMPLETO: "] = "FARMING DONE: ",
     ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
     ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE DONE: it already has 510 EVs in total and the missing ones don't fit (%s)",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "%d %s EVs missing but each battle gives %d: set allowOvershoot or use another method",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -602,6 +604,7 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s ga %s ni shinka chuu",
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
     ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
@@ -747,6 +750,7 @@ local LANG = {
     ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
     ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
     ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE KANRYOU: 'species' no dono Pokemon mo nokori no EV (%s) wo kurenai. Basho to shurui wo kaete",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE KANRYOU: EV goukei ga 510 de, nokori (%s) wa hairanai",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "Doryokuchi ga %d (%s) tarinai ga 1 kai %d: allowOvershoot ka betsu no houhou wo",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -3400,6 +3404,10 @@ end
 PK.USELESS_LIMIT = 40
 function PK.phaseDone(m)
   if not tcfg.target then return nil end
+  -- 510 in total: the missing EVs can't fit any more
+  if evTotal(m) >= 510 and not evsDone(m) then
+    return string.format(TX"FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)", PK.missing(m))
+  end
   if tcfg.only then
     for sp in pairs(tcfg.only) do if shouldFight(m, sp) then return nil end end
     return string.format(TX"FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies",
@@ -3425,6 +3433,23 @@ function PK.finish(m, done, phaseMsg)
   logLine(bot.msg)
   notify(bot.msg)
   emu.pause()
+end
+-- The stat (STAT_LABEL index) that beating this species would push past the goal, or nil.
+-- Same rule as shouldFight; used when it can't run, so it never fights its way past the EVs.
+function PK.overshoot(m, species)
+  if not tcfg.target then return nil end
+  local g = evGain(m, species)
+  if not g then return nil end
+  local room = 510 - evTotal(m)
+  for i = 1, 6 do
+    if g[i] > 0 and room > 0 and m.evs[i] < 255 then
+      local after = m.evs[i] + math.min(g[i], 255 - m.evs[i], room)
+      if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
+        return ({ 1, 2, 3, 6, 4, 5 })[i]
+      end
+    end
+  end
+  return nil
 end
 -- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
 -- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each):
@@ -3809,6 +3834,15 @@ local function stepBattle()
       local why = PK.trapped()
       if not why and bot.runTries >= 3 then why = TX"no logra huir" end
       if why then
+        -- the trained Pokemon is the one out (none was sent out for it): would fighting push its
+        -- EVs past the goal? Then don't fight: pause, the player finishes it (catching gives no EVs)
+        local l = lead()
+        local over = not bot.sendSlot and l and bot.foe and PK.overshoot(l, bot.foe.species)
+        if over then
+          halt(string.format(TX"%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7",
+            speciesName(bot.foe.species), why, TX(STAT_LABEL[over])))
+          return
+        end
         bot.trapped = true
         logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
       end

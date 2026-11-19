@@ -496,5 +496,7 @@
   "no puede huir": "can't run",
   "FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies": "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
   "FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona": "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
-  "fin del entrenamiento": "end of training"
+  "fin del entrenamiento": "end of training",
+  "FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)": "PHASE DONE: it already has 510 EVs in total and the missing ones don't fit (%s)",
+  "%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7": "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7"
 }

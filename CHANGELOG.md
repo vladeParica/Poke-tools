@@ -78,6 +78,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   opponent there gave the missing EVs (e.g. a plan in phases: Attack on Route 24, Speed later).
   It now ends the phase ("FASE TERMINADA", with the EVs still missing) when no species in
   `species` helps any more, or after 40 battles in a row without a useful opponent.
+- Train Bot: EVs could go past the goal when a wild Pokémon wouldn't let it run (e.g. Diglett's
+  Arena Trap in Diglett's Cave) and it fought it. Now, if beating it would push an EV past the
+  goal, it pauses and notifies instead (catching it gives no EVs). It also stops at 510 EVs in
+  total when the missing ones can't fit.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.
