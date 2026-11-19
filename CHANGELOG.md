@@ -67,6 +67,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the
+  forced "choose a Pokémon" screen (it can't be closed with B, the cursor starts on the fainted
+  lead) left the bot in a loop. It now sends out the healthy Pokémon with the highest level,
+  runs, and goes to heal. Against trainers the Farm Bot still stops and lets you choose.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.

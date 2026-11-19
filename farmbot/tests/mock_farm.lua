@@ -129,6 +129,16 @@ if SCEN == "objetos" or SCEN == "bagfull" or SCEN == "pausa" or SCEN == "campo" 
   party[3] = { pid = 0x0BADBE00, species = 52, item = 0, friendship = 70, moves = { 10, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
     ivword = 0, level = 10, hp = 30, maxHP = 30 }
 end
+-- "faint": the lead faints once; the party has a fainted Pidgey (Lv 20) and two Meowth (Lv 10, 15).
+-- The bot must send out the healthy one with the highest level (slot 3) and run.
+if SCEN == "faint" then
+  party[2] = { pid = 0x0BADBEEF, species = 52, item = 0, friendship = 70, moves = { 10, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
+    ivword = 0, level = 10, hp = 30, maxHP = 30 }
+  party[3] = { pid = 0x0BADBE00, species = 52, item = 0, friendship = 70, moves = { 10, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
+    ivword = 0, level = 15, hp = 40, maxHP = 40 }
+  party[4] = { pid = 0x0BADBE22, species = 16, item = 0, friendship = 70, moves = { 10, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
+    ivword = 0, level = 20, hp = 0, maxHP = 50 }
+end
 local leadM = party[1]
 local function syncParty()
   for i, m in ipairs(party) do encodeMon(PARTY + (i - 1) * 0x64, m) end
@@ -291,6 +301,7 @@ local function battleFrame()
     local c = r8(ACUR)
     if edge("A") then
       w32(FLAGS, 0)
+      if c == 0 and b.sentOut then error("FOUGHT AFTER THE LEAD FAINTED") end
       if c == 0 then b.phase = "tomove"; b.ready = b.t + 10
       elseif c == 3 then
         if b.trainer then error("RAN FROM TRAINER") end
@@ -327,7 +338,15 @@ local function battleFrame()
         textPhase(2, function() winBattle(b); finish() end)
       else
         textPhase(1, function()
-          leadM.hp = math.max(leadM.hp - 3, 0); syncParty(); w16(BMONS + 0x28, leadM.hp)
+          leadM.hp = math.max(leadM.hp - 3, 0)
+          if SCEN == "faint" and not W.fainted then leadM.hp = 0; W.fainted = true end
+          syncParty(); w16(BMONS + 0x28, leadM.hp)
+          if leadM.hp == 0 and SCEN == "faint" then
+            -- forced party screen (CONTROLLER_CHOOSEPOKEMON): the cursor starts on the fainted lead
+            ev("lead fainted"); w32(CB2, CB_PARTY); w8(PMENU + 9, 0); setTask(1, F_CHOOSE)
+            w8(BUFA, 22); w32(FLAGS, 1); b.phase = "sendout"; b.ready = b.t + 10
+            return
+          end
           if leadM.hp == 0 then error("LEAD FAINTED") end
           textPhase(1, toAction)
         end)
@@ -339,6 +358,39 @@ local function battleFrame()
     elseif edge("down") and c < 2 and c + 2 < nm then w8(MCUR, c + 2) end
   elseif b.phase == "toaction" then
     if b.t >= b.ready then toAction() end
+  elseif b.phase == "sendout" then
+    -- this screen can't be closed: B does nothing, A on a fainted Pokemon does nothing
+    if b.t < b.ready then return end
+    local s = r8(PMENU + 9)
+    if s >= 0x80 then s = s - 0x100 end
+    local n = #party
+    if edge("down") then
+      if s == 7 then s = 0 elseif s + 1 >= n then s = 7 else s = s + 1 end; w8(PMENU + 9, s)
+    elseif edge("up") then
+      if s == 7 then s = n - 1 elseif s == 0 then s = 7 else s = s - 1 end; w8(PMENU + 9, s)
+    elseif edge("A") then
+      if s ~= 7 and party[s + 1].hp > 0 then
+        b.sendSlot = s
+        -- SHIFT / SUMMARY / CANCEL (setActions is defined further down)
+        for k = 0, 7 do w8(INTERNAL + 0x0F + k, ({ 10, 0, 2 })[k + 1] or 0) end
+        w8(INTERNAL + 0x17, 3); w8(MCURSOR, 0); setTask(1, F_SELECT); b.phase = "sendact"; b.ready = b.t + 6
+      else ev("tried to send out a fainted Pokemon") end
+    end
+  elseif b.phase == "sendact" then
+    if b.t < b.ready then return end
+    local c, n = r8(MCURSOR), r8(INTERNAL + 0x17)
+    if edge("down") then w8(MCURSOR, (c + 1) % n)
+    elseif edge("up") then w8(MCURSOR, (c - 1) % n)
+    elseif edge("B") then setTask(1, F_CHOOSE); b.phase = "sendout"; b.ready = b.t + 6
+    elseif edge("A") then
+      local opt = r8(INTERNAL + 0x0F + c)
+      if opt ~= 10 then error("BOT PICKED SEND ACTION " .. opt) end
+      local m = party[b.sendSlot + 1]
+      ev("sent out " .. m.species .. " Lv" .. m.level)
+      setTask(1, nil); w32(CB2, CB_BATTLE)
+      setBattleMon(0, m.species, m.level, m.hp, m.maxHP, m.moves, m.pp, { 10, 10 }, m.item)
+      b.sentOut = true; toAction()
+    end
   elseif b.phase == "ending" then
     if b.t - b.endT == 20 then w8(INB, 0); w32(CB2, CB_TRANS) end
     if b.t - b.endT == 50 then

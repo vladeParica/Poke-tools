@@ -67,6 +67,10 @@ def run(scen, cfg, show=False):
 
 
 CASES = [
+    # the lead faints in a wild battle: send out the healthy Pokemon with the highest level and run
+    ('debilitado', 'faint', {'mode': 'nivel', 'targetLevel': 14},
+     lambda r: 'PAUSED' in r['err'] and 'sent out 52 Lv15' in r['events'] and 'tried to send out a fainted' not in r['events']
+     and r['ran'] >= 1 and r['heals'] >= 1),
     ('nivel', 'nivel', {'mode': 'nivel', 'targetLevel': 14},
      lambda r: 'PAUSED' in r['err'] and r['level'] >= 14 and 'FARMEO COMPLETO' in r['log']),
     ('objetos', 'objetos', {'mode': 'objetos', 'itemTarget': 4},

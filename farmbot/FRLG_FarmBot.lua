@@ -105,6 +105,7 @@ local LANG = {
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (%d per hour of play)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -317,6 +318,7 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "I couldn't heal: the way there must end INSIDE the Center, facing the nurse (record another with 6)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "I couldn't read the encounter table: remove the 'species' filter",
     ["No pude quitar los objetos: "] = "I couldn't take the items: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Couldn't send out another Pokemon: pick it yourself, run and press 7",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "I couldn't follow the route to the Center (record another with 6)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "I couldn't follow the trainer route (record another with 5)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "I couldn't get back to the training spot (record another route with 6)",
@@ -433,6 +435,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Your Pokemon is evolving: finish the scene and the bot carries on by itself",
     ["Tu Pokemon evoluciono a "] = "Your Pokemon evolved into ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Your Pokemon fainted against a trainer: pick the next one yourself and finish the battle",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Your Pokemon fainted and the game asks for another: pick it yourself, run and press 7",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Your Pokemon fainted and no healthy one is left: pick it yourself and press 7",
     ["Ultimo:"] = "Last:",
     ["Ultimo: "] = "Last: ",
     ["Usando Buscapelea"] = "Using VS Seeker",
@@ -458,6 +462,7 @@ local LANG = {
     ["daria EVs de "] = "would give EVs in ",
     ["de camino"] = "on the way",
     ["debilitado"] = "fainted",
+    ["debilitado: huir"] = "fainted: run",
     ["dinero"] = "money",
     ["el archivo debe ser un objeto { ... }"] = "the file must be an object { ... }",
     ["el cursor del menu START no llega a POKEMON"] = "the START menu cursor doesn't reach POKEMON",
@@ -593,6 +598,7 @@ local LANG = {
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (play 1 jikan atari %d)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -805,6 +811,7 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "Kaifuku dekinakatta: iki wa Center no NAKA, Joy-san no mae de owaru hitsuyou (6 de kiroku shinaoshite)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "Encount table wo yomenakatta: 'species' no jouken wo hazushite",
     ["No pude quitar los objetos: "] = "Dougu wo hazusenakatta: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Tsugi no Pokemon wo dasenakatta: jibun de erande nigete 7 wo oshite",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "Center e no route wo tadorenakatta (6 de kiroku shinaoshite)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "Trainer route wo tadorenakatta (5 de kiroku shinaoshite)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "Tokkun point ni modorenakatta (6 de route wo kiroku shinaoshite)",
@@ -921,6 +928,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Pokemon ga shinka chuu: scene wo owaraseru to bot ga tsuzukemasu",
     ["Tu Pokemon evoluciono a "] = "Pokemon ga shinka: ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Trainer sen de Pokemon ga hinshi: tsugi wo erande battle wo owarasete",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Pokemon ga taoreta, tsugi wo erande nigete kara 7 wo oshite",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Pokemon ga taoreta, genki na Pokemon ga inai: jibun de erande 7 wo oshite",
     ["Ultimo:"] = "Saigo:",
     ["Ultimo: "] = "Saigo: ",
     ["Usando Buscapelea"] = "Battle Searcher shiyou chuu",
@@ -946,6 +955,7 @@ local LANG = {
     ["daria EVs de "] = "doryokuchi wo kureru: ",
     ["de camino"] = "idou chuu",
     ["debilitado"] = "hinshi",
+    ["debilitado: huir"] = "taoreta: nigeru",
     ["dinero"] = "okozukai",
     ["el archivo debe ser un objeto { ... }"] = "file wa object { ... } de aru hitsuyou ga aru",
     ["el cursor del menu START no llega a POKEMON"] = "START menu no cursor ga POKEMON ni todokanai",
@@ -2340,6 +2350,8 @@ end
 local K = {
   STARTMENU_POKEMON = 1,
   OPT_ITEM = 3, OPT_TAKE = 5,                  -- CURSOR_OPTION_ITEM / CURSOR_OPTION_TAKE_ITEM
+  OPT_SHIFT = 10, OPT_SEND_OUT = 11,           -- CURSOR_OPTION_SHIFT / CURSOR_OPTION_SEND_OUT
+  CMD_CHOOSEPOKEMON = 22,                      -- CONTROLLER_CHOOSEPOKEMON (battle_controllers.h)
   ITEM_VS_SEEKER = 362,
   ABILITY_PICKUP = 53,
   MOVE_THIEF = 168, MOVE_COVET = 343,
@@ -3526,6 +3538,7 @@ local function enterBattle(returnTo)
   bot.foe, bot.fight, bot.forceRun = nil, nil, (returnTo ~= nil)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
+  bot.sendSlot = nil
   bot.outT = 0
   bot.battles = bot.battles + 1
 end
@@ -3611,6 +3624,9 @@ local function stepBattle()
     halt(TX"Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
     return
   end
+  -- Wild battle, the game asks for another Pokemon (the lead fainted): before the evolution
+  -- check, because the party screen also changes callback2
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == K.CMD_CHOOSEPOKEMON then K.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -3938,6 +3954,49 @@ local function menuActions()
 end
 local function indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
 local function moveCursor(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+
+-- In a wild battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon?
+-- NO" could not run away. That party screen can't be closed with B, and its cursor starts on
+-- the fainted lead. Send out the healthy Pokemon with the highest level (never an egg) and
+-- run (bot.forceRun). After the battle the party is back in field order, so the fainted lead
+-- is still first and goes to heal. Same code as the Train Bot. In K: the 200-locals limit.
+K.sendOut = function()
+  if not MENU then
+    halt(TX"Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7")
+    return
+  end
+  bot.fight, bot.forceRun, bot.lastWhy = false, true, TX"debilitado: huir"
+  if not bot.sendSlot then
+    local best, lv
+    for i = 1, partyCount() - 1 do
+      local m = partyMon(i)
+      if m and m.hp > 0 and band(rshift(m.ivWord, 30), 1) == 0 and (not lv or m.level > lv) then best, lv = i, m.level end
+    end
+    if not best then halt(TX"Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"); return end
+    bot.sendSlot, bot.sendT = best, 0
+    local l, sm = lead(), partyMon(best)
+    logLine(string.format(TX"%s se debilito: saco a %s (Nv.%d) para huir", l and speciesName(l.species) or "?",
+      speciesName(sm.species), sm.level))
+  end
+  bot.sendT = bot.sendT + 1
+  if bot.sendT > 1800 then halt(TX"No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"); return end
+  if taskActive(MENU.taskSelection) then
+    -- SHIFT / SUMMARY / CANCEL: pick SHIFT (or SEND OUT)
+    local acts = menuActions()
+    local want = indexOf(acts, K.OPT_SHIFT) or indexOf(acts, K.OPT_SEND_OUT)
+    if not want then tap("B", 10); return end
+    local cur = s8(read8(MENU.menuCursor))
+    if cur == want then tap("A", 20) else moveCursor(cur, want) end
+    return
+  end
+  if not taskActive(MENU.taskChooseMon) then
+    if bot.sendT % 40 == 0 then tap("B", 10) end      -- a message over the party screen
+    return
+  end
+  local cur = s8(read8(MENU.partyMenu + 9))
+  if cur == bot.sendSlot then tap("A", 20)
+  elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
+end
 
 beginTake = function(held)
   local names = {}

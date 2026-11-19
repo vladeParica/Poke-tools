@@ -124,6 +124,8 @@ end
 local K = {
   STARTMENU_POKEMON = 1,
   OPT_ITEM = 3, OPT_TAKE = 5,                  -- CURSOR_OPTION_ITEM / CURSOR_OPTION_TAKE_ITEM
+  OPT_SHIFT = 10, OPT_SEND_OUT = 11,           -- CURSOR_OPTION_SHIFT / CURSOR_OPTION_SEND_OUT
+  CMD_CHOOSEPOKEMON = 22,                      -- CONTROLLER_CHOOSEPOKEMON (battle_controllers.h)
   ITEM_VS_SEEKER = 362,
   ABILITY_PICKUP = 53,
   MOVE_THIEF = 168, MOVE_COVET = 343,
@@ -1310,6 +1312,7 @@ local function enterBattle(returnTo)
   bot.foe, bot.fight, bot.forceRun = nil, nil, (returnTo ~= nil)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
+  bot.sendSlot = nil
   bot.outT = 0
   bot.battles = bot.battles + 1
 end
@@ -1395,6 +1398,9 @@ local function stepBattle()
     halt(TX"Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
     return
   end
+  -- Wild battle, the game asks for another Pokemon (the lead fainted): before the evolution
+  -- check, because the party screen also changes callback2
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == K.CMD_CHOOSEPOKEMON then K.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -1722,6 +1728,49 @@ local function menuActions()
 end
 local function indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
 local function moveCursor(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+
+-- In a wild battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon?
+-- NO" could not run away. That party screen can't be closed with B, and its cursor starts on
+-- the fainted lead. Send out the healthy Pokemon with the highest level (never an egg) and
+-- run (bot.forceRun). After the battle the party is back in field order, so the fainted lead
+-- is still first and goes to heal. Same code as the Train Bot. In K: the 200-locals limit.
+K.sendOut = function()
+  if not MENU then
+    halt(TX"Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7")
+    return
+  end
+  bot.fight, bot.forceRun, bot.lastWhy = false, true, TX"debilitado: huir"
+  if not bot.sendSlot then
+    local best, lv
+    for i = 1, partyCount() - 1 do
+      local m = partyMon(i)
+      if m and m.hp > 0 and band(rshift(m.ivWord, 30), 1) == 0 and (not lv or m.level > lv) then best, lv = i, m.level end
+    end
+    if not best then halt(TX"Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"); return end
+    bot.sendSlot, bot.sendT = best, 0
+    local l, sm = lead(), partyMon(best)
+    logLine(string.format(TX"%s se debilito: saco a %s (Nv.%d) para huir", l and speciesName(l.species) or "?",
+      speciesName(sm.species), sm.level))
+  end
+  bot.sendT = bot.sendT + 1
+  if bot.sendT > 1800 then halt(TX"No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"); return end
+  if taskActive(MENU.taskSelection) then
+    -- SHIFT / SUMMARY / CANCEL: pick SHIFT (or SEND OUT)
+    local acts = menuActions()
+    local want = indexOf(acts, K.OPT_SHIFT) or indexOf(acts, K.OPT_SEND_OUT)
+    if not want then tap("B", 10); return end
+    local cur = s8(read8(MENU.menuCursor))
+    if cur == want then tap("A", 20) else moveCursor(cur, want) end
+    return
+  end
+  if not taskActive(MENU.taskChooseMon) then
+    if bot.sendT % 40 == 0 then tap("B", 10) end      -- a message over the party screen
+    return
+  end
+  local cur = s8(read8(MENU.partyMenu + 9))
+  if cur == bot.sendSlot then tap("A", 20)
+  elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
+end
 
 beginTake = function(held)
   local names = {}

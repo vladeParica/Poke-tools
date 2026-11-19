@@ -484,5 +484,10 @@
   "Guardado en la mochila: %s": "Stored in the bag: %s",
   "pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6": "pickup is on, but there is no Pokemon with Pickup in slots 2 to 6",
   "Recogida: %d Pokemon en el equipo": "Pickup: %d Pokemon in the party",
-  "Recogida: %d encontrados, %d guardados": "Pickup: %d found, %d stored"
+  "Recogida: %d encontrados, %d guardados": "Pickup: %d found, %d stored",
+  "Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7": "Your Pokemon fainted and the game asks for another: pick it yourself, run and press 7",
+  "debilitado: huir": "fainted: run",
+  "Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7": "Your Pokemon fainted and no healthy one is left: pick it yourself and press 7",
+  "%s se debilito: saco a %s (Nv.%d) para huir": "%s fainted: sending out %s (Lv.%d) to run away",
+  "No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7": "Couldn't send out another Pokemon: pick it yourself, run and press 7"
 }
