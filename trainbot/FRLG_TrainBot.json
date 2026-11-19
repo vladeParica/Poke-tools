@@ -67,7 +67,7 @@
   // "auto" = lo quita por el menu (versiones USA), "pause" = pausa y te avisa,
   // null = desactivado. El primer Pokemon (el que entrena) nunca se toca.
   "pickup": null,
-  "pickupTakeAt": null,   // quitarlos cuando tantos lleven objeto (1 a 5); null = todos
+  "pickupTakeAt": null,   // quitarlos cuando tantos lleven objeto (1 a 5); null = la mitad (5 -> 3)
 
   // ---------------------- AVISOS AL CELULAR -----------------------
   // Te avisa cuando termina, encuentra un shiny, quiere aprender un ataque

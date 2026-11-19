@@ -489,5 +489,9 @@
   "debilitado: huir": "fainted: run",
   "Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7": "Your Pokemon fainted and no healthy one is left: pick it yourself and press 7",
   "%s se debilito: saco a %s (Nv.%d) para huir": "%s fainted: sending out %s (Lv.%d) to run away",
-  "No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7": "Couldn't send out another Pokemon: pick it yourself, run and press 7"
+  "No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7": "Couldn't send out another Pokemon: pick it yourself, run and press 7",
+  "atrapado por un ataque": "trapped by a move",
+  "no logra huir": "running keeps failing",
+  "No puede huir de %s (%s): pelea": "Can't run from %s (%s): fighting",
+  "no puede huir": "can't run"
 }

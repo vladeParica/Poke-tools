@@ -173,8 +173,8 @@
           def: null, nullable: true, label: 'Objetos de Recogida',
           help: 'Vacío = desactivado. El bot usa START > POKÉMON > OBJETO > QUITAR (solo versiones USA).', comment: '"auto", "pause" o null = desactivado' },
         { key: 'pickupTakeAt', type: 'int', min: 1, max: 5, def: null, nullable: true, half: true, label: 'Quitarlos cuando lleven objeto',
-          help: 'Cuántos deben llevar objeto para ir al menú. Vacío = todos.', showIf: function (c) { return c.pickup != null; },
-          comment: 'null = cuando todos lleven objeto' }
+          help: 'Cuántos deben llevar objeto para ir al menú. Vacío = la mitad (con 5, en cuanto 3 lleven).', showIf: function (c) { return c.pickup != null; },
+          comment: 'null = cuando la mitad lleve objeto' }
       ] },
       { id: 'moves', title: 'Ataques', icon: 'spark', desc: 'Qué hacer cuando quiere aprender un ataque nuevo y ya tiene cuatro.', fields: [
         { key: 'learnMoves', type: 'enum', segmented: true, def: 'auto', label: 'Ataques nuevos',

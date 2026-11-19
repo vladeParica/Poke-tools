@@ -47,12 +47,16 @@ keep the one you train first, and set `"pickup": "auto"`:
 
 - Pickup works only after a **won** battle, which is what training does. Each Pickup Pokémon
   that holds nothing may find an item.
-- When the Pickup Pokémon hold items (all of them, or `pickupTakeAt` of them), the bot opens
+- When enough Pickup Pokémon hold an item (half of them by default, e.g. 3 of 5, or
+  `pickupTakeAt` of them), the bot opens
   START → POKéMON → the Pokémon → ITEM → TAKE and stores each item in the bag. Every step is
   checked in memory.
 - Before training ends it takes whatever is left, so nothing stays on them.
 - The first Pokémon is never touched: it may be holding a Macho Brace on purpose.
 - Pickup Pokémon don't fight, so they gain no EVs or experience.
+- If the trained Pokémon faints and running fails, the bot sends out the healthy Pokémon with
+  the highest level and runs. If the wild Pokémon won't let it run (Shadow Tag, Arena Trap,
+  Mean Look, Wrap…), it fights instead.
 
 The menu automation is the Farm Bot's and works on the **USA** versions (FireRed/LeafGreen 1.0
 and 1.1). On other versions, or with `"pickup": "pause"`, the bot pauses and notifies you so you

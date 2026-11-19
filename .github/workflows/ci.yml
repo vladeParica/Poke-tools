@@ -81,6 +81,7 @@ jobs:
           python trainbot/tests/run_want.py
           python trainbot/tests/run_pickup.py
           python trainbot/tests/run_faint.py
+          python trainbot/tests/run_trap.py
 
   farmbot:
     name: Farm Bot simulator

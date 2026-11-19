@@ -71,6 +71,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   forced "choose a Pokémon" screen (it can't be closed with B, the cursor starts on the fainted
   lead) left the bot in a loop. It now sends out the healthy Pokémon with the highest level,
   runs, and goes to heal. Against trainers the Farm Bot still stops and lets you choose.
+- Train Bot and Farm Bot: a wild Pokémon that doesn't let you run (Shadow Tag, Arena Trap, Magnet
+  Pull, Mean Look, Wrap…) made the bot choose RUN forever. It now checks the game's own rules
+  (pret `IsRunningFromBattleImpossible`) and fights; after 3 failed RUNs for any other reason too.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.

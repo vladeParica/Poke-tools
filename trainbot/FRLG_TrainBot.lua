@@ -40,7 +40,7 @@ local CONFIG = {
   evolve         = false,   -- false = cancel evolutions (B), true = let it evolve (you decide)
   stopOnShiny    = true,    -- pause if a wild shiny appears
   pickup         = nil,     -- Pickup Pokemon in slots 2-6: "auto" = take their items via the menu (USA), "pause" = pause and tell you
-  pickupTakeAt   = nil,     -- pickup: take them when this many hold an item (nil = all of them)
+  pickupTakeAt   = nil,     -- pickup: take them when this many hold an item (nil = half of them, rounded up)
   walkAxis       = "horizontal",
   walkFrames     = 16,
   routeFile      = "FRLG_TrainRoute.txt",
@@ -320,6 +320,7 @@ local LANG = {
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "I couldn't follow the route to the Center (record another with 6)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "I couldn't follow the trainer route (record another with 5)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "I couldn't get back to the training spot (record another route with 6)",
+    ["No puede huir de %s (%s): pelea"] = "Can't run from %s (%s): fighting",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "I can't use the VS Seeker: the character doesn't stay still on the map",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "The Teachy TV didn't open: register it on SELECT. Waiting at normal speed.",
     ["No se aprendio "] = "Didn't learn ",
@@ -452,6 +453,7 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
     ["ataque desconocido en "] = "unknown move in ",
+    ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
     ["camino al Centro"] = "on the way to the Center",
     ["cerrado"] = "closed",
@@ -505,7 +507,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "there is no POKEMON option in the START menu",
     ["no llego al Pokemon "] = "can't reach Pokemon ",
     ["no lleva objeto"] = "holds no item",
+    ["no logra huir"] = "running keeps failing",
     ["no pude cerrar los menus"] = "I couldn't close the menus",
+    ["no puede huir"] = "can't run",
     ["no se abrio la pantalla del equipo"] = "the party screen didn't open",
     ["no se pudo robar"] = "couldn't steal",
     ["no ubico el titulo"] = "can't find the title screen",
@@ -813,6 +817,7 @@ local LANG = {
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "Center e no route wo tadorenakatta (6 de kiroku shinaoshite)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "Trainer route wo tadorenakatta (5 de kiroku shinaoshite)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "Tokkun point ni modorenakatta (6 de route wo kiroku shinaoshite)",
+    ["No puede huir de %s (%s): pelea"] = "%s kara nigerarenai (%s): tatakau",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "Battle Searcher wo tsukaenai: shujinkou ga map de tomaranai",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "TV ga hirakanakatta: SELECT ni touroku shite. Futsuu no hayasa de machimasu.",
     ["No se aprendio "] = "Oboenakatta: ",
@@ -945,6 +950,7 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
     ["ataque desconocido en "] = "fumei na waza: ",
+    ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
     ["camino al Centro"] = "Center e idou chuu",
     ["cerrado"] = "tojite iru",
@@ -998,7 +1004,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "START menu ni POKEMON ga nai",
     ["no llego al Pokemon "] = "Pokemon ni todokanai: ",
     ["no lleva objeto"] = "dougu wo motte inai",
+    ["no logra huir"] = "nigerarenai",
     ["no pude cerrar los menus"] = "menu wo tojirarenakatta",
+    ["no puede huir"] = "nigerarenai",
     ["no se abrio la pantalla del equipo"] = "temochi gamen ga hirakanakatta",
     ["no se pudo robar"] = "nusumenakatta",
     ["no ubico el titulo"] = "title gamen ga mitsukaranai",
@@ -3240,7 +3248,11 @@ end
 -- functions differ per build (pret "symbols" branch); RAM is the same in the four USA ones.
 -- Everything lives in one table: Lua 5.1 allows 200 locals per block.
 local PK = { ABILITY = 53, OPT_ITEM = 3, OPT_TAKE = 5, STARTMENU_POKEMON = 1,
-  CMD_CHOOSEPOKEMON = 22, OPT_SHIFT = 10, OPT_SEND_OUT = 11 }   -- battle_controllers.h, party_menu.h
+  CMD_CHOOSEPOKEMON = 22, OPT_SHIFT = 10, OPT_SEND_OUT = 11,    -- battle_controllers.h, party_menu.h
+  -- escaping (pret battle_main.c IsRunningFromBattleImpossible, constants/*.h)
+  ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
+  AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
+  STATUS2_TRAPPED = 0x0400E000 }      -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
 if gameLang == 0x45 and gameName then
   local fn = ({
     FireRed0   = { 0x0806F1F0, 0x0811EBA0, 0x0811FB28, 0x08122C5C },
@@ -3299,7 +3311,7 @@ function PK.check(finishing)
   local n = #PK.slots()
   if n == 0 then return false end
   local held = PK.scan()
-  local at = math.min(tonumber(CONFIG.pickupTakeAt) or n, n)
+  local at = math.min(tonumber(CONFIG.pickupTakeAt) or math.ceil(n / 2), n)   -- default: half of them
   if #held == 0 or (#held < at and not finishing) then return false end
   PK.begin(held)
   return true
@@ -3365,6 +3377,31 @@ function PK.sendOut()
   local cur = PK.s8(read8(M.partyMenu + 9))
   if cur == bot.sendSlot then tap("A", 20)
   elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
+end
+-- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
+-- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each):
+-- Smoke Ball or Run Away always escape; Shadow Tag traps; Arena Trap unless Flying or
+-- Levitate; Magnet Pull traps Steel; Mean Look / Block (STATUS2_ESCAPE_PREVENTION) and
+-- Wrap / Bind / Fire Spin... (STATUS2_WRAPPED) trap.
+function PK.trapped()
+  local b0, b1 = A.battleMons, A.battleMons + 0x58
+  local ab, t1, t2 = read8(b0 + 0x20), read8(b0 + 0x21), read8(b0 + 0x22)
+  if read16(b0 + 0x2E) == PK.ITEM_SMOKE_BALL or ab == PK.AB_RUN_AWAY then return nil end
+  local foeAb = read8(b1 + 0x20)
+  local name = TT_ABILNAME[foeAb] or "?"
+  if foeAb == PK.AB_SHADOW_TAG then return name end
+  if foeAb == PK.AB_ARENA_TRAP and ab ~= PK.AB_LEVITATE and t1 ~= PK.TYPE_FLYING and t2 ~= PK.TYPE_FLYING then return name end
+  if foeAb == PK.AB_MAGNET_PULL and (t1 == PK.TYPE_STEEL or t2 == PK.TYPE_STEEL) then return name end
+  if band(read32(b0 + 0x50), PK.STATUS2_TRAPPED) ~= 0 then return TX"atrapado por un ataque" end
+  return nil
+end
+-- Any move with PP left (when it has to fight but no move is "useful")
+function PK.anyMove(blocked)
+  local me = battleMon(0)
+  for k = 1, 4 do
+    if me.moves[k] ~= 0 and me.pp[k] > 0 and not (blocked and blocked[k]) then return k end
+  end
+  return nil
 end
 function PK.begin(held)
   local names = {}
@@ -3612,6 +3649,7 @@ local function enterBattle(returnTo)
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
   bot.outT = 0
   bot.sendSlot = nil
+  bot.runTries, bot.trapped = 0, nil
   bot.battles = bot.battles + 1
 end
 
@@ -3720,9 +3758,21 @@ local function stepBattle()
     local run = not bot.fight or bot.forceRun
     if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
     if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
+    -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
+    if run and not bot.trapped then
+      local why = PK.trapped()
+      if not why and bot.runTries >= 3 then why = TX"no logra huir" end
+      if why then
+        bot.trapped = true
+        logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
+      end
+    end
+    if bot.trapped then run = false; bot.lastWhy = TX"no puede huir" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
-    if c == want then tap("A", 16)
+    if c == want then
+      if run then bot.runTries = bot.runTries + 1 end
+      tap("A", 16)
     elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
@@ -3733,6 +3783,7 @@ local function stepBattle()
       bot.blocked[bot.lastMoveSlot] = true
     end
     local slot = bestMove(bot.blocked)
+    if not slot and bot.trapped then slot = PK.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then tap("B", 10); bot.forceRun = true; return end
     local want = slot - 1
     local c = band(read8(A.moveCursor), 3)

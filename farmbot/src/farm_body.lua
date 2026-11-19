@@ -126,6 +126,10 @@ local K = {
   OPT_ITEM = 3, OPT_TAKE = 5,                  -- CURSOR_OPTION_ITEM / CURSOR_OPTION_TAKE_ITEM
   OPT_SHIFT = 10, OPT_SEND_OUT = 11,           -- CURSOR_OPTION_SHIFT / CURSOR_OPTION_SEND_OUT
   CMD_CHOOSEPOKEMON = 22,                      -- CONTROLLER_CHOOSEPOKEMON (battle_controllers.h)
+  -- escaping (pret battle_main.c IsRunningFromBattleImpossible, constants/*.h)
+  ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
+  AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
+  STATUS2_TRAPPED = 0x0400E000,                -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
   ITEM_VS_SEEKER = 362,
   ABILITY_PICKUP = 53,
   MOVE_THIEF = 168, MOVE_COVET = 343,
@@ -1313,6 +1317,7 @@ local function enterBattle(returnTo)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
   bot.sendSlot = nil
+  bot.runTries, bot.trapped = 0, nil
   bot.outT = 0
   bot.battles = bot.battles + 1
 end
@@ -1486,9 +1491,21 @@ local function stepBattle()
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       run = true; bot.lastWhy = TX"sin ataques utiles"
     end
+    -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
+    if run and not bot.trapped then
+      local why = K.trapped()
+      if not why and bot.runTries >= 3 then why = TX"no logra huir" end
+      if why then
+        bot.trapped = true
+        logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
+      end
+    end
+    if bot.trapped then run = false; bot.lastWhy = TX"no puede huir" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
-    if c == want then tap("A", 16)
+    if c == want then
+      if run then bot.runTries = bot.runTries + 1 end
+      tap("A", 16)
     elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
@@ -1500,6 +1517,7 @@ local function stepBattle()
     end
     local slot = bestMove(bot.blocked)
     if bot.steal and not bot.steal.done and not bot.blocked[bot.steal.slot] then slot = bot.steal.slot end
+    if not slot and bot.trapped then slot = K.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       tap("B", 10); bot.forceRun = true; return
@@ -1728,6 +1746,30 @@ local function menuActions()
 end
 local function indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
 local function moveCursor(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+
+-- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
+-- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each).
+-- Same code as the Train Bot.
+K.trapped = function()
+  local b0, b1 = A.battleMons, A.battleMons + 0x58
+  local ab, t1, t2 = read8(b0 + 0x20), read8(b0 + 0x21), read8(b0 + 0x22)
+  if read16(b0 + 0x2E) == K.ITEM_SMOKE_BALL or ab == K.AB_RUN_AWAY then return nil end
+  local foeAb = read8(b1 + 0x20)
+  local name = TT_ABILNAME[foeAb] or "?"
+  if foeAb == K.AB_SHADOW_TAG then return name end
+  if foeAb == K.AB_ARENA_TRAP and ab ~= K.AB_LEVITATE and t1 ~= K.TYPE_FLYING and t2 ~= K.TYPE_FLYING then return name end
+  if foeAb == K.AB_MAGNET_PULL and (t1 == K.TYPE_STEEL or t2 == K.TYPE_STEEL) then return name end
+  if band(read32(b0 + 0x50), K.STATUS2_TRAPPED) ~= 0 then return TX"atrapado por un ataque" end
+  return nil
+end
+-- Any move with PP left (when it has to fight but no move is "useful")
+K.anyMove = function(blocked)
+  local me = battleMon(0)
+  for k = 1, 4 do
+    if me.moves[k] ~= 0 and me.pp[k] > 0 and not (blocked and blocked[k]) then return k end
+  end
+  return nil
+end
 
 -- In a wild battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon?
 -- NO" could not run away. That party screen can't be closed with B, and its cursor starts on

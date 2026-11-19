@@ -175,6 +175,7 @@ end
 local function startBattle(trainer)
   stats.battles = stats.battles + 1
   local sp = trainer and 66 or POOL[math.random(1, #POOL)]
+  if SCEN == "trap" and not trainer then sp = (stats.battles % 2 == 1) and 19 or 16 end   -- Rattata / Pidgey
   local lvl = math.random(3, 5)
   local pid
   repeat pid = math.random(0, 0xFFFFFFF) until bit.bxor(bit.bxor(TID, SID), bit.bxor(pid % 65536, math.floor(pid / 65536))) >= 8
@@ -198,6 +199,8 @@ local function startBattle(trainer)
   end
   setBattleMon(0, leadM.species, leadM.level, leadM.hp, leadM.maxHP, leadM.moves, leadM.pp, { 10, 10 }, leadM.item)
   setBattleMon(1, sp, lvl, lvl * 4, lvl * 4, { 33, 0, 0, 0 }, { 35, 0, 0, 0 }, { 0, 0 }, item)
+  -- "trap": wild Rattata have Shadow Tag (ability 23), so RUN only says "Can't escape!"
+  if SCEN == "trap" and sp == 19 and not trainer then w8(BMONS + 0x58 + 0x20, 23); W.battle.trapped = true end
   ev((trainer and "trainer " or "battle ") .. sp .. (item ~= 0 and (" holds " .. item) or ""))
 end
 
@@ -303,6 +306,10 @@ local function battleFrame()
       w32(FLAGS, 0)
       if c == 0 and b.sentOut then error("FOUGHT AFTER THE LEAD FAINTED") end
       if c == 0 then b.phase = "tomove"; b.ready = b.t + 10
+      elseif c == 3 and b.trapped then
+        stats.trapFails = (stats.trapFails or 0) + 1; ev("cannot escape")
+        if stats.trapFails > 20 then error("STUCK RUNNING") end
+        textPhase(1, toAction)
       elseif c == 3 then
         if b.trainer then error("RAN FROM TRAINER") end
         stats.ran = stats.ran + 1; w8(OUTC, 4)

@@ -67,6 +67,10 @@ def run(scen, cfg, show=False):
 
 
 CASES = [
+    # a wild Pokemon with Shadow Tag can't be run from: fight it instead of choosing RUN forever
+    ('atrapado', 'trap', {'mode': 'nivel', 'targetLevel': 14, 'avoidSpecies': ['Rattata']},
+     lambda r: 'PAUSED' in r['err'] and 'battle 19' in r['events'] and 'cannot escape' not in r['events']
+     and 'No puede huir de Rattata' in r['log']),
     # the lead faints in a wild battle: send out the healthy Pokemon with the highest level and run
     ('debilitado', 'faint', {'mode': 'nivel', 'targetLevel': 14},
      lambda r: 'PAUSED' in r['err'] and 'sent out 52 Lv15' in r['events'] and 'tried to send out a fainted' not in r['events']
