@@ -99,37 +99,10 @@ A.objects = A.avatar - 0x240                                   -- gObjectEvents
 
 A.battleType = A.enemy - 0x14E0    -- gBattleTypeFlags (0x02022B4C in USA)
 
--- Field menus (pokefirered, "symbols" branch). RAM is the same in the four
--- USA versions (FireRed / LeafGreen 1.0 and 1.1); the functions differ.
--- Other versions have no verified map: taking items falls back to "pause".
-local MENU = nil
-if gameLang == 0x45 and gameName then
-  local fn = ({
-    FireRed0   = { 0x0806F1F0, 0x0811EBA0, 0x0811FB28, 0x08122C5C, 0x0810C670 },
-    FireRed1   = { 0x0806F204, 0x0811EC18, 0x0811FBA0, 0x08122CD4, 0x0810C6E8 },
-    LeafGreen0 = { 0x0806F1F0, 0x0811EB78, 0x0811FB00, 0x08122C34, 0x0810C648 },
-    LeafGreen1 = { 0x0806F204, 0x0811EBF0, 0x0811FB78, 0x08122CAC, 0x0810C6C0 },
-  })[gameName .. (gameRev1 and "1" or "0")]
-  if fn then
-    MENU = {
-      startCursor = 0x020370F4, startCount = 0x020370F5, startOrder = 0x020370F6,
-      partyMenu = 0x0203B0A0, partyInternal = 0x0203B09C, menuCursor = 0x0203ADE6, tasks = 0x03005090,
-      -- functions (+1: Thumb code)
-      taskStartMenu = fn[1] + 1, cbParty = fn[2] + 1, taskChooseMon = fn[3] + 1, taskSelection = fn[4] + 1,
-      taskVsSeeker = fn[5] + 1,
-    }
-  end
-end
+--@@INCLUDE game@@
+local MENU = Game.menu      -- field menus of this build (nil: not verified, taking items pauses)
 -- Game constants (a single table: Lua 5.1 allows 200 locals per block)
 local K = {
-  STARTMENU_POKEMON = 1,
-  OPT_ITEM = 3, OPT_TAKE = 5,                  -- CURSOR_OPTION_ITEM / CURSOR_OPTION_TAKE_ITEM
-  OPT_SHIFT = 10, OPT_SEND_OUT = 11,           -- CURSOR_OPTION_SHIFT / CURSOR_OPTION_SEND_OUT
-  CMD_CHOOSEPOKEMON = 22,                      -- CONTROLLER_CHOOSEPOKEMON (battle_controllers.h)
-  -- escaping (pret battle_main.c IsRunningFromBattleImpossible, constants/*.h)
-  ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
-  AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
-  STATUS2_TRAPPED = 0x0400E000,                -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
   ITEM_VS_SEEKER = 362,
   ABILITY_PICKUP = 53,
   MOVE_THIEF = 168, MOVE_COVET = 343,
@@ -1111,6 +1084,8 @@ local function inOverworld()
   return not inBattle() and bot.cbOW and read32(A.callback2) == bot.cbOW
 end
 
+--@@INCLUDE menus@@
+
 local function startWalk()
   queue = {}; zeroEnemy()
   bot.st, bot.t = "walk", 0
@@ -1405,7 +1380,7 @@ local function stepBattle()
   end
   -- Wild battle, the game asks for another Pokemon (the lead fainted): before the evolution
   -- check, because the party screen also changes callback2
-  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == K.CMD_CHOOSEPOKEMON then K.sendOut(); return end
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == Menus.CMD_CHOOSEPOKEMON then Menus.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -1493,7 +1468,7 @@ local function stepBattle()
     end
     -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
     if run and not bot.trapped then
-      local why = K.trapped()
+      local why = Menus.trapped()
       if not why and bot.runTries >= 3 then why = TX"no logra huir" end
       if why then
         bot.trapped = true
@@ -1517,7 +1492,7 @@ local function stepBattle()
     end
     local slot = bestMove(bot.blocked)
     if bot.steal and not bot.steal.done and not bot.blocked[bot.steal.slot] then slot = bot.steal.slot end
-    if not slot and bot.trapped then slot = K.anyMove(bot.blocked) end     -- trapped: any move with PP
+    if not slot and bot.trapped then slot = Menus.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       tap("B", 10); bot.forceRun = true; return
@@ -1728,198 +1703,11 @@ end
 
 -- -------------------- Take items (party menu) --------------------
 -- START > POKEMON > (Pokemon) > ITEM > TAKE, checking every step in memory.
-local function taskActive(fnAddr)
-  for i = 0, 15 do
-    local t = MENU.tasks + i * 40
-    if read8(t + 4) ~= 0 and read32(t) == fnAddr then return true end
-  end
-  return false
-end
-local function s8(v) if v >= 0x80 then return v - 0x100 end return v end
-local function menuActions()
-  local p = read32(MENU.partyInternal)
-  if p < 0x02000000 or p >= 0x02040000 then return {} end
-  local n, t = read8(p + 0x17), {}
-  if n > 8 then return {} end
-  for k = 0, n - 1 do t[#t + 1] = read8(p + 0x0F + k) end
-  return t
-end
-local function indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
-local function moveCursor(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+-- the menu helpers the VS Seeker and the diagnostic use (shared/lua/menus.lua)
+local taskActive, s8, menuActions = Menus.taskActive, Menus.s8, Menus.actions
 
--- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
--- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each).
--- Same code as the Train Bot.
-K.trapped = function()
-  local b0, b1 = A.battleMons, A.battleMons + 0x58
-  local ab, t1, t2 = read8(b0 + 0x20), read8(b0 + 0x21), read8(b0 + 0x22)
-  if read16(b0 + 0x2E) == K.ITEM_SMOKE_BALL or ab == K.AB_RUN_AWAY then return nil end
-  local foeAb = read8(b1 + 0x20)
-  local name = TT_ABILNAME[foeAb] or "?"
-  if foeAb == K.AB_SHADOW_TAG then return name end
-  if foeAb == K.AB_ARENA_TRAP and ab ~= K.AB_LEVITATE and t1 ~= K.TYPE_FLYING and t2 ~= K.TYPE_FLYING then return name end
-  if foeAb == K.AB_MAGNET_PULL and (t1 == K.TYPE_STEEL or t2 == K.TYPE_STEEL) then return name end
-  if band(read32(b0 + 0x50), K.STATUS2_TRAPPED) ~= 0 then return TX"atrapado por un ataque" end
-  return nil
-end
--- Any move with PP left (when it has to fight but no move is "useful")
-K.anyMove = function(blocked)
-  local me = battleMon(0)
-  for k = 1, 4 do
-    if me.moves[k] ~= 0 and me.pp[k] > 0 and not (blocked and blocked[k]) then return k end
-  end
-  return nil
-end
-
--- In a wild battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon?
--- NO" could not run away. That party screen can't be closed with B, and its cursor starts on
--- the fainted lead. Send out the healthy Pokemon with the highest level (never an egg) and
--- run (bot.forceRun). After the battle the party is back in field order, so the fainted lead
--- is still first and goes to heal. Same code as the Train Bot. In K: the 200-locals limit.
-K.sendOut = function()
-  if not MENU then
-    halt(TX"Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7")
-    return
-  end
-  bot.fight, bot.forceRun, bot.lastWhy = false, true, TX"debilitado: huir"
-  if not bot.sendSlot then
-    local best, lv
-    for i = 1, partyCount() - 1 do
-      local m = partyMon(i)
-      if m and m.hp > 0 and band(rshift(m.ivWord, 30), 1) == 0 and (not lv or m.level > lv) then best, lv = i, m.level end
-    end
-    if not best then halt(TX"Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"); return end
-    bot.sendSlot, bot.sendT = best, 0
-    local l, sm = lead(), partyMon(best)
-    logLine(string.format(TX"%s se debilito: saco a %s (Nv.%d) para huir", l and speciesName(l.species) or "?",
-      speciesName(sm.species), sm.level))
-  end
-  bot.sendT = bot.sendT + 1
-  if bot.sendT > 1800 then halt(TX"No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"); return end
-  if taskActive(MENU.taskSelection) then
-    -- SHIFT / SUMMARY / CANCEL: pick SHIFT (or SEND OUT)
-    local acts = menuActions()
-    local want = indexOf(acts, K.OPT_SHIFT) or indexOf(acts, K.OPT_SEND_OUT)
-    if not want then tap("B", 10); return end
-    local cur = s8(read8(MENU.menuCursor))
-    if cur == want then tap("A", 20) else moveCursor(cur, want) end
-    return
-  end
-  if not taskActive(MENU.taskChooseMon) then
-    if bot.sendT % 40 == 0 then tap("B", 10) end      -- a message over the party screen
-    return
-  end
-  local cur = s8(read8(MENU.partyMenu + 9))
-  if cur == bot.sendSlot then tap("A", 20)
-  elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
-end
-
-beginTake = function(held)
-  local names = {}
-  for _, h in ipairs(held) do names[#names + 1] = itemName(h.item) end
-  if tcfg.take == "pause" or not MENU then
-    stopBot()
-    bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
-    logLine(bot.msg)
-    notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
-    pcall(emu.pause)
-    return
-  end
-  logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
-  queue = {}
-  zeroEnemy()
-  bot.take = { list = held, i = 1, phase = "settle", tries = 0 }
-  bot.st, bot.t = "take", 0
-end
-
-local function stepTake()
-  bot.t = bot.t + 1
-  if #queue > 0 then return end
-  local T = bot.take
-  local function fail(why)
-    bot.take = nil
-    halt(TX"No pude quitar los objetos: " .. why .. TX". Terminalo tu en el menu y pulsa 7")
-  end
-  local function go(phase) T.phase, bot.t = phase, 0 end
-  if T.phase == "settle" then
-    -- on the map, standing still, before opening the menu
-    if inOverworld() then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
-    if T.ow >= 30 then tap("start", 20); go("startmenu") end
-    if bot.t > 600 then fail(TX"no vuelve el mapa") end
-  elseif T.phase == "startmenu" then
-    if not taskActive(MENU.taskStartMenu) then
-      if bot.t > 90 then
-        T.tries = T.tries + 1
-        if T.tries > 3 then fail(TX"el menu START no se abre") return end
-        go("settle")
-      end
-      return
-    end
-    local n = read8(MENU.startCount)
-    local want
-    for k = 0, math.min(n, 9) - 1 do if read8(MENU.startOrder + k) == K.STARTMENU_POKEMON then want = k end end
-    if not want then fail(TX"no hay opcion POKEMON en el menu START") return end
-    local cur = read8(MENU.startCursor)
-    if cur == want then tap("A", 30); go("party")
-    elseif bot.t > 300 then fail(TX"el cursor del menu START no llega a POKEMON")
-    else moveCursor(cur, want) end
-  elseif T.phase == "party" then
-    if read32(A.callback2) == MENU.cbParty and taskActive(MENU.taskChooseMon) then
-      T.ready = (T.ready or 0) + 1
-      if T.ready > 20 then T.ready = nil; go("pick") end
-    elseif bot.t > 600 then fail(TX"no se abrio la pantalla del equipo") end
-  elseif T.phase == "pick" then
-    local e = T.list[T.i]
-    if not e then go("exit") return end
-    local m = partyMon(e.slot)
-    if not m or m.item == 0 then T.i = T.i + 1 return end
-    if not taskActive(MENU.taskChooseMon) then
-      if bot.t > 300 then fail(TX"la pantalla del equipo no responde") end
-      if bot.t % 30 == 0 then tap("B", 10) end
-      return
-    end
-    local cur = s8(read8(MENU.partyMenu + 9))
-    if cur == e.slot then tap("A", 20); go("actions")
-    elseif bot.t > 300 then fail(TX"no llego al Pokemon " .. (e.slot + 1))
-    elseif cur < e.slot or cur > 5 then tap("down", 8) else tap("up", 8) end
-  elseif T.phase == "actions" or T.phase == "itemmenu" then
-    local opt = (T.phase == "actions") and K.OPT_ITEM or K.OPT_TAKE
-    local acts = menuActions()
-    local want = taskActive(MENU.taskSelection) and indexOf(acts, opt) or nil
-    if not want then
-      if bot.t > 240 then fail(T.phase == "actions" and TX"no aparece OBJETO" or TX"no aparece QUITAR") end
-      return
-    end
-    local cur = s8(read8(MENU.menuCursor))
-    if cur == want then
-      tap("A", 20)
-      if T.phase == "actions" then go("itemmenu") else go("taking") end
-    elseif bot.t > 240 then fail(TX"el cursor no llega a la opcion")
-    else moveCursor(cur, want) end
-  elseif T.phase == "taking" then
-    local e = T.list[T.i]
-    local m = partyMon(e.slot)
-    if m and m.item == 0 then
-      -- "Received X": close the message and go back to the party list
-      if taskActive(MENU.taskChooseMon) and bot.t > 30 then T.i = T.i + 1; go("pick") return end
-      if bot.t % 12 == 0 then tap("B", 8) end
-    elseif bot.t > 240 then
-      fail(TX"la mochila no tiene espacio para " .. itemName(e.item))
-    end
-  elseif T.phase == "exit" then
-    -- leave the party and close the START menu (B until on the map with no menu)
-    local onMap = inOverworld() and not taskActive(MENU.taskStartMenu)
-    if onMap then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
-    if T.ow >= 40 then
-      bot.take = nil
-      bot.st, bot.t = "after", 0
-      afterBattleDecide()
-      return
-    end
-    if not onMap and bot.t % 20 == 0 then tap("B", 10) end
-    if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
-  end
-end
+beginTake = function(held) Menus.beginTake(held, tcfg.take == "pause", afterBattleDecide) end
+local stepTake = Menus.stepTake
 
 -- ------------------- Money: rematches with the VS Seeker --------------------
 beginTrainerLoop = function()

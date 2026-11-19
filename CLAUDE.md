@@ -167,12 +167,14 @@ with key 6 (there/back) and replays it. `healMode`: `nurse` or `tile`.
 Notifications via ntfy/Discord (`notify`). Key 8: inspection (stats, IVs, EVs, moves).
 Guards against two instances (`train_running.lock`).
 Optional `pickup` (off by default, ADR-0011 amendment): takes the items Pickup Pokémon in slots 2–6
-find, with the Farm Bot's menu code copied into the `PK` table (one local: Lua 5.1 limit).
+find; the menus are `Menus` (shared/lua/menus.lua), the Train Bot's own logic is the `PK` table.
 Tests: `run_pickup.py` runs the Train Bot in the Farm Bot simulator.
 
 ## Farm Bot (`farmbot/`, v1.0)
 
-Separate script forked from the Train Bot (ADR-0011): never edit the Train Bot for farm work.
+Separate script forked from the Train Bot (ADR-0011). Code both need lives in `shared/lua/` (ADR-0015):
+`game.lua` (per-build addresses: `Game.menu`, `Game.wildHeaders`) and `menus.lua` (`Menus`: party/START menus,
+taking items, sending out another Pokémon, escape rules). Fix shared behaviour THERE, once, not in each bot.
 Modes: `nivel`, `objetos` (Pickup: only after a WIN), `robar` (Thief/Covet when the wild mon
 holds a wanted item, then run), `dinero` (VS Seeker + trainer route, key 5; double battles via
 `stepDouble`: battlers 0 and 2, gBattleBufferA stride 0x200, exec-flag bits 1/4, target = A). Takes held items

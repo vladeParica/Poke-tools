@@ -97,6 +97,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   `shared/gamedata/gamedata.json`; the bots' tables are rendered from it at build time and the
   guide reads it too. `trainbot/tools/gen_tables.py` and `trainbot/src/train_tables.lua` are gone
   (ADR-0015).
+- The Train Bot and the Farm Bot share their menu and escape code (`shared/lua/menus.lua`) and
+  the per-build addresses (`shared/lua/game.lua`, also used by the Shiny Bot) instead of copies.
 - Train Bot: when training (or a phase) ends it first goes to heal at the Center, if a route is
   recorded, and then pauses.
 - Train Bot examples moved to `trainbot/examples/configs/` with per-stat names
