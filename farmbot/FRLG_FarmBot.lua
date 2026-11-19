@@ -104,7 +104,9 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s is evolving into %s",
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (%d per hour of play)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -247,6 +249,9 @@ local LANG = {
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARMING DONE: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE DONE: it already has 510 EVs in total and the missing ones don't fit (%s)",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "%d %s EVs missing but each battle gives %d: set allowOvershoot or use another method",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -265,6 +270,7 @@ local LANG = {
     ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "RECORDING WAY BACK: go back to the start point (where you use the VS Seeker) and press 5",
     ["GUARDAR"] = "SAVE",
     ["Graba la ruta de los entrenadores con la tecla 5"] = "Record the trainer route with key 5",
+    ["Guardado en la mochila: %s"] = "Stored in the bag: %s",
     ["Guardado en la mochila: %s (tienes %d)"] = "Stored in the bag: %s (you have %d)",
     ["Guardados %d%s  encontrados %d%s"] = "Stored %d%s  found %d%s",
     ["Guardando en la mochila: "] = "Storing in the bag: ",
@@ -318,9 +324,11 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "I couldn't heal: the way there must end INSIDE the Center, facing the nurse (record another with 6)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "I couldn't read the encounter table: remove the 'species' filter",
     ["No pude quitar los objetos: "] = "I couldn't take the items: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Couldn't send out another Pokemon: pick it yourself, run and press 7",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "I couldn't follow the route to the Center (record another with 6)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "I couldn't follow the trainer route (record another with 5)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "I couldn't get back to the training spot (record another route with 6)",
+    ["No puede huir de %s (%s): pelea"] = "Can't run from %s (%s): fighting",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "I can't use the VS Seeker: the character doesn't stay still on the map",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "The Teachy TV didn't open: register it on SELECT. Waiting at normal speed.",
     ["No se aprendio "] = "Didn't learn ",
@@ -373,7 +381,9 @@ local LANG = {
     ["REGISTRAR"] = "REGISTER",
     ["RETIRARSE"] = "RETIRE",
     ["Recogida (hay que ganar)"] = "Pickup (must win)",
+    ["Recogida: %d Pokemon en el equipo"] = "Pickup: %d Pokemon in the party",
     ["Recogida: %d en el equipo  llevan objeto: %s"] = "Pickup: %d in the party  holding items: %s",
+    ["Recogida: %d encontrados, %d guardados"] = "Pickup: %d found, %d stored",
     ["Regalo"] = "Gift",
     ["Regalo RNG"] = "Gift RNG",
     ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Register the VS Seeker on SELECT (Bag > VS Seeker > Register)",
@@ -432,6 +442,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Your Pokemon is evolving: finish the scene and the bot carries on by itself",
     ["Tu Pokemon evoluciono a "] = "Your Pokemon evolved into ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Your Pokemon fainted against a trainer: pick the next one yourself and finish the battle",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Your Pokemon fainted and the game asks for another: pick it yourself, run and press 7",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Your Pokemon fainted and no healthy one is left: pick it yourself and press 7",
     ["Ultimo:"] = "Last:",
     ["Ultimo: "] = "Last: ",
     ["Usando Buscapelea"] = "Using VS Seeker",
@@ -449,6 +461,7 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
     ["ataque desconocido en "] = "unknown move in ",
+    ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
     ["camino al Centro"] = "on the way to the Center",
     ["cerrado"] = "closed",
@@ -459,6 +472,7 @@ local LANG = {
     ["de camino"] = "on the way",
     ["de hierba"] = "grass",
     ["debilitado"] = "fainted",
+    ["debilitado: huir"] = "fainted: run",
     ["dinero"] = "money",
     ["el archivo debe ser un objeto { ... }"] = "the file must be an object { ... }",
     ["el cursor del menu START no llega a POKEMON"] = "the START menu cursor doesn't reach POKEMON",
@@ -478,6 +492,7 @@ local LANG = {
     ["falta ',' o ']'"] = "missing ',' or ']'",
     ["falta ',' o '}'"] = "missing ',' or '}'",
     ["falta ':'"] = "missing ':'",
+    ["fin del entrenamiento"] = "end of training",
     ["huir"] = "run",
     ["la mochila no tiene espacio para "] = "the bag has no room for ",
     ["la pantalla del equipo no responde"] = "the party screen doesn't respond",
@@ -503,7 +518,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "there is no POKEMON option in the START menu",
     ["no llego al Pokemon "] = "can't reach Pokemon ",
     ["no lleva objeto"] = "holds no item",
+    ["no logra huir"] = "running keeps failing",
     ["no pude cerrar los menus"] = "I couldn't close the menus",
+    ["no puede huir"] = "can't run",
     ["no se abrio la pantalla del equipo"] = "the party screen didn't open",
     ["no se pudo robar"] = "couldn't steal",
     ["no ubico el titulo"] = "can't find the title screen",
@@ -515,6 +532,9 @@ local LANG = {
     ["objetos (Recogida)"] = "items (Pickup)",
     ["opcion desconocida: "] = "unknown option: ",
     ["pelear"] = "fight",
+    ["pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6"] = "pickup is on, but there is no Pokemon with Pickup in slots 2 to 6",
+    ["pickup debe ser \"auto\", \"pause\" o null"] = "pickup must be \"auto\", \"pause\" or null",
+    ["pickupTakeAt debe ser un numero del 1 al 5"] = "pickupTakeAt must be a number from 1 to 5",
     ["prediccion fallida"] = "prediction failed",
     ["rango elegido"] = "chosen range",
     ["robado: "] = "stolen: ",
@@ -590,7 +610,9 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s ga %s ni shinka chuu",
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (play 1 jikan atari %d)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -733,6 +755,9 @@ local LANG = {
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE KANRYOU: 'species' no dono Pokemon mo nokori no EV (%s) wo kurenai. Basho to shurui wo kaete",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE KANRYOU: EV goukei ga 510 de, nokori (%s) wa hairanai",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "Doryokuchi ga %d (%s) tarinai ga 1 kai %d: allowOvershoot ka betsu no houhou wo",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -751,6 +776,7 @@ local LANG = {
     ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "KAERI KIROKU CHUU: kaishi point (Battle Searcher wo tsukau basho) ni modotte 5 wo oshite",
     ["GUARDAR"] = "REPORT",
     ["Graba la ruta de los entrenadores con la tecla 5"] = "5 key de trainer route wo kiroku shite",
+    ["Guardado en la mochila: %s"] = "Bag ni shimatta: %s",
     ["Guardado en la mochila: %s (tienes %d)"] = "Bag ni shimatta: %s (shoji %d)",
     ["Guardados %d%s  encontrados %d%s"] = "Shuunou %d%s  hakken %d%s",
     ["Guardando en la mochila: "] = "Bag ni shimatte iru: ",
@@ -804,9 +830,11 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "Kaifuku dekinakatta: iki wa Center no NAKA, Joy-san no mae de owaru hitsuyou (6 de kiroku shinaoshite)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "Encount table wo yomenakatta: 'species' no jouken wo hazushite",
     ["No pude quitar los objetos: "] = "Dougu wo hazusenakatta: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Tsugi no Pokemon wo dasenakatta: jibun de erande nigete 7 wo oshite",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "Center e no route wo tadorenakatta (6 de kiroku shinaoshite)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "Trainer route wo tadorenakatta (5 de kiroku shinaoshite)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "Tokkun point ni modorenakatta (6 de route wo kiroku shinaoshite)",
+    ["No puede huir de %s (%s): pelea"] = "%s kara nigerarenai (%s): tatakau",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "Battle Searcher wo tsukaenai: shujinkou ga map de tomaranai",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "TV ga hirakanakatta: SELECT ni touroku shite. Futsuu no hayasa de machimasu.",
     ["No se aprendio "] = "Oboenakatta: ",
@@ -859,7 +887,9 @@ local LANG = {
     ["REGISTRAR"] = "TOUROKU",
     ["RETIRARSE"] = "RETIRE",
     ["Recogida (hay que ganar)"] = "Monohiroi (katsu hitsuyou ari)",
+    ["Recogida: %d Pokemon en el equipo"] = "Monohiroi: temochi ni %d hiki",
     ["Recogida: %d en el equipo  llevan objeto: %s"] = "Monohiroi: temochi ni %d  mochimono: %s",
+    ["Recogida: %d encontrados, %d guardados"] = "Monohiroi: %d ko mitsuketa, %d ko shimatta",
     ["Regalo"] = "Morau",
     ["Regalo RNG"] = "Morau RNG",
     ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Battle Searcher wo SELECT ni touroku shite (Bag > Battle Searcher > Touroku)",
@@ -918,6 +948,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Pokemon ga shinka chuu: scene wo owaraseru to bot ga tsuzukemasu",
     ["Tu Pokemon evoluciono a "] = "Pokemon ga shinka: ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Trainer sen de Pokemon ga hinshi: tsugi wo erande battle wo owarasete",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Pokemon ga taoreta, tsugi wo erande nigete kara 7 wo oshite",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Pokemon ga taoreta, genki na Pokemon ga inai: jibun de erande 7 wo oshite",
     ["Ultimo:"] = "Saigo:",
     ["Ultimo: "] = "Saigo: ",
     ["Usando Buscapelea"] = "Battle Searcher shiyou chuu",
@@ -935,6 +967,7 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
     ["ataque desconocido en "] = "fumei na waza: ",
+    ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
     ["camino al Centro"] = "Center e idou chuu",
     ["cerrado"] = "tojite iru",
@@ -945,6 +978,7 @@ local LANG = {
     ["de camino"] = "idou chuu",
     ["de hierba"] = "kusa",
     ["debilitado"] = "hinshi",
+    ["debilitado: huir"] = "taoreta: nigeru",
     ["dinero"] = "okozukai",
     ["el archivo debe ser un objeto { ... }"] = "file wa object { ... } de aru hitsuyou ga aru",
     ["el cursor del menu START no llega a POKEMON"] = "START menu no cursor ga POKEMON ni todokanai",
@@ -964,6 +998,7 @@ local LANG = {
     ["falta ',' o ']'"] = "',' ka ']' ga nai",
     ["falta ',' o '}'"] = "',' ka '}' ga nai",
     ["falta ':'"] = "':' ga nai",
+    ["fin del entrenamiento"] = "kunren shuuryou",
     ["huir"] = "nigeru",
     ["la mochila no tiene espacio para "] = "bag ni aki ga nai: ",
     ["la pantalla del equipo no responde"] = "temochi gamen ga hannou shinai",
@@ -989,7 +1024,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "START menu ni POKEMON ga nai",
     ["no llego al Pokemon "] = "Pokemon ni todokanai: ",
     ["no lleva objeto"] = "dougu wo motte inai",
+    ["no logra huir"] = "nigerarenai",
     ["no pude cerrar los menus"] = "menu wo tojirarenakatta",
+    ["no puede huir"] = "nigerarenai",
     ["no se abrio la pantalla del equipo"] = "temochi gamen ga hirakanakatta",
     ["no se pudo robar"] = "nusumenakatta",
     ["no ubico el titulo"] = "title gamen ga mitsukaranai",
@@ -1001,6 +1038,9 @@ local LANG = {
     ["objetos (Recogida)"] = "dougu (Monohiroi)",
     ["opcion desconocida: "] = "fumei na settei: ",
     ["pelear"] = "tatakau",
+    ["pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6"] = "pickup wa ON da ga, 2-6 ban ni Monohiroi no Pokemon ga inai",
+    ["pickup debe ser \"auto\", \"pause\" o null"] = "pickup wa \"auto\", \"pause\" ka null",
+    ["pickupTakeAt debe ser un numero del 1 al 5"] = "pickupTakeAt wa 1 kara 5 no kazu",
     ["prediccion fallida"] = "yosoku shippai",
     ["rango elegido"] = "erabareta hanni",
     ["robado: "] = "nusunda: ",
@@ -2336,6 +2376,12 @@ end
 local K = {
   STARTMENU_POKEMON = 1,
   OPT_ITEM = 3, OPT_TAKE = 5,                  -- CURSOR_OPTION_ITEM / CURSOR_OPTION_TAKE_ITEM
+  OPT_SHIFT = 10, OPT_SEND_OUT = 11,           -- CURSOR_OPTION_SHIFT / CURSOR_OPTION_SEND_OUT
+  CMD_CHOOSEPOKEMON = 22,                      -- CONTROLLER_CHOOSEPOKEMON (battle_controllers.h)
+  -- escaping (pret battle_main.c IsRunningFromBattleImpossible, constants/*.h)
+  ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
+  AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
+  STATUS2_TRAPPED = 0x0400E000,                -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
   ITEM_VS_SEEKER = 362,
   ABILITY_PICKUP = 53,
   MOVE_THIEF = 168, MOVE_COVET = 343,
@@ -3522,6 +3568,8 @@ local function enterBattle(returnTo)
   bot.foe, bot.fight, bot.forceRun = nil, nil, (returnTo ~= nil)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
+  bot.sendSlot = nil
+  bot.runTries, bot.trapped = 0, nil
   bot.outT = 0
   bot.battles = bot.battles + 1
 end
@@ -3607,6 +3655,9 @@ local function stepBattle()
     halt(TX"Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
     return
   end
+  -- Wild battle, the game asks for another Pokemon (the lead fainted): before the evolution
+  -- check, because the party screen also changes callback2
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == K.CMD_CHOOSEPOKEMON then K.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -3692,9 +3743,21 @@ local function stepBattle()
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       run = true; bot.lastWhy = TX"sin ataques utiles"
     end
+    -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
+    if run and not bot.trapped then
+      local why = K.trapped()
+      if not why and bot.runTries >= 3 then why = TX"no logra huir" end
+      if why then
+        bot.trapped = true
+        logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
+      end
+    end
+    if bot.trapped then run = false; bot.lastWhy = TX"no puede huir" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
-    if c == want then tap("A", 16)
+    if c == want then
+      if run then bot.runTries = bot.runTries + 1 end
+      tap("A", 16)
     elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
@@ -3706,6 +3769,7 @@ local function stepBattle()
     end
     local slot = bestMove(bot.blocked)
     if bot.steal and not bot.steal.done and not bot.blocked[bot.steal.slot] then slot = bot.steal.slot end
+    if not slot and bot.trapped then slot = K.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       tap("B", 10); bot.forceRun = true; return
@@ -3934,6 +3998,73 @@ local function menuActions()
 end
 local function indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
 local function moveCursor(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+
+-- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
+-- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each).
+-- Same code as the Train Bot.
+K.trapped = function()
+  local b0, b1 = A.battleMons, A.battleMons + 0x58
+  local ab, t1, t2 = read8(b0 + 0x20), read8(b0 + 0x21), read8(b0 + 0x22)
+  if read16(b0 + 0x2E) == K.ITEM_SMOKE_BALL or ab == K.AB_RUN_AWAY then return nil end
+  local foeAb = read8(b1 + 0x20)
+  local name = TT_ABILNAME[foeAb] or "?"
+  if foeAb == K.AB_SHADOW_TAG then return name end
+  if foeAb == K.AB_ARENA_TRAP and ab ~= K.AB_LEVITATE and t1 ~= K.TYPE_FLYING and t2 ~= K.TYPE_FLYING then return name end
+  if foeAb == K.AB_MAGNET_PULL and (t1 == K.TYPE_STEEL or t2 == K.TYPE_STEEL) then return name end
+  if band(read32(b0 + 0x50), K.STATUS2_TRAPPED) ~= 0 then return TX"atrapado por un ataque" end
+  return nil
+end
+-- Any move with PP left (when it has to fight but no move is "useful")
+K.anyMove = function(blocked)
+  local me = battleMon(0)
+  for k = 1, 4 do
+    if me.moves[k] ~= 0 and me.pp[k] > 0 and not (blocked and blocked[k]) then return k end
+  end
+  return nil
+end
+
+-- In a wild battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon?
+-- NO" could not run away. That party screen can't be closed with B, and its cursor starts on
+-- the fainted lead. Send out the healthy Pokemon with the highest level (never an egg) and
+-- run (bot.forceRun). After the battle the party is back in field order, so the fainted lead
+-- is still first and goes to heal. Same code as the Train Bot. In K: the 200-locals limit.
+K.sendOut = function()
+  if not MENU then
+    halt(TX"Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7")
+    return
+  end
+  bot.fight, bot.forceRun, bot.lastWhy = false, true, TX"debilitado: huir"
+  if not bot.sendSlot then
+    local best, lv
+    for i = 1, partyCount() - 1 do
+      local m = partyMon(i)
+      if m and m.hp > 0 and band(rshift(m.ivWord, 30), 1) == 0 and (not lv or m.level > lv) then best, lv = i, m.level end
+    end
+    if not best then halt(TX"Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"); return end
+    bot.sendSlot, bot.sendT = best, 0
+    local l, sm = lead(), partyMon(best)
+    logLine(string.format(TX"%s se debilito: saco a %s (Nv.%d) para huir", l and speciesName(l.species) or "?",
+      speciesName(sm.species), sm.level))
+  end
+  bot.sendT = bot.sendT + 1
+  if bot.sendT > 1800 then halt(TX"No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"); return end
+  if taskActive(MENU.taskSelection) then
+    -- SHIFT / SUMMARY / CANCEL: pick SHIFT (or SEND OUT)
+    local acts = menuActions()
+    local want = indexOf(acts, K.OPT_SHIFT) or indexOf(acts, K.OPT_SEND_OUT)
+    if not want then tap("B", 10); return end
+    local cur = s8(read8(MENU.menuCursor))
+    if cur == want then tap("A", 20) else moveCursor(cur, want) end
+    return
+  end
+  if not taskActive(MENU.taskChooseMon) then
+    if bot.sendT % 40 == 0 then tap("B", 10) end      -- a message over the party screen
+    return
+  end
+  local cur = s8(read8(MENU.partyMenu + 9))
+  if cur == bot.sendSlot then tap("A", 20)
+  elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
+end
 
 beginTake = function(held)
   local names = {}

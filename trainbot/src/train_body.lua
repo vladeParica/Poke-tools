@@ -39,6 +39,8 @@ local CONFIG = {
   notify         = nil,     -- phone notifications: {ntfy = "your-topic"} and/or {discord = "webhook url"}
   evolve         = false,   -- false = cancel evolutions (B), true = let it evolve (you decide)
   stopOnShiny    = true,    -- pause if a wild shiny appears
+  pickup         = nil,     -- Pickup Pokemon in slots 2-6: "auto" = take their items via the menu (USA), "pause" = pause and tell you
+  pickupTakeAt   = nil,     -- pickup: take them when this many hold an item (nil = half of them, rounded up)
   walkAxis       = "horizontal",
   walkFrames     = 16,
   routeFile      = "FRLG_TrainRoute.txt",
@@ -269,6 +271,17 @@ local function interpretConfig(problems)
   if tcfg.wanted and wn == 0 then tcfg.wanted = nil end
   if wn > 4 then problems[#problems + 1] = TX"wantedMoves tiene " .. wn .. TX" ataques (maximo 4)" end
   if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = TX"notify debe ser {\"ntfy\": \"tema\"}" end
+  -- Pickup (optional): off unless it is set
+  tcfg.pickup = nil
+  if CONFIG.pickup ~= nil and CONFIG.pickup ~= false then
+    local pk = (CONFIG.pickup == true) and "auto" or simplify(tostring(CONFIG.pickup))
+    if pk == "auto" or pk == "pause" then tcfg.pickup = pk
+    else problems[#problems + 1] = TX"pickup debe ser \"auto\", \"pause\" o null" end
+  end
+  local ta = CONFIG.pickupTakeAt
+  if ta ~= nil and (not tonumber(ta) or tonumber(ta) < 1 or tonumber(ta) > 5) then
+    problems[#problems + 1] = TX"pickupTakeAt debe ser un numero del 1 al 5"
+  end
 end
 
 local function loadConfig()
@@ -280,7 +293,7 @@ local function loadConfig()
     local cfg = jsonDecode(data)
     if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     local optional = { evs = 1, targetLevel = 1, maxLevel = 1, species = 1, avoidSpecies = 1, keepMoves = 1, wantedMoves = 1,
-                       askTimeout = 1, notify = 1 }
+                       askTimeout = 1, notify = 1, pickup = 1, pickupTakeAt = 1 }
     for k, v in pairs(cfg) do
       if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = TX"opcion desconocida: " .. k end
       CONFIG[k] = v
@@ -993,6 +1006,338 @@ local function beginHeal(reason)
   bot.st, bot.t = "heal_go", 0
 end
 
+-- ---------- Pickup: take what the Pickup Pokemon in slots 2-6 find ----------
+-- Optional (pickup = "auto" / "pause"): with it off nothing here runs. The lead (slot 1)
+-- is never touched, it may hold a Macho Brace on purpose. Pickup only works after a won
+-- battle, which is what training does. The menu path is the Farm Bot's (ADR-0011):
+-- START > POKEMON > (Pokemon) > ITEM > TAKE, checking every step in memory. Field menu
+-- functions differ per build (pret "symbols" branch); RAM is the same in the four USA ones.
+-- Everything lives in one table: Lua 5.1 allows 200 locals per block.
+local PK = { ABILITY = 53, OPT_ITEM = 3, OPT_TAKE = 5, STARTMENU_POKEMON = 1,
+  CMD_CHOOSEPOKEMON = 22, OPT_SHIFT = 10, OPT_SEND_OUT = 11,    -- battle_controllers.h, party_menu.h
+  -- escaping (pret battle_main.c IsRunningFromBattleImpossible, constants/*.h)
+  ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
+  AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
+  STATUS2_TRAPPED = 0x0400E000 }      -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
+if gameLang == 0x45 and gameName then
+  local fn = ({
+    FireRed0   = { 0x0806F1F0, 0x0811EBA0, 0x0811FB28, 0x08122C5C },
+    FireRed1   = { 0x0806F204, 0x0811EC18, 0x0811FBA0, 0x08122CD4 },
+    LeafGreen0 = { 0x0806F1F0, 0x0811EB78, 0x0811FB00, 0x08122C34 },
+    LeafGreen1 = { 0x0806F204, 0x0811EBF0, 0x0811FB78, 0x08122CAC },
+  })[gameName .. (gameRev1 and "1" or "0")]
+  if fn then
+    PK.MENU = {
+      startCursor = 0x020370F4, startCount = 0x020370F5, startOrder = 0x020370F6,
+      partyMenu = 0x0203B0A0, partyInternal = 0x0203B09C, menuCursor = 0x0203ADE6, tasks = 0x03005090,
+      -- functions (+1: Thumb code)
+      taskStartMenu = fn[1] + 1, cbParty = fn[2] + 1, taskChooseMon = fn[3] + 1, taskSelection = fn[4] + 1,
+    }
+  end
+end
+function PK.itemName(id) return TT_ITEMNAME[id] or ("#" .. id) end
+function PK.mon(i) return readPartyMon(A.party + i * 0x64) end
+-- Party slots 2-6 (1-5 here) whose Pokemon has Pickup
+function PK.slots()
+  local t = {}
+  for i = 1, partyCount() - 1 do
+    local m = PK.mon(i)
+    local sx = m and TT_SPECX[m.species]
+    local ab = sx and ((m.abilityBit == 1 and sx[2] ~= 0) and sx[2] or sx[1]) or 0
+    if ab == PK.ABILITY then t[#t + 1] = i end
+  end
+  return t
+end
+-- The ones holding an item; logs what is new and counts as stored what is gone
+function PK.scan()
+  local held, now = {}, {}
+  for _, i in ipairs(PK.slots()) do
+    local m = PK.mon(i)
+    if m and m.item ~= 0 then held[#held + 1] = { slot = i, item = m.item }; now[i] = m.item end
+  end
+  for slot, item in pairs(bot.pkSeen) do
+    if not now[slot] then
+      bot.pkItems = bot.pkItems + 1
+      logLine(string.format(TX"Guardado en la mochila: %s", PK.itemName(item)))
+      bot.pkSeen[slot] = nil
+    end
+  end
+  for _, h in ipairs(held) do
+    if not bot.pkSeen[h.slot] then
+      bot.pkSeen[h.slot] = h.item
+      bot.pkFound = bot.pkFound + 1
+      local who = PK.mon(h.slot)
+      logLine(string.format(TX"%s consiguio %s", who and speciesName(who.species) or "?", PK.itemName(h.item)))
+    end
+  end
+  return held
+end
+-- After a battle: true if it went to take the items (enough of them hold one, or training ends)
+function PK.check(finishing)
+  local n = #PK.slots()
+  if n == 0 then return false end
+  local held = PK.scan()
+  local at = math.min(tonumber(CONFIG.pickupTakeAt) or math.ceil(n / 2), n)   -- default: half of them
+  if #held == 0 or (#held < at and not finishing) then return false end
+  PK.begin(held)
+  return true
+end
+function PK.taskActive(fnAddr)
+  for i = 0, 15 do
+    local t = PK.MENU.tasks + i * 40
+    if read8(t + 4) ~= 0 and read32(t) == fnAddr then return true end
+  end
+  return false
+end
+function PK.s8(v) if v >= 0x80 then return v - 0x100 end return v end
+function PK.actions()
+  local p = read32(PK.MENU.partyInternal)
+  if p < 0x02000000 or p >= 0x02040000 then return {} end
+  local n, t = read8(p + 0x17), {}
+  if n > 8 then return {} end
+  for k = 0, n - 1 do t[#t + 1] = read8(p + 0x0F + k) end
+  return t
+end
+function PK.indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
+function PK.cursorTo(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+-- In battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon? NO"
+-- could not run away. That party screen can't be closed with B, and its cursor starts on the
+-- fainted lead. Send out the healthy Pokemon with the highest level (never an egg) and run:
+-- bot.forceRun makes the next action RUN. After the battle the party is back in field
+-- order (UpdatePartyToFieldOrder), so the fainted lead is still first and goes to heal.
+-- The party menu RAM is the one the item menus use (USA builds).
+function PK.sendOut()
+  local M = PK.MENU
+  if not M then
+    halt(TX"Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7")
+    return
+  end
+  bot.fight, bot.forceRun, bot.lastWhy = false, true, TX"debilitado: huir"
+  if not bot.sendSlot then
+    local best, lv
+    for i = 1, partyCount() - 1 do
+      local m = PK.mon(i)
+      if m and m.hp > 0 and band(rshift(m.ivWord, 30), 1) == 0 and (not lv or m.level > lv) then best, lv = i, m.level end
+    end
+    if not best then halt(TX"Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"); return end
+    bot.sendSlot, bot.sendT = best, 0
+    local l, s = lead(), PK.mon(best)
+    logLine(string.format(TX"%s se debilito: saco a %s (Nv.%d) para huir", l and speciesName(l.species) or "?",
+      speciesName(s.species), s.level))
+  end
+  bot.sendT = bot.sendT + 1
+  if bot.sendT > 1800 then halt(TX"No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"); return end
+  if PK.taskActive(M.taskSelection) then
+    -- SHIFT / SUMMARY / CANCEL: pick SHIFT (or SEND OUT)
+    local acts = PK.actions()
+    local want = PK.indexOf(acts, PK.OPT_SHIFT) or PK.indexOf(acts, PK.OPT_SEND_OUT)
+    if not want then tap("B", 10); return end
+    local cur = PK.s8(read8(M.menuCursor))
+    if cur == want then tap("A", 20) else PK.cursorTo(cur, want) end
+    return
+  end
+  if not PK.taskActive(M.taskChooseMon) then
+    if bot.sendT % 40 == 0 then tap("B", 10) end      -- a message over the party screen
+    return
+  end
+  local cur = PK.s8(read8(M.partyMenu + 9))
+  if cur == bot.sendSlot then tap("A", 20)
+  elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
+end
+-- EVs still missing, as text ("252 Vel, 6 PS")
+function PK.missing(m)
+  local t = {}
+  for st = 1, 6 do
+    local i = EV_OF_STAT[st]
+    local need = tcfg.target and (tcfg.target[i] - m.evs[i]) or 0
+    if need > 0 then t[#t + 1] = need .. " " .. TX(STAT_LABEL[st]) end
+  end
+  return table.concat(t, ", ")
+end
+-- This spot is finished although training isn't: a plan in phases (e.g. Attack on Route 24,
+-- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
+-- or many battles in a row had no useful opponent. Returns the message, or nil.
+PK.USELESS_LIMIT = 40
+function PK.phaseDone(m)
+  if not tcfg.target then return nil end
+  -- 510 in total: the missing EVs can't fit any more
+  if evTotal(m) >= 510 and not evsDone(m) then
+    return string.format(TX"FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)", PK.missing(m))
+  end
+  if tcfg.only then
+    for sp in pairs(tcfg.only) do if shouldFight(m, sp) then return nil end end
+    return string.format(TX"FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies",
+      PK.missing(m))
+  end
+  if (bot.useless or 0) >= PK.USELESS_LIMIT then
+    return string.format(TX"FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona",
+      bot.useless, PK.missing(m))
+  end
+  return nil
+end
+-- Training (or this phase) is over: heal first if a route to the Center is recorded, then pause
+function PK.finish(m, done, phaseMsg)
+  if route.go and not bot.finishHealed and not partyHealed() then
+    bot.finishHealed = true                    -- one trip: then it stops whatever happens
+    beginHeal(TX"fin del entrenamiento")
+    return
+  end
+  stopBot()
+  bot.done, bot.finishHealed = done, nil
+  bot.msg = done and string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+    table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")) or phaseMsg
+  logLine(bot.msg)
+  notify(bot.msg)
+  emu.pause()
+end
+-- The stat (STAT_LABEL index) that beating this species would push past the goal, or nil.
+-- Same rule as shouldFight; used when it can't run, so it never fights its way past the EVs.
+function PK.overshoot(m, species)
+  if not tcfg.target then return nil end
+  local g = evGain(m, species)
+  if not g then return nil end
+  local room = 510 - evTotal(m)
+  for i = 1, 6 do
+    if g[i] > 0 and room > 0 and m.evs[i] < 255 then
+      local after = m.evs[i] + math.min(g[i], 255 - m.evs[i], room)
+      if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
+        return ({ 1, 2, 3, 6, 4, 5 })[i]
+      end
+    end
+  end
+  return nil
+end
+-- Why this wild battle can't be run from, or nil. pret IsRunningFromBattleImpossible
+-- (battle_main.c), read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each):
+-- Smoke Ball or Run Away always escape; Shadow Tag traps; Arena Trap unless Flying or
+-- Levitate; Magnet Pull traps Steel; Mean Look / Block (STATUS2_ESCAPE_PREVENTION) and
+-- Wrap / Bind / Fire Spin... (STATUS2_WRAPPED) trap.
+function PK.trapped()
+  local b0, b1 = A.battleMons, A.battleMons + 0x58
+  local ab, t1, t2 = read8(b0 + 0x20), read8(b0 + 0x21), read8(b0 + 0x22)
+  if read16(b0 + 0x2E) == PK.ITEM_SMOKE_BALL or ab == PK.AB_RUN_AWAY then return nil end
+  local foeAb = read8(b1 + 0x20)
+  local name = TT_ABILNAME[foeAb] or "?"
+  if foeAb == PK.AB_SHADOW_TAG then return name end
+  if foeAb == PK.AB_ARENA_TRAP and ab ~= PK.AB_LEVITATE and t1 ~= PK.TYPE_FLYING and t2 ~= PK.TYPE_FLYING then return name end
+  if foeAb == PK.AB_MAGNET_PULL and (t1 == PK.TYPE_STEEL or t2 == PK.TYPE_STEEL) then return name end
+  if band(read32(b0 + 0x50), PK.STATUS2_TRAPPED) ~= 0 then return TX"atrapado por un ataque" end
+  return nil
+end
+-- Any move with PP left (when it has to fight but no move is "useful")
+function PK.anyMove(blocked)
+  local me = battleMon(0)
+  for k = 1, 4 do
+    if me.moves[k] ~= 0 and me.pp[k] > 0 and not (blocked and blocked[k]) then return k end
+  end
+  return nil
+end
+function PK.begin(held)
+  local names = {}
+  for _, h in ipairs(held) do names[#names + 1] = PK.itemName(h.item) end
+  if tcfg.pickup == "pause" or not PK.MENU then
+    stopBot()
+    bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
+    logLine(bot.msg)
+    notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
+    pcall(emu.pause)
+    return
+  end
+  logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
+  queue = {}
+  zeroEnemy()
+  bot.take = { list = held, i = 1, phase = "settle", tries = 0 }
+  bot.st, bot.t = "take", 0
+end
+function PK.step()
+  bot.t = bot.t + 1
+  if #queue > 0 then return end
+  local T, M = bot.take, PK.MENU
+  local function fail(why)
+    bot.take = nil
+    halt(TX"No pude quitar los objetos: " .. why .. TX". Terminalo tu en el menu y pulsa 7")
+  end
+  local function go(phase) T.phase, bot.t = phase, 0 end
+  if T.phase == "settle" then
+    -- on the map, standing still, before opening the menu
+    if inOverworld() then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
+    if T.ow >= 30 then tap("start", 20); go("startmenu") end
+    if bot.t > 600 then fail(TX"no vuelve el mapa") end
+  elseif T.phase == "startmenu" then
+    if not PK.taskActive(M.taskStartMenu) then
+      if bot.t > 90 then
+        T.tries = T.tries + 1
+        if T.tries > 3 then fail(TX"el menu START no se abre") return end
+        go("settle")
+      end
+      return
+    end
+    local n = read8(M.startCount)
+    local want
+    for k = 0, math.min(n, 9) - 1 do if read8(M.startOrder + k) == PK.STARTMENU_POKEMON then want = k end end
+    if not want then fail(TX"no hay opcion POKEMON en el menu START") return end
+    local cur = read8(M.startCursor)
+    if cur == want then tap("A", 30); go("party")
+    elseif bot.t > 300 then fail(TX"el cursor del menu START no llega a POKEMON")
+    else PK.cursorTo(cur, want) end
+  elseif T.phase == "party" then
+    if read32(A.callback2) == M.cbParty and PK.taskActive(M.taskChooseMon) then
+      T.ready = (T.ready or 0) + 1
+      if T.ready > 20 then T.ready = nil; go("pick") end
+    elseif bot.t > 600 then fail(TX"no se abrio la pantalla del equipo") end
+  elseif T.phase == "pick" then
+    local e = T.list[T.i]
+    if not e then go("exit") return end
+    local m = PK.mon(e.slot)
+    if not m or m.item == 0 then T.i = T.i + 1 return end
+    if not PK.taskActive(M.taskChooseMon) then
+      if bot.t > 300 then fail(TX"la pantalla del equipo no responde") end
+      if bot.t % 30 == 0 then tap("B", 10) end
+      return
+    end
+    local cur = PK.s8(read8(M.partyMenu + 9))
+    if cur == e.slot then tap("A", 20); go("actions")
+    elseif bot.t > 300 then fail(TX"no llego al Pokemon " .. (e.slot + 1))
+    elseif cur < e.slot or cur > 5 then tap("down", 8) else tap("up", 8) end
+  elseif T.phase == "actions" or T.phase == "itemmenu" then
+    local opt = (T.phase == "actions") and PK.OPT_ITEM or PK.OPT_TAKE
+    local acts = PK.actions()
+    local want = PK.taskActive(M.taskSelection) and PK.indexOf(acts, opt) or nil
+    if not want then
+      if bot.t > 240 then fail(T.phase == "actions" and TX"no aparece OBJETO" or TX"no aparece QUITAR") end
+      return
+    end
+    local cur = PK.s8(read8(M.menuCursor))
+    if cur == want then
+      tap("A", 20)
+      if T.phase == "actions" then go("itemmenu") else go("taking") end
+    elseif bot.t > 240 then fail(TX"el cursor no llega a la opcion")
+    else PK.cursorTo(cur, want) end
+  elseif T.phase == "taking" then
+    local e = T.list[T.i]
+    local m = PK.mon(e.slot)
+    if m and m.item == 0 then
+      -- "Received X": close the message and go back to the party list
+      if PK.taskActive(M.taskChooseMon) and bot.t > 30 then T.i = T.i + 1; go("pick") return end
+      if bot.t % 12 == 0 then tap("B", 8) end
+    elseif bot.t > 240 then
+      fail(TX"la mochila no tiene espacio para " .. PK.itemName(e.item))
+    end
+  elseif T.phase == "exit" then
+    -- leave the party and close the START menu (B until on the map with no menu)
+    local onMap = inOverworld() and not PK.taskActive(M.taskStartMenu)
+    if onMap then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
+    if T.ow >= 40 then
+      bot.take = nil
+      bot.st, bot.t = "after", 0
+      PK.resume()
+      return
+    end
+    if not onMap and bot.t % 20 == 0 then tap("B", 10) end
+    if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
+  end
+end
+
 -- After a battle: decide what comes next
 local function afterBattleDecide()
   local m = leadOk()
@@ -1015,16 +1360,11 @@ local function afterBattleDecide()
     logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
     bot.leadSpecies = m.species
   end
-  if trainingDone(m) then
-    stopBot()
-    bot.done = true
-    bot.msg = string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
-      table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/"))
-    logLine(bot.msg)
-    notify(bot.msg)
-    emu.pause()
-    return
-  end
+  local done = trainingDone(m)
+  local phase = (not done) and PK.phaseDone(m) or nil
+  -- Pickup: take the items first (also when training is about to end, so none are left)
+  if tcfg.pickup and PK.check(done or phase ~= nil) then return end
+  if done or phase then PK.finish(m, done, phase); return end
   -- With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
   -- and going over is not allowed, it could never finish.
   if tcfg.target and not CONFIG.allowOvershoot then
@@ -1055,6 +1395,8 @@ local function afterBattleDecide()
   end
   startWalk()
 end
+
+PK.resume = afterBattleDecide
 
 -- Only one Train Bot at a time: if another Lua window was left running (for example
 -- an old version), both would press buttons at the same time.
@@ -1099,6 +1441,16 @@ local function startBot()
   bot.startTime = 0
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
+  bot.pkSeen, bot.pkItems, bot.pkFound = {}, 0, 0
+  bot.useless, bot.finishHealed = 0, nil
+  if tcfg.pickup then
+    local n = #PK.slots()
+    if n == 0 then logLine(TX"pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6")
+    else logLine(string.format(TX"Recogida: %d Pokemon en el equipo", n)) end
+    if tcfg.pickup == "auto" and not PK.MENU then
+      logLine(TX"Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara")
+    end
+  end
   logLine(string.format(TX"Entrenamiento iniciado: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
     table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")))
   local ws = wantedStatus(m)
@@ -1119,6 +1471,8 @@ local function enterBattle(returnTo)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
   bot.outT = 0
+  bot.sendSlot = nil
+  bot.runTries, bot.trapped = 0, nil
   bot.battles = bot.battles + 1
 end
 
@@ -1148,10 +1502,18 @@ local function stepBattle()
       local m = lead()
       if bot.forceRun then bot.fight, bot.lastWhy = false, TX"camino al Centro"
       elseif m then bot.fight, bot.lastWhy = shouldFight(m, foe.species) end
-      if bot.fight then bot.fought = bot.fought + 1 else bot.fled = bot.fled + 1 end
+      if bot.fight then bot.fought = bot.fought + 1; bot.useless = 0
+      else
+        bot.fled = bot.fled + 1
+        if not bot.forceRun then bot.useless = (bot.useless or 0) + 1 end    -- no useful opponent here
+      end
     end
   end
   if #queue > 0 then return end
+
+  -- The game asks for another Pokemon (the lead fainted): before the evolution check,
+  -- because the party screen also changes callback2
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == PK.CMD_CHOOSEPOKEMON then PK.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -1223,9 +1585,30 @@ local function stepBattle()
     local run = not bot.fight or bot.forceRun
     if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
     if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
+    -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
+    if run and not bot.trapped then
+      local why = PK.trapped()
+      if not why and bot.runTries >= 3 then why = TX"no logra huir" end
+      if why then
+        -- the trained Pokemon is the one out (none was sent out for it): would fighting push its
+        -- EVs past the goal? Then don't fight: pause, the player finishes it (catching gives no EVs)
+        local l = lead()
+        local over = not bot.sendSlot and l and bot.foe and PK.overshoot(l, bot.foe.species)
+        if over then
+          halt(string.format(TX"%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7",
+            speciesName(bot.foe.species), why, TX(STAT_LABEL[over])))
+          return
+        end
+        bot.trapped = true
+        logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
+      end
+    end
+    if bot.trapped then run = false; bot.lastWhy = TX"no puede huir" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
-    if c == want then tap("A", 16)
+    if c == want then
+      if run then bot.runTries = bot.runTries + 1 end
+      tap("A", 16)
     elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
@@ -1236,6 +1619,7 @@ local function stepBattle()
       bot.blocked[bot.lastMoveSlot] = true
     end
     local slot = bestMove(bot.blocked)
+    if not slot and bot.trapped then slot = PK.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then tap("B", 10); bot.forceRun = true; return end
     local want = slot - 1
     local c = band(read8(A.moveCursor), 3)
@@ -1480,7 +1864,7 @@ end
 -- ------------------------------- Panel -------------------------------
 local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",  --@i18n
   heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",  --@i18n
-  heal_back = "Volviendo al punto" }  --@i18n
+  heal_back = "Volviendo al punto", take = "Guardando objetos" }  --@i18n
 
 -- EV progress block: bar per stat, total, session, rate and estimated time
 local function evBlock(m, line)
@@ -1623,6 +2007,9 @@ local function draw()
         route.go and string.format(TX"%d/%d pasos", #route.go, #route.back) or TX"no grabada"))
     end
     line(string.format(TX"Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
+    if tcfg.pickup and bot.pkFound then
+      line(string.format(TX"Recogida: %d encontrados, %d guardados", bot.pkFound, bot.pkItems))
+    end
   end
   if bot.lastFoe and bot.running then
     line(string.format(TX"Rival: %s Nv.%d  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level,
@@ -1679,7 +2066,8 @@ while true do
     elseif st == "heal_tile" then stepHealTile()
     elseif st == "nurse_exit" then stepNurseExit()
     elseif st == "heal_back" then stepHealBack()
-    elseif st == "learn_pick" then stepLearnPick() end
+    elseif st == "learn_pick" then stepLearnPick()
+    elseif st == "take" then PK.step() end
     if not busy then runQueue() end
   end
   draw()

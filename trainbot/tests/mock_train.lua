@@ -83,6 +83,8 @@ local leadM = { pid = 0x1234567A, species = 4, item = 0, friendship = 70, moves 
 local secondM = { pid = 0x0BADBEEF, species = 16, item = 0, friendship = 70, moves = { 33, 0, 0, 0 }, pp = { 35, 0, 0, 0 },
   evs = { 0, 0, 0, 0, 0, 0 }, pokerus = 0, ivword = 0, level = 3, hp = 10, maxHP = 15 }
 if SCEN == "pokerus" then leadM.pokerus = 0x13 end
+-- "full510": 510 EVs in total (memory order HP, Atk, Def, Spe, SpA, SpD) with 3 HP still missing
+if SCEN == "full510" then leadM.evs = { 3, 252, 0, 255, 0, 0 } end
 local function syncParty() encodeMon(PARTY, leadM); encodeMon(PARTY + 0x64, secondM); w8(PCNT, 2) end
 syncParty()
 

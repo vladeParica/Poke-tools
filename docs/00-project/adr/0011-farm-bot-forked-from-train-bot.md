@@ -38,3 +38,12 @@ reading money, using the VS Seeker and trainer battles.
 - **Costs:** the battle engine is duplicated; a fix there must be copied to both bots.
   Menu automation, trainer battles and the VS Seeker are tested only in the simulator
   until the owner tries them in the real game.
+
+## Amendment (2026-11-19): Pickup in the Train Bot
+The owner asked for the Train Bot to take the Pickup items of slots 2–6 while it trains, so
+EV training also makes money. The Farm Bot's item-taking code (the same menu table and
+step-by-step checks) was copied into the Train Bot behind a new option, `pickup`, which is
+off by default: without it the Train Bot does exactly what it did before, and the change
+is checked by its existing tests plus `trainbot/tests/run_pickup.py` (Train Bot in the Farm
+Bot simulator). The rest of the farm work (levels, stealing, money) stays in the Farm Bot.
+The duplication grows: a fix to that menu code must now be copied to both bots.

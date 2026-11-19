@@ -164,6 +164,9 @@ abilities), learns moves (`auto`/`never`/`ask` with `wantedMoves`, `keepMoves`,
 with key 6 (there/back) and replays it. `healMode`: `nurse` or `tile`.
 Notifications via ntfy/Discord (`notify`). Key 8: inspection (stats, IVs, EVs, moves).
 Guards against two instances (`train_running.lock`).
+Optional `pickup` (off by default, ADR-0011 amendment): takes the items Pickup Pokémon in slots 2–6
+find, with the Farm Bot's menu code copied into the `PK` table (one local: Lua 5.1 limit).
+Tests: `run_pickup.py` runs the Train Bot in the Farm Bot simulator.
 
 ## Farm Bot (`farmbot/`, v1.0)
 
