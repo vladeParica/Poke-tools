@@ -1017,13 +1017,43 @@ local function validHeaderTable(base)
   return false
 end
 
+-- One header: map group, map number, 2 bytes of padding, then 4 pointers (0 or into the ROM)
+local function wildEntryOk(a)
+  if read8(a) > 0x30 or read8(a + 2) ~= 0 or read8(a + 3) ~= 0 then return false end
+  local any = false
+  for o = 4, 16, 4 do
+    local q = read32(a + o)
+    if q ~= 0 then
+      if q < 0x08000000 or q >= 0x0A000000 then return false end
+      any = true
+    end
+  end
+  return any
+end
+
+-- gWildMonHeaders per USA build (pret symbols branch). Each address is checked to be the
+-- FIRST header: in LeafGreen 1.1 the FireRed 1.0 address falls on its 18th header, and the
+-- maps before it (Viridian Forest among them) were missing.
+local WILD_HEADERS = { [0x52] = { [false] = 0x083C9CB8, [true] = 0x083C9D28 },   -- FireRed 1.0 / 1.1
+                       [0x47] = { [false] = 0x083C9AF4, [true] = 0x083C9B64 } }  -- LeafGreen 1.0 / 1.1
+
+local function wildTableStart(a)
+  while wildEntryOk(a - 20) do a = a - 20 end
+  return a
+end
+
 local function findWildTable()
-  if wildTableBase ~= nil then return wildTableBase end
-  wildTableBase = false
-  if validHeaderTable(0x083C9CB8) then wildTableBase = 0x083C9CB8; return wildTableBase end
+  -- only a table that was found is remembered: a failed search (e.g. the script ran before
+  -- the ROM was loaded) is tried again next time
+  if wildTableBase then return wildTableBase end
+  local known = gameLang == 0x45 and WILD_HEADERS[gameCode] and WILD_HEADERS[gameCode][gameRev1]
+  if known and validHeaderTable(known) and not wildEntryOk(known - 20) then
+    wildTableBase = known; return known
+  end
+  -- other languages: search, then go back to the first header of the table
   for a = 0x08300000, 0x08500000, 4 do
     if read8(a) < 0x30 and read8(a + 2) == 0 and read8(a + 3) == 0 and validHeaderTable(a) then
-      wildTableBase = a; return a
+      wildTableBase = wildTableStart(a); return wildTableBase
     end
   end
   return false
@@ -1935,7 +1965,16 @@ local function wildSetup()
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
-    bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    -- say what failed: the table itself, or this map (group.number) has no such encounters
+    local sb1 = read32(A.sb1)
+    if not findWildTable() then
+      bot.msg = TX"No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"
+    elseif validPtr(sb1) then
+      bot.msg = string.format(TX"Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas", read8(sb1 + 4), read8(sb1 + 5),
+                              wr.water and TX"de agua" or TX"de hierba")
+    else
+      bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    end
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   bot.st = "wbuild"

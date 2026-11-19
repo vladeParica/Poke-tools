@@ -478,5 +478,9 @@
   "Hay otro Farm Bot o un Train Bot corriendo en otra ventana de Lua: deja solo uno": "Another Farm Bot or a Train Bot is running in another Lua window: leave only one",
   "Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando": "New game: name your character and your rival, and press 7 while Oak is still talking",
   "No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando": "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
-  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "State saved near the target (advance %d): the tries start from here"
+  "Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui": "State saved near the target (advance %d): the tries start from here",
+  "No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado": "Couldn't find the encounter table in the ROM: reload the script with the game already running",
+  "Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas": "This map (%d.%d) has no %s encounters: start the mode in the grass or cave where you hunt",
+  "de agua": "water",
+  "de hierba": "grass"
 }
