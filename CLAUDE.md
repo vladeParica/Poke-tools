@@ -80,6 +80,8 @@ simulate memory, buttons and the minimum game logic.
   (move learning), `run_want.py` (wantedMoves). The mock simulates the map, doors, the
   nurse, battles with real menus, move-learning prompts (opcodes 0x5A/0x5B), the summary
   screen, evolution (`evo`/`evono`) and the healing tile (`tile`).
+- Shared rules: `python shared/tests/test_rules.py` (unit tests of `shared/lua/rules.lua`, no simulator).
+- Refactors must leave every simulator output identical (compare before/after, ADR-0015).
 
 ## Key Gen 3 / FRLG facts
 

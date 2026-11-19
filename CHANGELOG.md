@@ -99,6 +99,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   (ADR-0015).
 - The Train Bot and the Farm Bot share their menu and escape code (`shared/lua/menus.lua`) and
   the per-build addresses (`shared/lua/game.lua`, also used by the Shiny Bot) instead of copies.
+- The bots pick each state's step from a table, the Train Bot's after-battle steps are an ordered
+  list, and the escape and EV-goal decisions are pure functions (`shared/lua/rules.lua`) with unit
+  tests (`shared/tests/test_rules.py`, in CI).
 - Train Bot: when training (or a phase) ends it first goes to heal at the Center, if a route is
   recorded, and then pauses.
 - Train Bot examples moved to `trainbot/examples/configs/` with per-stat names

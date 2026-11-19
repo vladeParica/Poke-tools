@@ -68,6 +68,7 @@ local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
 local gameName = (gameCode == 0x52 and "FireRed") or (gameCode == 0x47 and "LeafGreen") or nil
 --@@INCLUDE game@@
+--@@INCLUDE rules@@
 
 local A = {}
 if gameLang == 0x45 then        -- USA
@@ -689,19 +690,8 @@ local function shouldFight(mon, species)
   if not tcfg.target then return true, "nivel" end
   local g = evGain(mon, species)
   if not g then return false, TX"sin datos" end
-  local total = evTotal(mon)
-  local room = 510 - total
-  local useful = false
-  for i = 1, 6 do
-    if g[i] > 0 and room > 0 and mon.evs[i] < 255 then
-      local add = math.min(g[i], 255 - mon.evs[i], room)
-      local after = mon.evs[i] + add
-      if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
-        return false, TX"daria EVs de " .. TX(STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[i]])
-      end
-      if mon.evs[i] < tcfg.target[i] then useful = true end
-    end
-  end
+  local over, useful = Rules.evStep(mon.evs, g, tcfg.target, CONFIG.allowOvershoot)
+  if over then return false, TX"daria EVs de " .. TX(STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[over]]) end
   if useful then return true, "EVs" end
   if evsDone(mon) and CONFIG.targetLevel and mon.level < CONFIG.targetLevel then return true, "nivel" end
   return false, TX"no da los EVs que faltan"
@@ -1114,16 +1104,8 @@ function PK.overshoot(m, species)
   if not tcfg.target then return nil end
   local g = evGain(m, species)
   if not g then return nil end
-  local room = 510 - evTotal(m)
-  for i = 1, 6 do
-    if g[i] > 0 and room > 0 and m.evs[i] < 255 then
-      local after = m.evs[i] + math.min(g[i], 255 - m.evs[i], room)
-      if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
-        return ({ 1, 2, 3, 6, 4, 5 })[i]
-      end
-    end
-  end
-  return nil
+  local over = Rules.evStep(m.evs, g, tcfg.target, CONFIG.allowOvershoot)
+  return over and ({ 1, 2, 3, 6, 4, 5 })[over] or nil
 end
 
 -- After a battle: decide what comes next. Chain of responsibility: each step looks at the

@@ -2,15 +2,11 @@
 -- (ADR-0015). Every menu step is checked in memory. Included where the bot already defines:
 -- A, read8/read16/read32, band, rshift, bot, queue, tap, halt, logLine, notify, stopBot,
 -- zeroEnemy, inOverworld, partyCount, readPartyMon, lead, speciesName, battleMon,
--- TT_ITEMNAME, TT_ABILNAME, TX and Game (shared/lua/game.lua).
+-- TT_ITEMNAME, TT_ABILNAME, TX, Game (shared/lua/game.lua) and Rules (shared/lua/rules.lua).
 local Menus = (function()
   local M = {
     OPT_ITEM = 3, OPT_TAKE = 5, OPT_SHIFT = 10, OPT_SEND_OUT = 11,   -- CURSOR_OPTION_* (party_menu.h)
     STARTMENU_POKEMON = 1, CMD_CHOOSEPOKEMON = 22,                    -- CONTROLLER_CHOOSEPOKEMON
-    -- escaping (pret battle_main.c IsRunningFromBattleImpossible, constants/*.h)
-    ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
-    AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
-    STATUS2_TRAPPED = 0x0400E000,              -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
   }
   M.MENU = Game.menu
 
@@ -80,21 +76,16 @@ local Menus = (function()
     elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
   end
 
-  -- Why this wild battle can't be run from, or nil: pret IsRunningFromBattleImpossible,
-  -- read from gBattleMons (0 = yours, 1 = the wild one; 0x58 bytes each). Smoke Ball or Run Away
-  -- always escape; Shadow Tag traps; Arena Trap unless Flying or Levitate; Magnet Pull traps
-  -- Steel; Mean Look / Block and Wrap / Bind / Fire Spin... (status2) trap.
+  -- Why this wild battle can't be run from (text for the log), or nil. Reads gBattleMons
+  -- (0 = yours, 1 = the wild one; 0x58 bytes each) and asks Rules.trappedBy.
   function M.trapped()
     local b0, b1 = A.battleMons, A.battleMons + 0x58
-    local ab, t1, t2 = read8(b0 + 0x20), read8(b0 + 0x21), read8(b0 + 0x22)
-    if read16(b0 + 0x2E) == M.ITEM_SMOKE_BALL or ab == M.AB_RUN_AWAY then return nil end
-    local foeAb = read8(b1 + 0x20)
-    local name = TT_ABILNAME[foeAb] or "?"
-    if foeAb == M.AB_SHADOW_TAG then return name end
-    if foeAb == M.AB_ARENA_TRAP and ab ~= M.AB_LEVITATE and t1 ~= M.TYPE_FLYING and t2 ~= M.TYPE_FLYING then return name end
-    if foeAb == M.AB_MAGNET_PULL and (t1 == M.TYPE_STEEL or t2 == M.TYPE_STEEL) then return name end
-    if band(read32(b0 + 0x50), M.STATUS2_TRAPPED) ~= 0 then return TX"atrapado por un ataque" end
-    return nil
+    local why = Rules.trappedBy(
+      { item = read16(b0 + 0x2E), ability = read8(b0 + 0x20), type1 = read8(b0 + 0x21), type2 = read8(b0 + 0x22),
+        trappedBits = band(read32(b0 + 0x50), Rules.STATUS2_TRAPPED) },
+      { ability = read8(b1 + 0x20) })
+    if why == "move" then return TX"atrapado por un ataque" end
+    return why and (TT_ABILNAME[why] or "?") or nil
   end
   -- Any move with PP left (when it has to fight but no move is "useful")
   function M.anyMove(blocked)

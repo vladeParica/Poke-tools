@@ -100,6 +100,7 @@ A.objects = A.avatar - 0x240                                   -- gObjectEvents
 A.battleType = A.enemy - 0x14E0    -- gBattleTypeFlags (0x02022B4C in USA)
 
 --@@INCLUDE game@@
+--@@INCLUDE rules@@
 local MENU = Game.menu      -- field menus of this build (nil: not verified, taking items pauses)
 -- Game constants (a single table: Lua 5.1 allows 200 locals per block)
 local K = {
