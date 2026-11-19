@@ -498,5 +498,9 @@
   "FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona": "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
   "fin del entrenamiento": "kunren shuuryou",
   "FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)": "PHASE KANRYOU: EV goukei ga 510 de, nokori (%s) wa hairanai",
-  "%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7": "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite"
+  "%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7": "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
+  "No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado": "ROM ni deai table ga nai: game wo kidou shite kara script wo saiyomikomi shite",
+  "Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas": "Kono map (%d.%d) ni wa %s no deai ga nai: kusamura ka doukutsu de mode wo hajimete",
+  "de agua": "mizu",
+  "de hierba": "kusa"
 }

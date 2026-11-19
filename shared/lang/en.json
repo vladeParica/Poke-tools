@@ -498,5 +498,9 @@
   "FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona": "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
   "fin del entrenamiento": "end of training",
   "FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)": "PHASE DONE: it already has 510 EVs in total and the missing ones don't fit (%s)",
-  "%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7": "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7"
+  "%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7": "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
+  "No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado": "Couldn't find the encounter table in the ROM: reload the script with the game already running",
+  "Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas": "This map (%d.%d) has no %s encounters: start the mode in the grass or cave where you hunt",
+  "de agua": "water",
+  "de hierba": "grass"
 }

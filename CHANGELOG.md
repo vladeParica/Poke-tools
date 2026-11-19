@@ -82,6 +82,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   Arena Trap in Diglett's Cave) and it fought it. Now, if beating it would push an EV past the
   goal, it pauses and notifies instead (catching it gives no EVs). It also stops at 510 EVs in
   total when the missing ones can't fit.
+- Shiny Bot, *Salvaje RNG* with `species` on LeafGreen 1.1: the bot read the encounter table
+  from the FireRed 1.0 address, which falls 17 headers inside LeafGreen 1.1's table, so maps such
+  as Viridian Forest "had no encounters". It now uses each build's address (pret symbols) and
+  always starts from the first header; the error message also names the map.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.
