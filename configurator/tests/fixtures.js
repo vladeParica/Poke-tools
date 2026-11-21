@@ -6,7 +6,6 @@ const rich = {
   shinybot: {
     mode: 'semilla inicial',
     initialSeeds: ['bc75', 'A0'],
-    afterSeedMode: 'Regalo RNG',
     natures: ['Modesta', 'Timid'],
     minIVs: { ps: 31, vel: 30 },
     maxIVs: { ataque: 0 },

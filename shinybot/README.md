@@ -29,7 +29,7 @@ The in-game mode names are in Spanish (shown in parentheses).
 | 5–7 | Static RNG, Gift RNG, Roamer RNG | Computes the exact advance and presses A on that frame |
 | 8 | Wild RNG (*Salvaje RNG*) | Walks to one step before the encounter and takes the step on the exact frame |
 | 9 | New game (*Partida nueva*) | Restarts until it gets the TID/SID you want |
-| 10 | Initial seed (*Semilla inicial*) | Hits a seed on the title screen, then launches `afterSeedMode` |
+| 10 | Initial seed (*Semilla inicial*) | Hits a seed on the title screen and pauses |
 | 11 | Fishing (*Pesca*) | Fishes with the rod registered on SELECT (face the water) and runs from battles until the target appears |
 | 12 | Fishing RNG (*Pesca RNG*) | Casts until something bites, saves a state on "on the hook!" and presses B on the target's exact frame (USA FireRed/LeafGreen) |
 
@@ -49,12 +49,12 @@ If you press 7 too early, the bot tells you: before naming your character there 
 (TID 0) and it refuses to start; before naming the rival, its presses land on the naming
 keyboard, so after two tries without a SID it stops and says when to press 7.
 
-### Initial seed (mode 10): resume from the seed
+### Initial seed (mode 10)
 
-Hitting a seed can take hundreds of soft resets. With `"pauseAfterSeed": true` the bot pauses
-once the save is loaded on the seed: save a state (Shift+F1) and unpause. To try again later,
-load that state, set `"mode"` to the mode you hand over to (for example `"Salvaje RNG"`) and
-`"reseed": false`, and press 7: the search starts from there.
+Each mode does one job. Initial seed resets and tries timings on the title screen until it hits
+one of `initialSeeds`, then pauses. Unpause, choose Continue, save a state (Shift+F1) where you
+hunt and start the RNG mode you need from it with `"reseed": false` (a new seed would lose this
+one). Hitting a seed can take hundreds of resets: that savestate lets you try again without it.
 
 If the bot hits the target's advance and PID but the IVs differ, the game interrupted that very
 generation (VBlank's `Random()` in the middle). Retrying gives the same result, so the bot says

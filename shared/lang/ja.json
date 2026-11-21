@@ -65,8 +65,6 @@
   "Probada por el bot: semilla %04X (arranque %d, frame %d)": "Bot ga tameshita: seed %04X (kidou %d, frame %d)",
   "Semilla inicial %04X conseguida (%d pruebas)": "Shoki seed %04X ni seikou (%d kai)",
   "[SEMILLA] %04X conseguida tras %d pruebas": "[SEED] %04X ni %d kai de seikou",
-  "Semilla lista: cargando la partida para ": "Seed junbi kanryo: game wo yomikomi chuu: ",
-  "Semilla %04X lista: continua la partida y usa el modo RNG": "Seed %04X junbi kanryo: tsuzuki kara hajimete RNG mode wo tsukatte",
   "ninguno": "nashi",
   "sin objetivo con este arranque": "kono kidou de wa mokuhyo nashi",
   "prediccion fallida": "yosoku shippai",
@@ -527,7 +525,8 @@
   "Lanzamientos: %d": "Nageta kaisuu: %d",
   "Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio": "%s tsurizao de wa koko ni 'species' no Pokemon wa denai: sao ka basho wo kaeru",
   "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Yobun na call no aru sougu (%s): warikomi to minashite H-1 de sagasu",
-  "Semilla cargada: guarda un savestate (Shift+F1) para retomar desde aqui. Quita la pausa para seguir": "Seed load zumi: koko kara saikai dekiru you ni savestate wo hozon (Shift+F1). Pause wo toite tsuzukeru",
   "Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s": "Mokuhyou (PID %08X) ni atatta ga game ga seisei wo warikonda: IV %s ni natta",
-  "El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7": "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu"
+  "El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7": "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu",
+  "Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG": "Seed %04X junbi OK: tsuzukete, savestate wo hozon (Shift+F1) shite RNG mode wo erabu",
+  "afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON": "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK"
 }

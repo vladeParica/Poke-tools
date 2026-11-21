@@ -7,8 +7,6 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 ## [Unreleased]
 
 ### Added
-- Shiny Bot: `pauseAfterSeed` (Initial seed). Pauses once the save is loaded on the seed so you can
-  keep a savestate and resume the hunt from it without hitting the seed again.
 - Shiny Bot: mode 11 **Pesca** (fishing). It uses the rod registered on SELECT while you face the
   water, closes the fishing texts with B (A facing water would offer Surf) and runs from every
   battle until the target appears, like *Salvaje*; `species` works too. It refuses to start without
@@ -18,7 +16,7 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   the Static RNG modes, calibrates the B press and presses it on the exact frame of the target,
   with the fishing slots of the registered rod and the map's fishing table. USA FireRed/LeafGreen
   1.0/1.1 only (it reads the fishing task by its address). New option `fishSearch` (default
-  1000000): no Teachy TV while fishing. `afterSeedMode` can hand over to it.
+  1000000): no Teachy TV while fishing.
 - **Farm Bot 1.0** (`farmbot/`): farms levels, items with Pickup, items stolen with Thief/Covet,
   and money from trainer rematches with the VS Seeker; takes held items through the party menu
   on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.
@@ -158,6 +156,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 
 ### Removed
 - Notes from a specific save file (computed seeds, team plan).
+- Shiny Bot: `afterSeedMode`. Each mode does one job: *Semilla inicial* hits the seed and pauses;
+  you continue, save a state and start the RNG mode you need from it (with `"reseed": false`).
+  An old JSON that still has the key keeps working: the bot says it is no longer used.
 
 ## Shiny Bot 4.3 — Train Bot 1.10
 First version published in this repository.

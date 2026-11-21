@@ -52,9 +52,8 @@ local CONFIG = {
   reseed        = true,         -- soft reset and another seed if there is no target / several fail
   reseedAfterFailedTargets = 3,
   maxReseeds    = 10,
-  newGameTSV    = nil,
+  newGameTSV    = nil,          -- New game: TID xor SID ranges (nil = the ones for a shiny 6x31 Ditto)
   initialSeeds  = nil,          -- Initial seed: list in hex, e.g. {"BC75","0A16"}
-  afterSeedMode = nil,          -- mode to launch when the seed is hit, e.g. "Regalo RNG"          -- New game: TID xor SID ranges (nil = the ones for a shiny 6x31 Ditto)
   rngMaxSearch  = nil,          -- (obsolete, ignored)
   wildMaxSearch = nil,          -- (obsolete, ignored)
   wildOneStep   = true,         -- Wild RNG: get one step away from the encounter before looking for the frame
@@ -62,7 +61,6 @@ local CONFIG = {
 
   -- On finding / several instances
   savestateSlot = nil,          -- nil = don't save by itself (in VBA-rr v22 it gives "Error creating file")
-  pauseAfterSeed = false,       -- Initial seed: pause once the save is loaded on the seed, to keep a savestate
   logFile       = "shiny_log.txt",
   stopOthers    = true,
   sharedDir     = nil,
@@ -456,12 +454,10 @@ local LANG = {
     ["Salvaje RNG"] = "Wild RNG",
     ["Savestate listo. Zona: %s%s"] = "Savestate ready. Area: %s%s",
     ["Se repite: dejo de revisar antes del paso"] = "It happens again: I stop checking before the step",
-    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X ready: continue the game and use the RNG mode",
-    ["Semilla cargada: guarda un savestate (Shift+F1) para retomar desde aqui. Quita la pausa para seguir"] = "Seed loaded: save a savestate (Shift+F1) to resume from here. Unpause to go on",
+    ["Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG"] = "Seed %04X ready: continue, save a state (Shift+F1) and choose the RNG mode",
     ["Semilla inicial"] = "Initial seed",
     ["Semilla inicial %04X conseguida (%d pruebas)"] = "Initial seed %04X hit (%d tries)",
     ["Semilla inicial: %04X   Actual: %08X"] = "Initial seed: %04X   Current: %08X",
-    ["Semilla lista: cargando la partida para "] = "Seed ready: loading the game for ",
     ["Shiny descartado por filtros: %s PID %08X  IVs %s"] = "Shiny skipped by filters: %s PID %08X  IVs %s",
     ["Sin ataques utiles contra un entrenador: terminalo tu"] = "No useful moves against a trainer: finish it yourself",
     ["Sin respuesta: el bot decide solo si aprende el ataque"] = "No answer: the bot decides by itself whether to learn the move",
@@ -506,6 +502,7 @@ local LANG = {
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X hit after %d tries",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
+    ["afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON"] = "afterSeedMode is no longer used (Initial seed ends paused): you can remove it from the JSON",
     ["ataque desconocido en "] = "unknown move in ",
     ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
@@ -989,12 +986,10 @@ local LANG = {
     ["Salvaje RNG"] = "Yasei RNG",
     ["Savestate listo. Zona: %s%s"] = "Savestate junbi kanryo. Basho: %s%s",
     ["Se repite: dejo de revisar antes del paso"] = "Mata okita: ippo mae no check wo yamemasu",
-    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X junbi kanryo: tsuzuki kara hajimete RNG mode wo tsukatte",
-    ["Semilla cargada: guarda un savestate (Shift+F1) para retomar desde aqui. Quita la pausa para seguir"] = "Seed load zumi: koko kara saikai dekiru you ni savestate wo hozon (Shift+F1). Pause wo toite tsuzukeru",
+    ["Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG"] = "Seed %04X junbi OK: tsuzukete, savestate wo hozon (Shift+F1) shite RNG mode wo erabu",
     ["Semilla inicial"] = "Shoki seed",
     ["Semilla inicial %04X conseguida (%d pruebas)"] = "Shoki seed %04X ni seikou (%d kai)",
     ["Semilla inicial: %04X   Actual: %08X"] = "Shoki seed: %04X   Genzai: %08X",
-    ["Semilla lista: cargando la partida para "] = "Seed junbi kanryo: game wo yomikomi chuu: ",
     ["Shiny descartado por filtros: %s PID %08X  IVs %s"] = "Irochigai wo jouken de miokuri: %s PID %08X  IVs %s",
     ["Sin ataques utiles contra un entrenador: terminalo tu"] = "Trainer ni tsukaeru waza nashi: jibun de owarasete",
     ["Sin respuesta: el bot decide solo si aprende el ataque"] = "Henji nashi: waza wo oboeru ka bot ga kimemasu",
@@ -1039,6 +1034,7 @@ local LANG = {
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X ni %d kai de seikou",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
+    ["afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON"] = "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK",
     ["ataque desconocido en "] = "fumei na waza: ",
     ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
@@ -1509,8 +1505,12 @@ local function loadConfig()
     if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     for k, v in pairs(cfg) do
       local optional = { species = 1, natures = 1, minIVs = 1, maxIVs = 1, minIVTotal = 1, hiddenPower = 1,
-        mode = 1, sharedDir = 1, savestateSlot = 1, newGameTSV = 1, initialSeeds = 1, afterSeedMode = 1, rngMaxSearch = 1, wildMaxSearch = 1, reseedBeyond = 1, teachyMargin = 1 }
-      if CONFIG[k] == nil and not optional[k] then
+        mode = 1, sharedDir = 1, savestateSlot = 1, newGameTSV = 1, initialSeeds = 1, rngMaxSearch = 1, wildMaxSearch = 1, reseedBeyond = 1, teachyMargin = 1 }
+      -- options that were removed: said once, never an error (old JSON files keep working)
+      local retired = { afterSeedMode = TX"afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON" }
+      if retired[k] then
+        print(retired[k])
+      elseif CONFIG[k] == nil and not optional[k] then
         problems[#problems + 1] = TX"opcion desconocida: " .. k
       end
       CONFIG[k] = v
@@ -1793,13 +1793,6 @@ local function kind()
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
--- The mode the Initial seed mode hands over to (afterSeedMode), or nil
-local function afterSeedIndex()
-  local after = CONFIG.afterSeedMode
-  if not after then return nil end
-  for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then return i end end
-  return nil
-end
 local function isWildRng() return bot.mode == 8 end
 local function isFishing() return bot.mode == 11 end
 -- Wild modes that hunt by species (walking, Wild RNG, fishing)
@@ -2599,14 +2592,6 @@ local function stepReseed()
   elseif bot.st == "rsettle" then
     if bot.t >= 60 then
       bot.selfReset = false
-      if bot.noReseed and CONFIG.pauseAfterSeed and not bot.seedPaused then
-        -- the seed costs many tries: a savestate here lets the hunt start again from it
-        -- (load it, choose the handed-over mode, set "reseed": false and press 7)
-        bot.seedPaused = true
-        bot.msg = TX"Semilla cargada: guarda un savestate (Shift+F1) para retomar desde aqui. Quita la pausa para seguir"
-        logLine(bot.msg)
-        emu.pause()
-      end
       if isFishRng() then
         zeroEnemy()
         rng.casts, rng.castT, rng.hookAt = 0, nil, nil
@@ -2679,7 +2664,7 @@ local function stepFar()
     goToTarget(far.best)
   elseif be >= limit then
     if far.best then goToTarget(far.best); return end
-    if CONFIG.reseed and not bot.noReseed and (bot.reseeds or 0) < CONFIG.maxReseeds then
+    if CONFIG.reseed and (bot.reseeds or 0) < CONFIG.maxReseeds then
       startReseed(string.format(TX"sin objetivo en %d avances", limit)); return
     end
     bot.msg = isFishRng() and TX"No hay objetivo con esos filtros: sube fishSearch o quita filtros"
@@ -2748,7 +2733,7 @@ local function modeProblem(mode)
 end
 
 local function rngStart()
-  -- also when the Initial seed mode hands over: the save was just loaded, read the party again
+  -- also after a new seed (soft reset): the save was just loaded, read the party again
   local problem = modeProblem()
   if problem then
     stopBot()
@@ -2793,7 +2778,7 @@ local function retryOrNext(hit)
   rng.pressAt = cand
   if rng.tries >= CONFIG.triesPerTarget or rng.pressAt < rng.preDelay then
     rng.failedTargets = (rng.failedTargets or 0) + 1
-    if CONFIG.reseed and not bot.noReseed and bot.mode ~= 9 and rng.failedTargets >= CONFIG.reseedAfterFailedTargets then
+    if CONFIG.reseed and bot.mode ~= 9 and rng.failedTargets >= CONFIG.reseedAfterFailedTargets then
       startReseed(TX"objetivos inalcanzables"); return
     end
     if rng.nextSearch then rng.nextSearch(rng.target + 1) else startFar(rng.target + 1) end
@@ -3178,17 +3163,12 @@ local function stepSeedBot()
         if seed == t then
           print(string.format(TX"Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
           logLine(string.format(TX"[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
-          local idx = afterSeedIndex()
-          if idx and idx ~= 10 then
-            bot.mode = idx
-            bot.noReseed = true
-            bot.st, bot.t = "rboot", 0
-            bot.msg = TX"Semilla lista: cargando la partida para " .. TX(MODES[idx])
-          else
-            bot.found, bot.running, bot.st, bot.selfReset = true, false, "found", false
-            bot.msg = string.format(TX"Semilla %04X lista: continua la partida y usa el modo RNG", seed)
-            emu.pause()
-          end
+          -- this mode only gets the seed: the player continues, saves a state and starts
+          -- the RNG mode they want from it
+          bot.found, bot.running, bot.st, bot.selfReset = true, false, "found", false
+          bot.msg = string.format(TX"Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG", seed)
+          print(bot.msg)
+          emu.pause()
           return
         end
       end
@@ -3713,8 +3693,7 @@ local function startBot()
     bot.msg = TX"Pesca: registra la Cana (Vieja, Buena o Super) en SELECT y mira hacia el agua"
     print(bot.msg); return
   end
-  -- Initial seed: check now the mode it will hand over to, not after the seed is found
-  local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
+  local problem = modeProblem(bot.mode)
   if problem then
     bot.msg = problem
     print(bot.msg); return
@@ -3728,7 +3707,7 @@ local function startBot()
   bot.encounters, bot.timeouts, bot.startFrame = 0, 0, emu.framecount()
   bot.startTime = now_time()
   queue = {}
-  bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried, bot.noReseed = nil, false, 0, 1, false
+  bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried = nil, false, 0, 1
   if bot.mode == 1 then
     zeroEnemy(); bot.st = "walk"; WK.start()
   elseif isFishing() then

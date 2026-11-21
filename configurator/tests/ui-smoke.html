@@ -44,9 +44,6 @@ document.getElementById('f').onload = () => setTimeout(() => {
     ok('issue click opens its section', nav('seed').getAttribute('aria-selected') === 'true' && !!d.getElementById('f-initialSeeds'));
     enter(d.getElementById('f-initialSeeds'), 'bc75, 0a16');
     ok('seeds added uppercase', /"initialSeeds": \["BC75", "0A16"\]/.test(pv()));
-    ok('error badge becomes a warning (afterSeedMode still empty)', nav('seed').querySelector('.n-badge').className.includes('warn'));
-    const am = d.getElementById('f-afterSeedMode'); am.value = 'Regalo RNG'; fire(am, 'change');
-    ok('afterSeedMode select', /"afterSeedMode": "Regalo RNG"/.test(pv()));
     ok('badge cleared once complete', badge('seed') === '');
     // 3. natures in Spanish (Qué buscar tab)
     go('target');

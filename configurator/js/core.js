@@ -99,7 +99,7 @@
       if (c.hiddenPower && typeof c.hiddenPower === 'object' && c.hiddenPower.type) {
         c.hiddenPower = { type: lk.hpTypes[simplify(c.hiddenPower.type)] || c.hiddenPower.type, minPower: c.hiddenPower.minPower };
       }
-      ['mode', 'afterSeedMode'].forEach(function (k) { if (typeof c[k] === 'string') c[k] = lk.modes[simplify(c[k])] || c[k]; });
+      ['mode'].forEach(function (k) { if (typeof c[k] === 'string') c[k] = lk.modes[simplify(c[k])] || c[k]; });
       ['initialSeeds', 'newGameTSV'].forEach(function (k) {
         var l = asList(c[k]);
         if (l) c[k] = l.map(function (s) { return String(s).toUpperCase(); });
@@ -197,8 +197,7 @@
       });
       if (cfg.mode === 'Semilla inicial') {
         if (!asList(cfg.initialSeeds)) err('initialSeeds', 'El modo Semilla inicial necesita al menos una semilla');
-        if (!cfg.afterSeedMode) warn('afterSeedMode', 'Sin "modo después de la semilla", el bot solo carga la partida');
-        else if ((asList(cfg.initialSeeds) || []).length < 3) info('initialSeeds', 'Cada reinicio solo alcanza 1 de 64 clases de semilla: con más semillas cae antes');
+        if ((asList(cfg.initialSeeds) || []).length < 3) info('initialSeeds', 'Cada reinicio solo alcanza 1 de 64 clases de semilla: con más semillas cae antes');
       }
       if (isInt(cfg.pressGapMin) && isInt(cfg.pressGapMax) && cfg.pressGapMin > cfg.pressGapMax) err('pressGapMin', 'La espera mínima entre A es mayor que la máxima');
       if (cfg.savestateSlot) warn('savestateSlot', 'En VBA-rr v22 guardar estado solo da "Error creating file"');
