@@ -78,6 +78,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   emulator (stopping with a message, training finished, evolution, items to take). `emu.pause()`
   ran inside `pcall`, where VBA-rr can't yield; the bots now ask with `Game.pauseSoon()` and the
   main loop pauses. The test mocks behave like VBA-rr here, so the error shows up in the tests.
+- Train Bot: against a wanted opponent the lead can't hurt with any move (e.g. only Normal moves
+  against Gastly) it ran from every battle forever. After 3 such battles in a row it now stops and
+  says the lead needs a move that damages that species.
 - Train Bot and Farm Bot: Bulbasaur had no game data (its row was stored under index 0), so a
   wild Bulbasaur counted as "no data" and a trained one had no types for the damage formula.
 - Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the

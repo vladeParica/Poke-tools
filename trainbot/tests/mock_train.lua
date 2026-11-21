@@ -85,6 +85,8 @@ local secondM = { pid = 0x0BADBEEF, species = 16, item = 0, friendship = 70, mov
 if SCEN == "pokerus" then leadM.pokerus = 0x13 end
 -- "full510": 510 EVs in total (memory order HP, Atk, Def, Spe, SpA, SpD) with 3 HP still missing
 if SCEN == "full510" then leadM.evs = { 3, 252, 0, 255, 0, 0 } end
+-- "ghost": only Normal moves (Scratch, Growl) and only Gastly around (Ghost/Poison: Normal does nothing)
+if SCEN == "ghost" then leadM.moves = { 10, 45, 0, 0 }; leadM.pp = { 35, 40, 0, 0 } end
 local function syncParty() encodeMon(PARTY, leadM); encodeMon(PARTY + 0x64, secondM); w8(PCNT, 2) end
 syncParty()
 
@@ -105,6 +107,7 @@ local SPECIES = {
   [19] = { 0, 0, 0, 1, 0, 0 }, [16] = { 0, 0, 0, 1, 0, 0 }, [43] = { 0, 0, 0, 0, 1, 0 },
   [56] = { 0, 1, 0, 0, 0, 0 }, [23] = { 0, 1, 0, 0, 0, 0 } }
 local POOL = { 19, 16, 43, 56, 23 }
+if SCEN == "ghost" then POOL = { 92 } end
 
 local function setBattleMon(i, sp, lvl, hp, maxHP, moves, pp, types)
   local b = BMONS + i * 0x58
@@ -125,7 +128,7 @@ local function startBattle()
   W.battle = { phase = "intro", t = 0, texts = 2, sp = sp, ehp = lvl * 4, lvl = lvl }
   w8(INB, 2); w32(CB2, CB_BATTLE); w32(SPTR, OP_TEXT); w32(FLAGS, 0); w8(BUFA, 0); w8(OUTC, 0)
   setBattleMon(0, leadM.species, leadM.level, leadM.hp, leadM.maxHP, leadM.moves, leadM.pp, { 10, 10 })
-  setBattleMon(1, sp, lvl, lvl * 4, lvl * 4, { 33, 0, 0, 0 }, { 35, 0, 0, 0 }, { 0, 0 })
+  setBattleMon(1, sp, lvl, lvl * 4, lvl * 4, { 33, 0, 0, 0 }, { 35, 0, 0, 0 }, (sp == 92) and { 7, 3 } or { 0, 0 })
   ev("battle " .. sp)
 end
 

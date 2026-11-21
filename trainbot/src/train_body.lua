@@ -1066,6 +1066,9 @@ end
 -- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
 -- or many battles in a row had no useful opponent. Returns the message, or nil.
 PK.USELESS_LIMIT = 40
+-- Battles in a row against a wanted opponent the lead can't hurt with any move (e.g. only Normal
+-- moves against Gastly): it would run from all of them forever, so it stops and says why
+PK.NOMOVE_LIMIT = 3
 function PK.phaseDone(m)
   if not tcfg.target then return nil end
   -- 510 in total: the missing EVs can't fit any more
@@ -1236,7 +1239,7 @@ local function startBot()
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
   bot.pkSeen, bot.pkItems, bot.pkFound = {}, 0, 0
-  bot.useless, bot.finishHealed = 0, nil
+  bot.useless, bot.finishHealed, PK.noMove = 0, nil, 0
   if tcfg.pickup then
     local n = #PK.slots()
     if n == 0 then logLine(TX"pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6")
@@ -1285,6 +1288,7 @@ local function stepBattle()
     if foe then
       bot.foe = foe
       bot.lastFoe = foe
+      bot.noMoveCounted = false
       if foe.sv < 8 and CONFIG.stopOnShiny then
         stopBot()
         bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
@@ -1378,7 +1382,19 @@ local function stepBattle()
     local me = battleMon(0)
     local run = not bot.fight or bot.forceRun
     if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
-    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
+    if not run and not bestMove(bot.blocked) then
+      run = true; bot.lastWhy = TX"sin ataques utiles"
+      if not bot.noMoveCounted then            -- once per battle
+        bot.noMoveCounted = true
+        PK.noMove = (PK.noMove or 0) + 1
+        local l = lead()
+        if PK.noMove >= PK.NOMOVE_LIMIT and l then
+          halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+            speciesName(l.species), speciesName(bot.foe.species)))
+          return
+        end
+      end
+    elseif not run then PK.noMove = 0 end
     -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
     if run and not bot.trapped then
       local why = Menus.trapped()

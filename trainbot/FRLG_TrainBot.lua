@@ -103,6 +103,7 @@ local LANG = {
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
     ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s has no move that damages %s: teach it one and press 7",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
     ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
@@ -609,6 +610,7 @@ local LANG = {
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
     ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s ni %s ni kiku waza ga nai: waza wo oboesasete 7 wo osu",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
     ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
@@ -3602,6 +3604,9 @@ end
 -- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
 -- or many battles in a row had no useful opponent. Returns the message, or nil.
 PK.USELESS_LIMIT = 40
+-- Battles in a row against a wanted opponent the lead can't hurt with any move (e.g. only Normal
+-- moves against Gastly): it would run from all of them forever, so it stops and says why
+PK.NOMOVE_LIMIT = 3
 function PK.phaseDone(m)
   if not tcfg.target then return nil end
   -- 510 in total: the missing EVs can't fit any more
@@ -3772,7 +3777,7 @@ local function startBot()
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
   bot.pkSeen, bot.pkItems, bot.pkFound = {}, 0, 0
-  bot.useless, bot.finishHealed = 0, nil
+  bot.useless, bot.finishHealed, PK.noMove = 0, nil, 0
   if tcfg.pickup then
     local n = #PK.slots()
     if n == 0 then logLine(TX"pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6")
@@ -3821,6 +3826,7 @@ local function stepBattle()
     if foe then
       bot.foe = foe
       bot.lastFoe = foe
+      bot.noMoveCounted = false
       if foe.sv < 8 and CONFIG.stopOnShiny then
         stopBot()
         bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
@@ -3914,7 +3920,19 @@ local function stepBattle()
     local me = battleMon(0)
     local run = not bot.fight or bot.forceRun
     if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
-    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
+    if not run and not bestMove(bot.blocked) then
+      run = true; bot.lastWhy = TX"sin ataques utiles"
+      if not bot.noMoveCounted then            -- once per battle
+        bot.noMoveCounted = true
+        PK.noMove = (PK.noMove or 0) + 1
+        local l = lead()
+        if PK.noMove >= PK.NOMOVE_LIMIT and l then
+          halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+            speciesName(l.species), speciesName(bot.foe.species)))
+          return
+        end
+      end
+    elseif not run then PK.noMove = 0 end
     -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
     if run and not bot.trapped then
       local why = Menus.trapped()

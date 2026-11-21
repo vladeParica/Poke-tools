@@ -31,6 +31,10 @@ if __name__=='__main__':
     run('pokerus', {"evs":{"atk":6},"healBelow":40}, route=route, show=show)
     run('level', {"evs":None,"targetLevel":8,"healBelow":40}, route=route, show=show)
     run('nolearn', {"evs":{"atk":2,"spe":3},"healBelow":40,"avoidSpecies":["Pidgey"]}, route=route, show=show)
+    # a wanted opponent it can't hurt (only Normal moves against Gastly): stop and say why, don't run forever
+    r,_=run('ghost', {"evs":{"spa":4},"species":["Gastly"],"healBelow":40}, route=route, show=show)
+    if 'no tiene ningun ataque' not in r[9] or r[2] > 4:
+        print('FAIL: ghost, battles=%d'%r[2]); print(r[9][-600:]); BAD.append('ghost')
     if BAD:
-        print('FAIL: VBA-rr would stop the script in', BAD)
+        print('FAIL:', BAD)
         sys.exit(1)

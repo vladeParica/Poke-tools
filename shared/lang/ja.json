@@ -257,6 +257,7 @@
   " (el bot no lo aprenderia)": " (bot nara oboenai)",
   "PS muy bajos": "HP ga totemo hikui",
   "sin ataques utiles": "tsukaeru waza nashi",
+  "%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7": "%s ni %s ni kiku waza ga nai: waza wo oboesasete 7 wo osu",
   "Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues": "Shinka chuu: jibun de owarasete (atarashii waza, message). Sono ato bot ga tsuzukemasu",
   "Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo": "Pokemon ga shinka chuu: scene wo owaraseru to bot ga tsuzukemasu",
   "Aviso: no se pudo volver al mapa tras el combate": "Chui: battle no ato map ni modorenakatta",
