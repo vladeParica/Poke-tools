@@ -103,6 +103,8 @@ syncParty()
 local frame, held, prevHeld = 0, {}, {}
 local function edge(b) return held[b] and not prevHeld[b] end
 local W = { g = 3, n = 20, x = 8, y = 10, face = 3, walkT = 0, cool = 0, dialog = nil, battle = nil, auto = nil }
+-- "farspot": the player stands 12 tiles away from where the recorded route ends (8,10)
+if SCEN == "farspot" then W.x = 20 end
 local stats = { battles = 0, fought = 0, ran = 0, heals = 0, learnPrompts = 0, maxY = 0, events = {} }
 local function ev(s) stats.events[#stats.events + 1] = frame .. ":" .. s end
 

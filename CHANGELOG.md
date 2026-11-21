@@ -77,6 +77,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Train Bot: away from the route's training spot (where the recorded way back ends) it said so
+  only after the first battle, without saying where. It now refuses at 7 and tells how far the
+  spot is, or that the route ends on another map.
 - Train Bot and Farm Bot: refusing a move could loop forever ("But, X can't learn more than four
   moves" again and again). The B pressed for battle texts could land on the first frame of the
   "Stop learning X?" box, which is NO and asks the whole question again, and the same way every

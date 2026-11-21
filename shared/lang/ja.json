@@ -528,5 +528,8 @@
   "Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s": "Mokuhyou (PID %08X) ni atatta ga game ga seisei wo warikonda: IV %s ni natta",
   "El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7": "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu",
   "Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG": "Seed %04X junbi OK: tsuzukete, savestate wo hozon (Shift+F1) shite RNG mode wo erabu",
-  "afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON": "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK"
+  "afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON": "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK",
+  "El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver": "Route no training spot wa %d masu saki (x %+d, y %+d): kaeri de 6 wo oshita basho ga route no owari",
+  "La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6": "Route wa betsu no map (%d.%d) de owaru; anata wa %d.%d: routeFile wo kakunin ka koko kara 6 de route wo rokuga",
+  "No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6": "Route no training spot ni inai (console wo miru): soko e iku ka 6 de betsu no route wo rokuga"
 }
