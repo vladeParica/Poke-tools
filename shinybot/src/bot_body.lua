@@ -86,6 +86,7 @@ local gameCode = read8(0x080000AE)
 local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
 local gameName = (gameCode == 0x52 and "FireRed") or (gameCode == 0x47 and "LeafGreen") or nil
+--@@INCLUDE game@@
 
 local A = {}
 local gMainVerified = false
@@ -540,6 +541,9 @@ local function playerIDs()
   local sb2 = read32(A.sb2)
   if not validPtr(sb2) then return nil end
   local ids = read32(sb2 + 0xA)
+  -- On the title screen / intro (after a reset) the pointer is already valid but the save is
+  -- not loaded yet: the IDs read 0/0. Treat that as "no save" instead of TID 0 / SID 0.
+  if ids == 0 then return nil end
   return ids % 0x10000, floor(ids / 0x10000)
 end
 
@@ -574,6 +578,13 @@ local function kind()
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
+-- The mode the Initial seed mode hands over to (afterSeedMode), or nil
+local function afterSeedIndex()
+  local after = CONFIG.afterSeedMode
+  if not after then return nil end
+  for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then return i end end
+  return nil
+end
 local function isWildRng() return bot.mode == 8 end
 
 local function push(buttons, frames) queue[#queue + 1] = { b = buttons, n = frames } end
@@ -896,7 +907,8 @@ local function ivsFromCalls(i1, i2)
            floor(i2 / 32) % 32, floor(i2 / 1024) % 32, i2 % 32 }
 end
 
-local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000 }
+local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000,
+              nearLead = 1800, nearGap = 3000, nearMin = 60 }
 local rngState = nil
 local wr = { r = {}, built = 0 }   -- r[k] = k-th call to Random() from the base seed
 
@@ -911,9 +923,17 @@ end
 
 local pendingZero = 0
 local function rngLoad()
-  savestate.load(rngState)
+  -- A state saved shortly before the target (see saveNear) skips the long wait from the base.
+  -- Advances keep counting from the base, so targets and tries are unchanged.
+  local n = rng.near
+  if n and n.base == rngState and rng.pressAt and rng.pressAt >= n.adv + rng.nearMin then
+    savestate.load(n.state)
+    rng.seed, rng.adv, rng.prevAdv = n.seed, n.adv, n.adv
+  else
+    savestate.load(rngState)
+    rng.seed, rng.adv, rng.prevAdv = rng.seed0, 0, 0
+  end
   queue = {}
-  rng.seed, rng.adv, rng.prevAdv = rng.seed0, 0, 0
   bot.armed = false
   monWatch = {}
   if kind() == 2 or kind() == 1 then
@@ -1008,13 +1028,40 @@ local function validHeaderTable(base)
   return false
 end
 
+-- One header: map group, map number, 2 bytes of padding, then 4 pointers (0 or into the ROM)
+local function wildEntryOk(a)
+  if read8(a) > 0x30 or read8(a + 2) ~= 0 or read8(a + 3) ~= 0 then return false end
+  local any = false
+  for o = 4, 16, 4 do
+    local q = read32(a + o)
+    if q ~= 0 then
+      if q < 0x08000000 or q >= 0x0A000000 then return false end
+      any = true
+    end
+  end
+  return any
+end
+
+-- gWildMonHeaders per USA build: Game.wildHeaders (shared/lua/game.lua). Each address is
+-- checked to be the FIRST header: in LeafGreen 1.1 the FireRed 1.0 address falls on its
+-- 18th header, and the maps before it (Viridian Forest among them) were missing.
+local function wildTableStart(a)
+  while wildEntryOk(a - 20) do a = a - 20 end
+  return a
+end
+
 local function findWildTable()
-  if wildTableBase ~= nil then return wildTableBase end
-  wildTableBase = false
-  if validHeaderTable(0x083C9CB8) then wildTableBase = 0x083C9CB8; return wildTableBase end
+  -- only a table that was found is remembered: a failed search (e.g. the script ran before
+  -- the ROM was loaded) is tried again next time
+  if wildTableBase then return wildTableBase end
+  local known = Game.wildHeaders
+  if known and validHeaderTable(known) and not wildEntryOk(known - 20) then
+    wildTableBase = known; return known
+  end
+  -- other languages: search, then go back to the first header of the table
   for a = 0x08300000, 0x08500000, 4 do
     if read8(a) < 0x30 and read8(a + 2) == 0 and read8(a + 3) == 0 and validHeaderTable(a) then
-      wildTableBase = a; return a
+      wildTableBase = wildTableStart(a); return wildTableBase
     end
   end
   return false
@@ -1388,7 +1435,35 @@ local function wantedTarget(pid, ivs, lo, hi)
   return isWanted({ pid = pid, ivs = ivs, sv = bxor(bxor(bot.tid, bot.sid), bxor(lo, hi)) })
 end
 
+-- What would stop `mode` from working here, or nil. A gift needs a free party slot (with a
+-- full party it goes to the PC, the bot never sees it and keeps retrying); the roamer must
+-- not be out yet. Also reads bot.baseParty, the party size the gift is detected against.
+local function modeProblem(mode)
+  local saved = bot.mode
+  bot.mode = mode or bot.mode
+  local k = kind()
+  bot.mode = saved
+  bot.baseParty = read8(A.partyCnt)
+  if k == 3 and bot.baseParty >= 6 then return TX"Equipo lleno: deja un espacio libre para el regalo" end
+  if k == 4 then
+    local r = readRoamer()
+    if r and r.active then return TX"El roamer ya esta activo: usa un save de ANTES del evento" end
+  end
+  return nil
+end
+
 local function rngStart()
+  -- also when the Initial seed mode hands over: the save was just loaded, read the party again
+  local problem = modeProblem()
+  if problem then
+    stopBot()
+    bot.msg = problem
+    print(bot.msg)
+    return
+  end
+  -- the shiny check needs this save's IDs: read them again now that it is loaded
+  local tid, sid = playerIDs()
+  if tid then bot.tid, bot.sid = tid, sid end
   rebaseHere()
   rng.nextSearch = nil
   rng.delay, rng.target, rng.targetPid, rng.tries = nil, nil, nil, 0
@@ -1432,6 +1507,17 @@ local function retryOrNext(hit)
   end
 end
 
+-- Far target without the Teachy TV: save a state nearLead advances before pressing, so the
+-- tries after the first one reload there instead of waiting from the base again.
+local function saveNear()
+  local from = (rng.near and rng.near.base == rngState) and rng.near.adv or 0
+  if rng.adv < rng.pressAt - rng.nearLead or rng.adv - from < rng.nearGap then return end
+  local st = savestate.create()
+  savestate.save(st)
+  rng.near = { base = rngState, state = st, adv = rng.adv, seed = rng.seed }
+  print(string.format(TX"Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui", rng.adv))
+end
+
 local function stepRng()
   if isReseedState() then stepReseed(); return end
   if bot.st == "far" then stepFar(); return end
@@ -1446,6 +1532,8 @@ local function stepRng()
       bot.t = 0
       pushPressSchedule()
       bot.st = "pressed"
+    elseif rng.target then
+      saveNear()
     end
   elseif bot.st == "pressed" then
     local mon = targetReady()
@@ -1795,9 +1883,7 @@ local function stepSeedBot()
         if seed == t then
           print(string.format(TX"Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
           logLine(string.format(TX"[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
-          local after = CONFIG.afterSeedMode
-          local idx = nil
-          if after then for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then idx = i end end end
+          local idx = afterSeedIndex()
           if idx and idx ~= 10 then
             bot.mode = idx
             bot.noReseed = true
@@ -1913,7 +1999,16 @@ local function wildSetup()
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
-    bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    -- say what failed: the table itself, or this map (group.number) has no such encounters
+    local sb1 = read32(A.sb1)
+    if not findWildTable() then
+      bot.msg = TX"No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"
+    elseif validPtr(sb1) then
+      bot.msg = string.format(TX"Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas", read8(sb1 + 4), read8(sb1 + 5),
+                              wr.water and TX"de agua" or TX"de hierba")
+    else
+      bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    end
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   bot.st = "wbuild"
@@ -2123,17 +2218,11 @@ local function startBot()
     print(bot.msg); return
   end
   bot.tid, bot.sid = tid, sid
-  bot.baseParty = read8(A.partyCnt)
-  if kind() == 3 and bot.baseParty >= 6 then
-    bot.msg = TX"Equipo lleno: deja un espacio libre para el regalo"
+  -- Initial seed: check now the mode it will hand over to, not after the seed is found
+  local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
+  if problem then
+    bot.msg = problem
     print(bot.msg); return
-  end
-  if kind() == 4 then
-    local r = readRoamer()
-    if r and r.active then
-      bot.msg = TX"El roamer ya esta activo: usa un save de ANTES del evento"
-      print(bot.msg); return
-    end
   end
   -- New game: the TID only exists once you name your character (the seed word is 0 before)
   if bot.mode == 9 and read16(0x02020000) == 0 then

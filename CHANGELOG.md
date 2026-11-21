@@ -53,12 +53,74 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - GPL-3.0 license, `CONTRIBUTING.md`, `SECURITY.md`, issue and PR templates.
 - Project logo (`assets/logo.svg`) and social preview image.
 
+- **Game guide** in Spanish (`docs/guia/`): a page per Pokémon, TMs/HMs, items and shops, move
+  tutors, trainers, EV spots, version exclusives and every move with who learns it (by level,
+  TM/HM or tutor), generated from pret/pokefirered with `tools/guia/gen_guia.py` (names from
+  PokeAPI); `--check` compares random values with pret. Sprites and item icons are linked from
+  PokeAPI/sprites, never stored (ADR-0013).
+- Shiny Bot, Static/Gift/Roamer RNG without the Teachy TV: on a far target the bot saves a
+  state shortly before it, and the tries after the first one start there instead of waiting
+  from the base again.
+
+- Train Bot: optional **Pickup while training** (`pickup`, `pickupTakeAt`): with Pickup Pokémon
+  (Meowth) in slots 2–6, the bot takes the items they find through the party menu and stores
+  them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
+
 ### Fixed
+- Shiny Bot, *Semilla inicial* handing over to *Regalo RNG* (e.g. Eevee) with a full party: the gift
+  went to the PC, the bot never saw it and kept retrying ("Comprobando" forever). It now checks the
+  mode in `afterSeedMode` when you press 7 (a free party slot for a gift, the roamer not out yet),
+  and checks again, with the party read again, when it hands over after the seed.
+- Shiny Bot: pressing 7 before the save was loaded (title screen, after a reset) read TID 0 / SID 0
+  and kept them, so the panel showed them and the RNG modes checked shininess against them. IDs of
+  0/0 now count as "load your save", and the RNG modes read the IDs again when they start.
+- Train Bot and Farm Bot: "can't call vba.frameadvance() from here" when the bot paused the
+  emulator (stopping with a message, training finished, evolution, items to take). `emu.pause()`
+  ran inside `pcall`, where VBA-rr can't yield; the bots now ask with `Game.pauseSoon()` and the
+  main loop pauses. The test mocks behave like VBA-rr here, so the error shows up in the tests.
+- Train Bot: against a wanted opponent the lead can't hurt with any move (e.g. only Normal moves
+  against Gastly) it ran from every battle forever. After 3 such battles in a row it now stops and
+  says the lead needs a move that damages that species.
+- Train Bot: with a `species` list, the PP that decide when to heal only count moves that can hurt
+  one of those species. Normal moves kept the count up against Gastly, so once Bite ran out it never
+  went to heal. If not even full PP would help, it stops and says why instead of healing in a loop.
+- Train Bot and Farm Bot: Bulbasaur had no game data (its row was stored under index 0), so a
+  wild Bulbasaur counted as "no data" and a trained one had no types for the damage formula.
+- Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the
+  forced "choose a Pokémon" screen (it can't be closed with B, the cursor starts on the fainted
+  lead) left the bot in a loop. It now sends out the healthy Pokémon with the highest level,
+  runs, and goes to heal. Against trainers the Farm Bot still stops and lets you choose.
+- Train Bot and Farm Bot: a wild Pokémon that doesn't let you run (Shadow Tag, Arena Trap, Magnet
+  Pull, Mean Look, Wrap…) made the bot choose RUN forever. It now checks the game's own rules
+  (pret `IsRunningFromBattleImpossible`) and fights; after 3 failed RUNs for any other reason too.
+- Train Bot: after reaching part of the goal it kept looking for battles forever when no
+  opponent there gave the missing EVs (e.g. a plan in phases: Attack on Route 24, Speed later).
+  It now ends the phase ("FASE TERMINADA", with the EVs still missing) when no species in
+  `species` helps any more, or after 40 battles in a row without a useful opponent.
+- Train Bot: EVs could go past the goal when a wild Pokémon wouldn't let it run (e.g. Diglett's
+  Arena Trap in Diglett's Cave) and it fought it. Now, if beating it would push an EV past the
+  goal, it pauses and notifies instead (catching it gives no EVs). It also stops at 510 EVs in
+  total when the missing ones can't fit.
+- Shiny Bot, *Salvaje RNG* with `species` on LeafGreen 1.1: the bot read the encounter table
+  from the FireRed 1.0 address, which falls 17 headers inside LeafGreen 1.1's table, so maps such
+  as Viridian Forest "had no encounters". It now uses each build's address (pret symbols) and
+  always starts from the first header; the error message also names the map.
 - Shiny Bot, *Partida nueva*: it refuses to start before the character has a name (TID 0)
   and, if no SID appears after two tries (started before naming the rival), it stops with a
   message saying when to press 7 instead of retrying forever.
 
 ### Changed
+- Game data comes from one extractor, `tools/gamedata/gamedata.py`, which reads pret once into
+  `shared/gamedata/gamedata.json`; the bots' tables are rendered from it at build time and the
+  guide reads it too. `trainbot/tools/gen_tables.py` and `trainbot/src/train_tables.lua` are gone
+  (ADR-0015).
+- The Train Bot and the Farm Bot share their menu and escape code (`shared/lua/menus.lua`) and
+  the per-build addresses (`shared/lua/game.lua`, also used by the Shiny Bot) instead of copies.
+- The bots pick each state's step from a table, the Train Bot's after-battle steps are an ordered
+  list, and the escape and EV-goal decisions are pure functions (`shared/lua/rules.lua`) with unit
+  tests (`shared/tests/test_rules.py`, in CI).
+- Train Bot: when training (or a phase) ends it first goes to heal at the Center, if a route is
+  recorded, and then pauses.
 - Train Bot examples moved to `trainbot/examples/configs/` with per-stat names
   (`FRLG_TrainBot_Speed_Diglett.json`, `FRLG_TrainBot_SpAtk_Tower.json`).
 - Pokémon Tower route renamed to `FRLG_TrainRoute_Tower.txt`.

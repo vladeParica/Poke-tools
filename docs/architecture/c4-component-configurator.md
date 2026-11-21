@@ -18,7 +18,7 @@ C4Component
     }
 
     System_Ext(fs, "Bot folder", "FRLG_*.lua + FRLG_*.json on disk")
-    System_Ext(lua, "Bots' Lua tables", "tables2.lua, train_tables.lua, examples")
+    System_Ext(lua, "Bots' Lua tables", "tables2.lua, gamedata.json (rendered by tools/gamedata), examples")
 
     Rel(player, app, "Edits, saves")
     Rel(app, schema, "Builds forms from")

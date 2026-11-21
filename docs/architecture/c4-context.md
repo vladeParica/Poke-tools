@@ -22,7 +22,7 @@ C4Context
     Rel(bots, ntfy, "Sends notifications", "HTTPS / curl")
     Rel(bots, discord, "Sends notifications", "HTTPS / curl")
     Rel(dev, bots, "Develops and tests")
-    Rel(dev, pret, "Generates tables", "gen_tables.py")
+    Rel(dev, pret, "Extracts game data", "tools/gamedata")
     Rel(github, bots, "Checks every push and PR")
 ```
 

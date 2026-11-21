@@ -7,6 +7,7 @@
 | Level | Scope | Tools | What it covers |
 |---|---|---|---|
 | Build | `src/` → generated `.lua` | `build.py`, CI | That what's committed matches the sources |
+| Rule unit | `shared/lua/rules.lua` (pure decisions: can it run away, what a battle does to the EVs) | Python + lupa (`shared/tests/test_rules.py`) | Trapping abilities and moves, Smoke Ball / Run Away, EV goal overshoot, the 255 and 510 caps — no emulator, milliseconds |
 | Simulator | Whole bot against an imitated game | Python + lupa (Lua 5.1), `tests/mock*.lua`, `tests/run_*.py` | Modes, filters, RNG, battles, routes, moves, invalid configuration |
 | Farm Bot simulator | Whole Farm Bot against `farmbot/tests/mock_farm.lua` | Python + lupa (`farmbot/tests/run_farm.py`, fails on its own) | Every mode to its goal, take-items menus (also with a field move), full bag, pause mode, refusals to start, shipped configs load |
 | Configurator unit | `configurator/js/core.js` | Node `node:test` (`configurator/tests/core.test.js`) | Parsing, name normalization, validation rules, serialization format, route checks (bundled routes clean), log parsing for the three bots |
@@ -21,7 +22,10 @@ python shinybot/build.py && python trainbot/build.py   # must not change any fil
 cd shinybot/tests && python run_test.py && python run_rng.py && python run_wild.py \
   && python run_cfg.py && python run_far.py && cd ../..
 python trainbot/tests/run_train.py && python trainbot/tests/run_learn.py && python trainbot/tests/run_want.py
+python shared/tests/test_rules.py                        # pure rules, no simulator
 ```
+A refactor must leave the simulator output identical: run the suites before and after and
+compare their output (dates and line numbers aside), as was done for ADR-0015.
 Farm Bot (exits with an error if a scenario fails):
 ```
 python farmbot/build.py && python farmbot/tests/run_farm.py

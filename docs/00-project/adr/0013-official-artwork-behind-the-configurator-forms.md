@@ -49,3 +49,10 @@ can't relicense Pokémon art.
   hosts; nothing else is sent (`no-referrer`). If a site moves its files, the backgrounds
   disappear until the URLs in `configurator/js/sprites.js` are updated.
 - **Open (Human-in-the-Loop):** none.
+
+## Amendment (2026-11-14): the game guide
+The guide in `docs/guia/` follows the same rule. Its Pokémon sprites (FireRed/LeafGreen, normal
+and shiny) and item and TM/HM icons are `<img>` links to the
+[PokeAPI/sprites](https://github.com/PokeAPI/sprites) repository on GitHub; no image file is
+added to this repository. `tools/guia/gen_guia.py` checks each URL once and leaves out the
+image if it doesn't exist. Reading the guide online requests those images from GitHub.

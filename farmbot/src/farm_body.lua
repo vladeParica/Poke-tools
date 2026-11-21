@@ -99,31 +99,11 @@ A.objects = A.avatar - 0x240                                   -- gObjectEvents
 
 A.battleType = A.enemy - 0x14E0    -- gBattleTypeFlags (0x02022B4C in USA)
 
--- Field menus (pokefirered, "symbols" branch). RAM is the same in the four
--- USA versions (FireRed / LeafGreen 1.0 and 1.1); the functions differ.
--- Other versions have no verified map: taking items falls back to "pause".
-local MENU = nil
-if gameLang == 0x45 and gameName then
-  local fn = ({
-    FireRed0   = { 0x0806F1F0, 0x0811EBA0, 0x0811FB28, 0x08122C5C, 0x0810C670 },
-    FireRed1   = { 0x0806F204, 0x0811EC18, 0x0811FBA0, 0x08122CD4, 0x0810C6E8 },
-    LeafGreen0 = { 0x0806F1F0, 0x0811EB78, 0x0811FB00, 0x08122C34, 0x0810C648 },
-    LeafGreen1 = { 0x0806F204, 0x0811EBF0, 0x0811FB78, 0x08122CAC, 0x0810C6C0 },
-  })[gameName .. (gameRev1 and "1" or "0")]
-  if fn then
-    MENU = {
-      startCursor = 0x020370F4, startCount = 0x020370F5, startOrder = 0x020370F6,
-      partyMenu = 0x0203B0A0, partyInternal = 0x0203B09C, menuCursor = 0x0203ADE6, tasks = 0x03005090,
-      -- functions (+1: Thumb code)
-      taskStartMenu = fn[1] + 1, cbParty = fn[2] + 1, taskChooseMon = fn[3] + 1, taskSelection = fn[4] + 1,
-      taskVsSeeker = fn[5] + 1,
-    }
-  end
-end
+--@@INCLUDE game@@
+--@@INCLUDE rules@@
+local MENU = Game.menu      -- field menus of this build (nil: not verified, taking items pauses)
 -- Game constants (a single table: Lua 5.1 allows 200 locals per block)
 local K = {
-  STARTMENU_POKEMON = 1,
-  OPT_ITEM = 3, OPT_TAKE = 5,                  -- CURSOR_OPTION_ITEM / CURSOR_OPTION_TAKE_ITEM
   ITEM_VS_SEEKER = 362,
   ABILITY_PICKUP = 53,
   MOVE_THIEF = 168, MOVE_COVET = 343,
@@ -1060,7 +1040,7 @@ local function halt(msg)
   bot.msg = msg
   logLine(msg)
   notify(msg)
-  pcall(emu.pause)            -- pause so you see it
+  Game.pauseSoon()            -- pause so you see it
 end
 local function leadOk()
   local m = lead()
@@ -1104,6 +1084,8 @@ end
 local function inOverworld()
   return not inBattle() and bot.cbOW and read32(A.callback2) == bot.cbOW
 end
+
+--@@INCLUDE menus@@
 
 local function startWalk()
   queue = {}; zeroEnemy()
@@ -1310,6 +1292,8 @@ local function enterBattle(returnTo)
   bot.foe, bot.fight, bot.forceRun = nil, nil, (returnTo ~= nil)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
+  bot.sendSlot = nil
+  bot.runTries, bot.trapped = 0, nil
   bot.outT = 0
   bot.battles = bot.battles + 1
 end
@@ -1395,6 +1379,9 @@ local function stepBattle()
     halt(TX"Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate")
     return
   end
+  -- Wild battle, the game asks for another Pokemon (the lead fainted): before the evolution
+  -- check, because the party screen also changes callback2
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == Menus.CMD_CHOOSEPOKEMON then Menus.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -1409,7 +1396,7 @@ local function stepBattle()
         bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
         notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
-        pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
+        Game.pauseSoon()        -- pause: unpause, finish the scene and the bot carries on by itself
         return
       end
       -- The animation advances by itself; only if it stays on a text for a long time, press A
@@ -1480,9 +1467,21 @@ local function stepBattle()
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       run = true; bot.lastWhy = TX"sin ataques utiles"
     end
+    -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
+    if run and not bot.trapped then
+      local why = Menus.trapped()
+      if not why and bot.runTries >= 3 then why = TX"no logra huir" end
+      if why then
+        bot.trapped = true
+        logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
+      end
+    end
+    if bot.trapped then run = false; bot.lastWhy = TX"no puede huir" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
-    if c == want then tap("A", 16)
+    if c == want then
+      if run then bot.runTries = bot.runTries + 1 end
+      tap("A", 16)
     elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
@@ -1494,6 +1493,7 @@ local function stepBattle()
     end
     local slot = bestMove(bot.blocked)
     if bot.steal and not bot.steal.done and not bot.blocked[bot.steal.slot] then slot = bot.steal.slot end
+    if not slot and bot.trapped then slot = Menus.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then
       if bot.trainer then halt(TX"Sin ataques utiles contra un entrenador: terminalo tu"); return end
       tap("B", 10); bot.forceRun = true; return
@@ -1518,7 +1518,7 @@ local function stepAfter()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
     bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
-    pcall(emu.pause)
+    Game.pauseSoon()
     notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
@@ -1704,131 +1704,10 @@ end
 
 -- -------------------- Take items (party menu) --------------------
 -- START > POKEMON > (Pokemon) > ITEM > TAKE, checking every step in memory.
-local function taskActive(fnAddr)
-  for i = 0, 15 do
-    local t = MENU.tasks + i * 40
-    if read8(t + 4) ~= 0 and read32(t) == fnAddr then return true end
-  end
-  return false
-end
-local function s8(v) if v >= 0x80 then return v - 0x100 end return v end
-local function menuActions()
-  local p = read32(MENU.partyInternal)
-  if p < 0x02000000 or p >= 0x02040000 then return {} end
-  local n, t = read8(p + 0x17), {}
-  if n > 8 then return {} end
-  for k = 0, n - 1 do t[#t + 1] = read8(p + 0x0F + k) end
-  return t
-end
-local function indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
-local function moveCursor(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+-- the menu helpers the VS Seeker and the diagnostic use (shared/lua/menus.lua)
+local taskActive, s8, menuActions = Menus.taskActive, Menus.s8, Menus.actions
 
-beginTake = function(held)
-  local names = {}
-  for _, h in ipairs(held) do names[#names + 1] = itemName(h.item) end
-  if tcfg.take == "pause" or not MENU then
-    stopBot()
-    bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
-    logLine(bot.msg)
-    notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
-    pcall(emu.pause)
-    return
-  end
-  logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
-  queue = {}
-  zeroEnemy()
-  bot.take = { list = held, i = 1, phase = "settle", tries = 0 }
-  bot.st, bot.t = "take", 0
-end
-
-local function stepTake()
-  bot.t = bot.t + 1
-  if #queue > 0 then return end
-  local T = bot.take
-  local function fail(why)
-    bot.take = nil
-    halt(TX"No pude quitar los objetos: " .. why .. TX". Terminalo tu en el menu y pulsa 7")
-  end
-  local function go(phase) T.phase, bot.t = phase, 0 end
-  if T.phase == "settle" then
-    -- on the map, standing still, before opening the menu
-    if inOverworld() then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
-    if T.ow >= 30 then tap("start", 20); go("startmenu") end
-    if bot.t > 600 then fail(TX"no vuelve el mapa") end
-  elseif T.phase == "startmenu" then
-    if not taskActive(MENU.taskStartMenu) then
-      if bot.t > 90 then
-        T.tries = T.tries + 1
-        if T.tries > 3 then fail(TX"el menu START no se abre") return end
-        go("settle")
-      end
-      return
-    end
-    local n = read8(MENU.startCount)
-    local want
-    for k = 0, math.min(n, 9) - 1 do if read8(MENU.startOrder + k) == K.STARTMENU_POKEMON then want = k end end
-    if not want then fail(TX"no hay opcion POKEMON en el menu START") return end
-    local cur = read8(MENU.startCursor)
-    if cur == want then tap("A", 30); go("party")
-    elseif bot.t > 300 then fail(TX"el cursor del menu START no llega a POKEMON")
-    else moveCursor(cur, want) end
-  elseif T.phase == "party" then
-    if read32(A.callback2) == MENU.cbParty and taskActive(MENU.taskChooseMon) then
-      T.ready = (T.ready or 0) + 1
-      if T.ready > 20 then T.ready = nil; go("pick") end
-    elseif bot.t > 600 then fail(TX"no se abrio la pantalla del equipo") end
-  elseif T.phase == "pick" then
-    local e = T.list[T.i]
-    if not e then go("exit") return end
-    local m = partyMon(e.slot)
-    if not m or m.item == 0 then T.i = T.i + 1 return end
-    if not taskActive(MENU.taskChooseMon) then
-      if bot.t > 300 then fail(TX"la pantalla del equipo no responde") end
-      if bot.t % 30 == 0 then tap("B", 10) end
-      return
-    end
-    local cur = s8(read8(MENU.partyMenu + 9))
-    if cur == e.slot then tap("A", 20); go("actions")
-    elseif bot.t > 300 then fail(TX"no llego al Pokemon " .. (e.slot + 1))
-    elseif cur < e.slot or cur > 5 then tap("down", 8) else tap("up", 8) end
-  elseif T.phase == "actions" or T.phase == "itemmenu" then
-    local opt = (T.phase == "actions") and K.OPT_ITEM or K.OPT_TAKE
-    local acts = menuActions()
-    local want = taskActive(MENU.taskSelection) and indexOf(acts, opt) or nil
-    if not want then
-      if bot.t > 240 then fail(T.phase == "actions" and TX"no aparece OBJETO" or TX"no aparece QUITAR") end
-      return
-    end
-    local cur = s8(read8(MENU.menuCursor))
-    if cur == want then
-      tap("A", 20)
-      if T.phase == "actions" then go("itemmenu") else go("taking") end
-    elseif bot.t > 240 then fail(TX"el cursor no llega a la opcion")
-    else moveCursor(cur, want) end
-  elseif T.phase == "taking" then
-    local e = T.list[T.i]
-    local m = partyMon(e.slot)
-    if m and m.item == 0 then
-      -- "Received X": close the message and go back to the party list
-      if taskActive(MENU.taskChooseMon) and bot.t > 30 then T.i = T.i + 1; go("pick") return end
-      if bot.t % 12 == 0 then tap("B", 8) end
-    elseif bot.t > 240 then
-      fail(TX"la mochila no tiene espacio para " .. itemName(e.item))
-    end
-  elseif T.phase == "exit" then
-    -- leave the party and close the START menu (B until on the map with no menu)
-    local onMap = inOverworld() and not taskActive(MENU.taskStartMenu)
-    if onMap then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
-    if T.ow >= 40 then
-      bot.take = nil
-      bot.st, bot.t = "after", 0
-      afterBattleDecide()
-      return
-    end
-    if not onMap and bot.t % 20 == 0 then tap("B", 10) end
-    if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
-  end
-end
+beginTake = function(held) Menus.beginTake(held, tcfg.take == "pause", afterBattleDecide) end
 
 -- ------------------- Money: rematches with the VS Seeker --------------------
 beginTrainerLoop = function()
@@ -2169,6 +2048,15 @@ reportConfig(cfgOk, cfgMsg, cfgProblems)
 if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
 if troute.go then print(string.format(TX"Ruta de entrenadores cargada: %d pasos de ida, %d de vuelta", #troute.go, #troute.back)) end
 
+-- State pattern: the function that runs every frame in each state (bot.st)
+local STEP = {
+  walk = stepWalk, battle = stepBattle, after = stepAfter, manual = stepManual,
+  heal_go = stepHealGo, nurse = stepNurse, heal_tile = stepHealTile, nurse_exit = stepNurseExit,
+  heal_back = stepHealBack, learn_pick = stepLearnPick, take = Menus.stepTake,
+  tr_charge = stepTrCharge, tr_use = stepTrUse,
+  tr_go = function() stepTrRoute(false) end, tr_back = function() stepTrRoute(true) end,
+}
+
 local badFrames = 0
 while true do
   gFrame = gFrame + 1
@@ -2184,24 +2072,12 @@ while true do
   end
   if bot.running then
     local busy = runQueue()
-    local st = bot.st
-    if st == "walk" then stepWalk()
-    elseif st == "battle" then stepBattle()
-    elseif st == "after" then stepAfter()
-    elseif st == "manual" then stepManual()
-    elseif st == "heal_go" then stepHealGo()
-    elseif st == "nurse" then stepNurse()
-    elseif st == "heal_tile" then stepHealTile()
-    elseif st == "nurse_exit" then stepNurseExit()
-    elseif st == "heal_back" then stepHealBack()
-    elseif st == "learn_pick" then stepLearnPick()
-    elseif st == "take" then stepTake()
-    elseif st == "tr_charge" then stepTrCharge()
-    elseif st == "tr_use" then stepTrUse()
-    elseif st == "tr_go" then stepTrRoute(false)
-    elseif st == "tr_back" then stepTrRoute(true) end
+    local step = STEP[bot.st]
+    if step then step() end
     if not busy then runQueue() end
   end
   draw()
+  -- the pause the bot asked for (Game.pauseSoon), here at the top level, never inside pcall
+  if Game.pausePending then Game.pausePending = false; emu.pause() end
   emu.frameadvance()
 end

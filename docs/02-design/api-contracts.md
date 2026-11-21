@@ -74,6 +74,8 @@ Obsolete, ignored: `rngMaxSearch`, `wildMaxSearch`, `reseedBeyond`.
 | `askTimeout` | seconds | `300` | With `ask`: how long to wait before deciding alone |
 | `evolve` | bool | `false` | Allow evolution |
 | `stopOnShiny` | bool | `true` | Pause on a wild shiny |
+| `pickup` | `"auto"` \| `"pause"` \| `null` | `null` = off | Pickup Pokémon in slots 2–6: take their items through the menu (USA versions) or pause and notify |
+| `pickupTakeAt` | 1–5 | `null` = half of them, rounded up | With `pickup`: go to the menu when this many hold an item |
 | `notify` | `{ntfy, discord}` | `null` | Phone notifications |
 | `walkAxis` / `walkFrames` | same as the Shiny Bot | | |
 | `routeFile` | text | `"FRLG_TrainRoute.txt"` | Route file |

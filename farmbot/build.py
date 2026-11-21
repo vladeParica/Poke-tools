@@ -1,16 +1,10 @@
-"""Generates FRLG_FarmBot.lua (CRLF, for Windows) from src/.
-Uses the Shiny Bot name tables and the Train Bot game data
-(trainbot/src/train_tables.lua, generated from pret/pokefirered) without copying them.
+"""Generates FRLG_FarmBot.lua (CRLF, for Windows) from src/farm_body.lua.
+Uses the Shiny Bot name tables, the game data from shared/gamedata/gamedata.json and the
+shared Lua modules in shared/lua/ without copying them (ADR-0015).
 Usage:  python farmbot/build.py
 """
 import os
 import sys
-H = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.join(H, '..', 'shared'))
-from langgen import lang_lua  # noqa: E402
-s = open(os.path.join(H, 'src', 'farm_body.lua'), encoding='utf-8').read()
-t = open(os.path.join(H, '..', 'shinybot', 'src', 'tables2.lua'), encoding='utf-8').read().rstrip() + '\n'
-d = open(os.path.join(H, '..', 'trainbot', 'src', 'train_tables.lua'), encoding='utf-8').read().rstrip() + '\n'
-out = s.replace('--@@TABLES@@', t).replace('--@@DATA@@', d).replace('--@@LANG@@', lang_lua())
-open(os.path.join(H, 'FRLG_FarmBot.lua'), 'w', newline='\r\n', encoding='utf-8').write(out)
-print('FRLG_FarmBot.lua:', len(out.splitlines()), 'lineas')
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'shared'))
+from buildlib import build  # noqa: E402
+build('farmbot/src/farm_body.lua', 'FRLG_FarmBot.lua')

@@ -39,6 +39,8 @@ local CONFIG = {
   notify         = nil,     -- phone notifications: {ntfy = "your-topic"} and/or {discord = "webhook url"}
   evolve         = false,   -- false = cancel evolutions (B), true = let it evolve (you decide)
   stopOnShiny    = true,    -- pause if a wild shiny appears
+  pickup         = nil,     -- Pickup Pokemon in slots 2-6: "auto" = take their items via the menu (USA), "pause" = pause and tell you
+  pickupTakeAt   = nil,     -- pickup: take them when this many hold an item (nil = half of them, rounded up)
   walkAxis       = "horizontal",
   walkFrames     = 16,
   routeFile      = "FRLG_TrainRoute.txt",
@@ -100,7 +102,10 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s is evolving into %s",
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s has no move that damages %s: teach it one and press 7",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (%d per hour of play)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -235,12 +240,17 @@ local LANG = {
     ["Esperando el frame"] = "Waiting for the frame",
     ["Esperando tu decision"] = "Waiting for your decision",
     ["Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"] = "It's evolving: finish it yourself (new moves, texts). The bot carries on by itself after",
+    ["Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui"] = "State saved near the target (advance %d): the tries start from here",
     ["Estatico"] = "Static",
     ["Estatico RNG"] = "Static RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "This ROM is not FireRed / LeafGreen. The bot won't run.",
+    ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "This map (%d.%d) has no %s encounters: start the mode in the grass or cave where you hunt",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARMING DONE: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE DONE: it already has 510 EVs in total and the missing ones don't fit (%s)",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "%d %s EVs missing but each battle gives %d: set allowOvershoot or use another method",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -259,6 +269,7 @@ local LANG = {
     ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "RECORDING WAY BACK: go back to the start point (where you use the VS Seeker) and press 5",
     ["GUARDAR"] = "SAVE",
     ["Graba la ruta de los entrenadores con la tecla 5"] = "Record the trainer route with key 5",
+    ["Guardado en la mochila: %s"] = "Stored in the bag: %s",
     ["Guardado en la mochila: %s (tienes %d)"] = "Stored in the bag: %s (you have %d)",
     ["Guardados %d%s  encontrados %d%s"] = "Stored %d%s  found %d%s",
     ["Guardando en la mochila: "] = "Storing in the bag: ",
@@ -303,6 +314,7 @@ local LANG = {
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "No party Pokemon has the Pickup ability",
     ["Niveles +%d desde el inicio%s"] = "Levels +%d since the start%s",
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
+    ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "Couldn't find the encounter table in the ROM: reload the script with the game already running",
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
@@ -311,9 +323,11 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "I couldn't heal: the way there must end INSIDE the Center, facing the nurse (record another with 6)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "I couldn't read the encounter table: remove the 'species' filter",
     ["No pude quitar los objetos: "] = "I couldn't take the items: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Couldn't send out another Pokemon: pick it yourself, run and press 7",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "I couldn't follow the route to the Center (record another with 6)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "I couldn't follow the trainer route (record another with 5)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "I couldn't get back to the training spot (record another route with 6)",
+    ["No puede huir de %s (%s): pelea"] = "Can't run from %s (%s): fighting",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "I can't use the VS Seeker: the character doesn't stay still on the map",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "The Teachy TV didn't open: register it on SELECT. Waiting at normal speed.",
     ["No se aprendio "] = "Didn't learn ",
@@ -366,7 +380,9 @@ local LANG = {
     ["REGISTRAR"] = "REGISTER",
     ["RETIRARSE"] = "RETIRE",
     ["Recogida (hay que ganar)"] = "Pickup (must win)",
+    ["Recogida: %d Pokemon en el equipo"] = "Pickup: %d Pokemon in the party",
     ["Recogida: %d en el equipo  llevan objeto: %s"] = "Pickup: %d in the party  holding items: %s",
+    ["Recogida: %d encontrados, %d guardados"] = "Pickup: %d found, %d stored",
     ["Regalo"] = "Gift",
     ["Regalo RNG"] = "Gift RNG",
     ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Register the VS Seeker on SELECT (Bag > VS Seeker > Register)",
@@ -425,6 +441,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Your Pokemon is evolving: finish the scene and the bot carries on by itself",
     ["Tu Pokemon evoluciono a "] = "Your Pokemon evolved into ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Your Pokemon fainted against a trainer: pick the next one yourself and finish the battle",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Your Pokemon fainted and the game asks for another: pick it yourself, run and press 7",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Your Pokemon fainted and no healthy one is left: pick it yourself and press 7",
     ["Ultimo:"] = "Last:",
     ["Ultimo: "] = "Last: ",
     ["Usando Buscapelea"] = "Using VS Seeker",
@@ -442,14 +460,18 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
     ["ataque desconocido en "] = "unknown move in ",
+    ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
     ["camino al Centro"] = "on the way to the Center",
     ["cerrado"] = "closed",
     ["combate "] = "battle ",
     ["cursor inesperado"] = "unexpected cursor",
     ["daria EVs de "] = "would give EVs in ",
+    ["de agua"] = "water",
     ["de camino"] = "on the way",
+    ["de hierba"] = "grass",
     ["debilitado"] = "fainted",
+    ["debilitado: huir"] = "fainted: run",
     ["dinero"] = "money",
     ["el archivo debe ser un objeto { ... }"] = "the file must be an object { ... }",
     ["el cursor del menu START no llega a POKEMON"] = "the START menu cursor doesn't reach POKEMON",
@@ -469,6 +491,7 @@ local LANG = {
     ["falta ',' o ']'"] = "missing ',' or ']'",
     ["falta ',' o '}'"] = "missing ',' or '}'",
     ["falta ':'"] = "missing ':'",
+    ["fin del entrenamiento"] = "end of training",
     ["huir"] = "run",
     ["la mochila no tiene espacio para "] = "the bag has no room for ",
     ["la pantalla del equipo no responde"] = "the party screen doesn't respond",
@@ -494,7 +517,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "there is no POKEMON option in the START menu",
     ["no llego al Pokemon "] = "can't reach Pokemon ",
     ["no lleva objeto"] = "holds no item",
+    ["no logra huir"] = "running keeps failing",
     ["no pude cerrar los menus"] = "I couldn't close the menus",
+    ["no puede huir"] = "can't run",
     ["no se abrio la pantalla del equipo"] = "the party screen didn't open",
     ["no se pudo robar"] = "couldn't steal",
     ["no ubico el titulo"] = "can't find the title screen",
@@ -506,6 +531,9 @@ local LANG = {
     ["objetos (Recogida)"] = "items (Pickup)",
     ["opcion desconocida: "] = "unknown option: ",
     ["pelear"] = "fight",
+    ["pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6"] = "pickup is on, but there is no Pokemon with Pickup in slots 2 to 6",
+    ["pickup debe ser \"auto\", \"pause\" o null"] = "pickup must be \"auto\", \"pause\" or null",
+    ["pickupTakeAt debe ser un numero del 1 al 5"] = "pickupTakeAt must be a number from 1 to 5",
     ["prediccion fallida"] = "prediction failed",
     ["rango elegido"] = "chosen range",
     ["robado: "] = "stolen: ",
@@ -581,7 +609,10 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s ga %s ni shinka chuu",
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s ni %s ni kiku waza ga nai: waza wo oboesasete 7 wo osu",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (play 1 jikan atari %d)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -716,12 +747,17 @@ local LANG = {
     ["Esperando el frame"] = "Frame wo matte iru",
     ["Esperando tu decision"] = "Anata no handan wo matte iru",
     ["Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"] = "Shinka chuu: jibun de owarasete (atarashii waza, message). Sono ato bot ga tsuzukemasu",
+    ["Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui"] = "Mokuhyou no chikaku de state wo hozon (%d): kore kara no shikou wa koko kara",
     ["Estatico"] = "Symbol",
     ["Estatico RNG"] = "Symbol RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "Kono ROM wa FireRed / LeafGreen dewa arimasen. Bot wa ugokimasen.",
+    ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "Kono map (%d.%d) ni wa %s no deai ga nai: kusamura ka doukutsu de mode wo hajimete",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE KANRYOU: 'species' no dono Pokemon mo nokori no EV (%s) wo kurenai. Basho to shurui wo kaete",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE KANRYOU: EV goukei ga 510 de, nokori (%s) wa hairanai",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "Doryokuchi ga %d (%s) tarinai ga 1 kai %d: allowOvershoot ka betsu no houhou wo",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -740,6 +776,7 @@ local LANG = {
     ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "KAERI KIROKU CHUU: kaishi point (Battle Searcher wo tsukau basho) ni modotte 5 wo oshite",
     ["GUARDAR"] = "REPORT",
     ["Graba la ruta de los entrenadores con la tecla 5"] = "5 key de trainer route wo kiroku shite",
+    ["Guardado en la mochila: %s"] = "Bag ni shimatta: %s",
     ["Guardado en la mochila: %s (tienes %d)"] = "Bag ni shimatta: %s (shoji %d)",
     ["Guardados %d%s  encontrados %d%s"] = "Shuunou %d%s  hakken %d%s",
     ["Guardando en la mochila: "] = "Bag ni shimatte iru: ",
@@ -784,6 +821,7 @@ local LANG = {
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "Temochi ni tokusei Monohiroi no Pokemon ga inai",
     ["Niveles +%d desde el inicio%s"] = "Kaishi kara Lv +%d%s",
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
+    ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "ROM ni deai table ga nai: game wo kidou shite kara script wo saiyomikomi shite",
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
@@ -792,9 +830,11 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "Kaifuku dekinakatta: iki wa Center no NAKA, Joy-san no mae de owaru hitsuyou (6 de kiroku shinaoshite)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "Encount table wo yomenakatta: 'species' no jouken wo hazushite",
     ["No pude quitar los objetos: "] = "Dougu wo hazusenakatta: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Tsugi no Pokemon wo dasenakatta: jibun de erande nigete 7 wo oshite",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "Center e no route wo tadorenakatta (6 de kiroku shinaoshite)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "Trainer route wo tadorenakatta (5 de kiroku shinaoshite)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "Tokkun point ni modorenakatta (6 de route wo kiroku shinaoshite)",
+    ["No puede huir de %s (%s): pelea"] = "%s kara nigerarenai (%s): tatakau",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "Battle Searcher wo tsukaenai: shujinkou ga map de tomaranai",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "TV ga hirakanakatta: SELECT ni touroku shite. Futsuu no hayasa de machimasu.",
     ["No se aprendio "] = "Oboenakatta: ",
@@ -847,7 +887,9 @@ local LANG = {
     ["REGISTRAR"] = "TOUROKU",
     ["RETIRARSE"] = "RETIRE",
     ["Recogida (hay que ganar)"] = "Monohiroi (katsu hitsuyou ari)",
+    ["Recogida: %d Pokemon en el equipo"] = "Monohiroi: temochi ni %d hiki",
     ["Recogida: %d en el equipo  llevan objeto: %s"] = "Monohiroi: temochi ni %d  mochimono: %s",
+    ["Recogida: %d encontrados, %d guardados"] = "Monohiroi: %d ko mitsuketa, %d ko shimatta",
     ["Regalo"] = "Morau",
     ["Regalo RNG"] = "Morau RNG",
     ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Battle Searcher wo SELECT ni touroku shite (Bag > Battle Searcher > Touroku)",
@@ -906,6 +948,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Pokemon ga shinka chuu: scene wo owaraseru to bot ga tsuzukemasu",
     ["Tu Pokemon evoluciono a "] = "Pokemon ga shinka: ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Trainer sen de Pokemon ga hinshi: tsugi wo erande battle wo owarasete",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Pokemon ga taoreta, tsugi wo erande nigete kara 7 wo oshite",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Pokemon ga taoreta, genki na Pokemon ga inai: jibun de erande 7 wo oshite",
     ["Ultimo:"] = "Saigo:",
     ["Ultimo: "] = "Saigo: ",
     ["Usando Buscapelea"] = "Battle Searcher shiyou chuu",
@@ -923,14 +967,18 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
     ["ataque desconocido en "] = "fumei na waza: ",
+    ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
     ["camino al Centro"] = "Center e idou chuu",
     ["cerrado"] = "tojite iru",
     ["combate "] = "battle ",
     ["cursor inesperado"] = "yoki shinai cursor",
     ["daria EVs de "] = "doryokuchi wo kureru: ",
+    ["de agua"] = "mizu",
     ["de camino"] = "idou chuu",
+    ["de hierba"] = "kusa",
     ["debilitado"] = "hinshi",
+    ["debilitado: huir"] = "taoreta: nigeru",
     ["dinero"] = "okozukai",
     ["el archivo debe ser un objeto { ... }"] = "file wa object { ... } de aru hitsuyou ga aru",
     ["el cursor del menu START no llega a POKEMON"] = "START menu no cursor ga POKEMON ni todokanai",
@@ -950,6 +998,7 @@ local LANG = {
     ["falta ',' o ']'"] = "',' ka ']' ga nai",
     ["falta ',' o '}'"] = "',' ka '}' ga nai",
     ["falta ':'"] = "':' ga nai",
+    ["fin del entrenamiento"] = "kunren shuuryou",
     ["huir"] = "nigeru",
     ["la mochila no tiene espacio para "] = "bag ni aki ga nai: ",
     ["la pantalla del equipo no responde"] = "temochi gamen ga hannou shinai",
@@ -975,7 +1024,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "START menu ni POKEMON ga nai",
     ["no llego al Pokemon "] = "Pokemon ni todokanai: ",
     ["no lleva objeto"] = "dougu wo motte inai",
+    ["no logra huir"] = "nigerarenai",
     ["no pude cerrar los menus"] = "menu wo tojirarenakatta",
+    ["no puede huir"] = "nigerarenai",
     ["no se abrio la pantalla del equipo"] = "temochi gamen ga hirakanakatta",
     ["no se pudo robar"] = "nusumenakatta",
     ["no ubico el titulo"] = "title gamen ga mitsukaranai",
@@ -987,6 +1038,9 @@ local LANG = {
     ["objetos (Recogida)"] = "dougu (Monohiroi)",
     ["opcion desconocida: "] = "fumei na settei: ",
     ["pelear"] = "tatakau",
+    ["pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6"] = "pickup wa ON da ga, 2-6 ban ni Monohiroi no Pokemon ga inai",
+    ["pickup debe ser \"auto\", \"pause\" o null"] = "pickup wa \"auto\", \"pause\" ka null",
+    ["pickupTakeAt debe ser un numero del 1 al 5"] = "pickupTakeAt wa 1 kara 5 no kazu",
     ["prediccion fallida"] = "yosoku shippai",
     ["rango elegido"] = "erabareta hanni",
     ["robado: "] = "nusunda: ",
@@ -1097,7 +1151,7 @@ local nationalDexList = {
  335, 369, 304, 305, 306, 351, 313, 314, 345, 346, 347, 348, 280, 281, 282, 371, 372, 373, 374, 375,
  376, 377, 378, 379, 382, 383, 384, 380, 381, 385, 386, 358}
 
--- Generated from pret/pokefirered (gen_tables.py)
+-- Generated from shared/gamedata/gamedata.json (tools/gamedata, ADR-0015): do not edit
 local TT_MOVE = {
 [1]={40,0,100,0,35,0,"POUND"},
 [2]={50,1,100,43,25,0,"KARATE CHOP"},
@@ -1455,7 +1509,7 @@ local TT_MOVE = {
 [354]={140,14,90,204,5,0,"PSYCHO BOOST"},
 }
 local TT_SPEC = {
-[0]={12,3,0,0,0,0,1,0},
+[1]={12,3,0,0,0,0,1,0},
 [2]={12,3,0,0,0,0,1,1},
 [3]={12,3,0,0,0,0,2,1},
 [4]={10,10,0,0,0,1,0,0},
@@ -2259,7 +2313,7 @@ local TT_LEARN = {
 }
 local TT_ITEMNAME = {[1]="MASTER BALL",[2]="ULTRA BALL",[3]="GREAT BALL",[4]="POKé BALL",[5]="SAFARI BALL",[6]="NET BALL",[7]="DIVE BALL",[8]="NEST BALL",[9]="REPEAT BALL",[10]="TIMER BALL",[11]="LUXURY BALL",[12]="PREMIER BALL",[13]="POTION",[14]="ANTIDOTE",[15]="BURN HEAL",[16]="ICE HEAL",[17]="AWAKENING",[18]="PARLYZ HEAL",[19]="FULL RESTORE",[20]="MAX POTION",[21]="HYPER POTION",[22]="SUPER POTION",[23]="FULL HEAL",[24]="REVIVE",[25]="MAX REVIVE",[26]="FRESH WATER",[27]="SODA POP",[28]="LEMONADE",[29]="MOOMOO MILK",[30]="ENERGYPOWDER",[31]="ENERGY ROOT",[32]="HEAL POWDER",[33]="REVIVAL HERB",[34]="ETHER",[35]="MAX ETHER",[36]="ELIXIR",[37]="MAX ELIXIR",[38]="LAVA COOKIE",[39]="BLUE FLUTE",[40]="YELLOW FLUTE",[41]="RED FLUTE",[42]="BLACK FLUTE",[43]="WHITE FLUTE",[44]="BERRY JUICE",[45]="SACRED ASH",[46]="SHOAL SALT",[47]="SHOAL SHELL",[48]="RED SHARD",[49]="BLUE SHARD",[50]="YELLOW SHARD",[51]="GREEN SHARD",[63]="HP UP",[64]="PROTEIN",[65]="IRON",[66]="CARBOS",[67]="CALCIUM",[68]="RARE CANDY",[69]="PP UP",[70]="ZINC",[71]="PP MAX",[73]="GUARD SPEC.",[74]="DIRE HIT",[75]="X ATTACK",[76]="X DEFEND",[77]="X SPEED",[78]="X ACCURACY",[79]="X SPECIAL",[80]="POKé DOLL",[81]="FLUFFY TAIL",[83]="SUPER REPEL",[84]="MAX REPEL",[85]="ESCAPE ROPE",[86]="REPEL",[93]="SUN STONE",[94]="MOON STONE",[95]="FIRE STONE",[96]="THUNDERSTONE",[97]="WATER STONE",[98]="LEAF STONE",[103]="TINYMUSHROOM",[104]="BIG MUSHROOM",[106]="PEARL",[107]="BIG PEARL",[108]="STARDUST",[109]="STAR PIECE",[110]="NUGGET",[111]="HEART SCALE",[121]="ORANGE MAIL",[122]="HARBOR MAIL",[123]="GLITTER MAIL",[124]="MECH MAIL",[125]="WOOD MAIL",[126]="WAVE MAIL",[127]="BEAD MAIL",[128]="SHADOW MAIL",[129]="TROPIC MAIL",[130]="DREAM MAIL",[131]="FAB MAIL",[132]="RETRO MAIL",[133]="CHERI BERRY",[134]="CHESTO BERRY",[135]="PECHA BERRY",[136]="RAWST BERRY",[137]="ASPEAR BERRY",[138]="LEPPA BERRY",[139]="ORAN BERRY",[140]="PERSIM BERRY",[141]="LUM BERRY",[142]="SITRUS BERRY",[143]="FIGY BERRY",[144]="WIKI BERRY",[145]="MAGO BERRY",[146]="AGUAV BERRY",[147]="IAPAPA BERRY",[148]="RAZZ BERRY",[149]="BLUK BERRY",[150]="NANAB BERRY",[151]="WEPEAR BERRY",[152]="PINAP BERRY",[153]="POMEG BERRY",[154]="KELPSY BERRY",[155]="QUALOT BERRY",[156]="HONDEW BERRY",[157]="GREPA BERRY",[158]="TAMATO BERRY",[159]="CORNN BERRY",[160]="MAGOST BERRY",[161]="RABUTA BERRY",[162]="NOMEL BERRY",[163]="SPELON BERRY",[164]="PAMTRE BERRY",[165]="WATMEL BERRY",[166]="DURIN BERRY",[167]="BELUE BERRY",[168]="LIECHI BERRY",[169]="GANLON BERRY",[170]="SALAC BERRY",[171]="PETAYA BERRY",[172]="APICOT BERRY",[173]="LANSAT BERRY",[174]="STARF BERRY",[175]="ENIGMA BERRY",[179]="BRIGHTPOWDER",[180]="WHITE HERB",[181]="MACHO BRACE",[182]="EXP. SHARE",[183]="QUICK CLAW",[184]="SOOTHE BELL",[185]="MENTAL HERB",[186]="CHOICE BAND",[187]="KING'S ROCK",[188]="SILVERPOWDER",[189]="AMULET COIN",[190]="CLEANSE TAG",[191]="SOUL DEW",[192]="DEEPSEATOOTH",[193]="DEEPSEASCALE",[194]="SMOKE BALL",[195]="EVERSTONE",[196]="FOCUS BAND",[197]="LUCKY EGG",[198]="SCOPE LENS",[199]="METAL COAT",[200]="LEFTOVERS",[201]="DRAGON SCALE",[202]="LIGHT BALL",[203]="SOFT SAND",[204]="HARD STONE",[205]="MIRACLE SEED",[206]="BLACKGLASSES",[207]="BLACK BELT",[208]="MAGNET",[209]="MYSTIC WATER",[210]="SHARP BEAK",[211]="POISON BARB",[212]="NEVERMELTICE",[213]="SPELL TAG",[214]="TWISTEDSPOON",[215]="CHARCOAL",[216]="DRAGON FANG",[217]="SILK SCARF",[218]="UP-GRADE",[219]="SHELL BELL",[220]="SEA INCENSE",[221]="LAX INCENSE",[222]="LUCKY PUNCH",[223]="METAL POWDER",[224]="THICK CLUB",[225]="STICK",[254]="RED SCARF",[255]="BLUE SCARF",[256]="PINK SCARF",[257]="GREEN SCARF",[258]="YELLOW SCARF",[259]="MACH BIKE",[260]="COIN CASE",[261]="ITEMFINDER",[262]="OLD ROD",[263]="GOOD ROD",[264]="SUPER ROD",[265]="S.S. TICKET",[266]="CONTEST PASS",[268]="WAILMER PAIL",[269]="DEVON GOODS",[270]="SOOT SACK",[271]="BASEMENT KEY",[272]="ACRO BIKE",[273]="{POKEBLOCK} CASE",[274]="LETTER",[275]="EON TICKET",[276]="RED ORB",[277]="BLUE ORB",[278]="SCANNER",[279]="GO-GOGGLES",[280]="METEORITE",[281]="RM. 1 KEY",[282]="RM. 2 KEY",[283]="RM. 4 KEY",[284]="RM. 6 KEY",[285]="STORAGE KEY",[286]="ROOT FOSSIL",[287]="CLAW FOSSIL",[288]="DEVON SCOPE",[289]="TM01",[290]="TM02",[291]="TM03",[292]="TM04",[293]="TM05",[294]="TM06",[295]="TM07",[296]="TM08",[297]="TM09",[298]="TM10",[299]="TM11",[300]="TM12",[301]="TM13",[302]="TM14",[303]="TM15",[304]="TM16",[305]="TM17",[306]="TM18",[307]="TM19",[308]="TM20",[309]="TM21",[310]="TM22",[311]="TM23",[312]="TM24",[313]="TM25",[314]="TM26",[315]="TM27",[316]="TM28",[317]="TM29",[318]="TM30",[319]="TM31",[320]="TM32",[321]="TM33",[322]="TM34",[323]="TM35",[324]="TM36",[325]="TM37",[326]="TM38",[327]="TM39",[328]="TM40",[329]="TM41",[330]="TM42",[331]="TM43",[332]="TM44",[333]="TM45",[334]="TM46",[335]="TM47",[336]="TM48",[337]="TM49",[338]="TM50",[339]="HM01",[340]="HM02",[341]="HM03",[342]="HM04",[343]="HM05",[344]="HM06",[345]="HM07",[346]="HM08",[349]="OAK'S PARCEL",[350]="POKé FLUTE",[351]="SECRET KEY",[352]="BIKE VOUCHER",[353]="GOLD TEETH",[354]="OLD AMBER",[355]="CARD KEY",[356]="LIFT KEY",[357]="HELIX FOSSIL",[358]="DOME FOSSIL",[359]="SILPH SCOPE",[360]="BICYCLE",[361]="TOWN MAP",[362]="VS SEEKER",[363]="FAME CHECKER",[364]="TM CASE",[365]="BERRY POUCH",[366]="TEACHY TV",[367]="TRI-PASS",[368]="RAINBOW PASS",[369]="TEA",[370]="MYSTICTICKET",[371]="AURORATICKET",[372]="POWDER JAR",[373]="RUBY",[374]="SAPPHIRE"}
 local TT_ABILNAME = {[1]="STENCH",[2]="DRIZZLE",[3]="SPEED BOOST",[4]="BATTLE ARMOR",[5]="STURDY",[6]="DAMP",[7]="LIMBER",[8]="SAND VEIL",[9]="STATIC",[10]="VOLT ABSORB",[11]="WATER ABSORB",[12]="OBLIVIOUS",[13]="CLOUD NINE",[14]="COMPOUNDEYES",[15]="INSOMNIA",[16]="COLOR CHANGE",[17]="IMMUNITY",[18]="FLASH FIRE",[19]="SHIELD DUST",[20]="OWN TEMPO",[21]="SUCTION CUPS",[22]="INTIMIDATE",[23]="SHADOW TAG",[24]="ROUGH SKIN",[25]="WONDER GUARD",[26]="LEVITATE",[27]="EFFECT SPORE",[28]="SYNCHRONIZE",[29]="CLEAR BODY",[30]="NATURAL CURE",[31]="LIGHTNINGROD",[32]="SERENE GRACE",[33]="SWIFT SWIM",[34]="CHLOROPHYLL",[35]="ILLUMINATE",[36]="TRACE",[37]="HUGE POWER",[38]="POISON POINT",[39]="INNER FOCUS",[40]="MAGMA ARMOR",[41]="WATER VEIL",[42]="MAGNET PULL",[43]="SOUNDPROOF",[44]="RAIN DISH",[45]="SAND STREAM",[46]="PRESSURE",[47]="THICK FAT",[48]="EARLY BIRD",[49]="FLAME BODY",[50]="RUN AWAY",[51]="KEEN EYE",[52]="HYPER CUTTER",[53]="PICKUP",[54]="TRUANT",[55]="HUSTLE",[56]="CUTE CHARM",[57]="PLUS",[58]="MINUS",[59]="FORECAST",[60]="STICKY HOLD",[61]="SHED SKIN",[62]="GUTS",[63]="MARVEL SCALE",[64]="LIQUID OOZE",[65]="OVERGROW",[66]="BLAZE",[67]="TORRENT",[68]="SWARM",[69]="ROCK HEAD",[70]="DROUGHT",[71]="ARENA TRAP",[72]="VITAL SPIRIT",[73]="WHITE SMOKE",[74]="PURE POWER",[75]="SHELL ARMOR",[76]="CACOPHONY",[77]="AIR LOCK"}
-local TT_SPECX = {[0]={65,0,31},[2]={65,0,31},[3]={65,0,31},[4]={66,0,31},[5]={66,0,31},[6]={66,0,31},[7]={67,0,31},[8]={67,0,31},[9]={67,0,31},[10]={19,0,127},[11]={61,0,127},[12]={14,0,127},[13]={19,0,127},[14]={61,0,127},[15]={68,0,127},[16]={51,0,127},[17]={51,0,127},[18]={51,0,127},[19]={50,62,127},[20]={50,62,127},[21]={51,0,127},[22]={51,0,127},[23]={22,61,127},[24]={22,61,127},[25]={9,0,127},[26]={9,0,127},[27]={8,0,127},[28]={8,0,127},[29]={38,0,254},[30]={38,0,254},[31]={38,0,254},[32]={38,0,0},[33]={38,0,0},[34]={38,0,0},[35]={56,0,191},[36]={56,0,191},[37]={18,0,191},[38]={18,0,191},[39]={56,0,191},[40]={56,0,191},[41]={39,0,127},[42]={39,0,127},[43]={34,0,127},[44]={34,0,127},[45]={34,0,127},[46]={27,0,127},[47]={27,0,127},[48]={14,0,127},[49]={19,0,127},[50]={8,71,127},[51]={8,71,127},[52]={53,0,127},[53]={7,0,127},[54]={6,13,127},[55]={6,13,127},[56]={72,0,127},[57]={72,0,127},[58]={22,18,63},[59]={22,18,63},[60]={11,6,127},[61]={11,6,127},[62]={11,6,127},[63]={28,39,63},[64]={28,39,63},[65]={28,39,63},[66]={62,0,63},[67]={62,0,63},[68]={62,0,63},[69]={34,0,127},[70]={34,0,127},[71]={34,0,127},[72]={29,64,127},[73]={29,64,127},[74]={69,5,127},[75]={69,5,127},[76]={69,5,127},[77]={50,18,127},[78]={50,18,127},[79]={12,20,127},[80]={12,20,127},[81]={42,5,255},[82]={42,5,255},[83]={51,39,127},[84]={50,48,127},[85]={50,48,127},[86]={47,0,127},[87]={47,0,127},[88]={1,60,127},[89]={1,60,127},[90]={75,0,127},[91]={75,0,127},[92]={26,0,127},[93]={26,0,127},[94]={26,0,127},[95]={69,5,127},[96]={15,0,127},[97]={15,0,127},[98]={52,75,127},[99]={52,75,127},[100]={43,9,255},[101]={43,9,255},[102]={34,0,127},[103]={34,0,127},[104]={69,31,127},[105]={69,31,127},[106]={7,0,0},[107]={51,0,0},[108]={20,12,127},[109]={26,0,127},[110]={26,0,127},[111]={31,69,127},[112]={31,69,127},[113]={30,32,254},[114]={34,0,127},[115]={48,0,254},[116]={33,0,127},[117]={38,0,127},[118]={33,41,127},[119]={33,41,127},[120]={35,30,255},[121]={35,30,255},[122]={43,0,127},[123]={68,0,127},[124]={12,0,254},[125]={9,0,63},[126]={49,0,63},[127]={52,0,127},[128]={22,0,0},[129]={33,0,127},[130]={22,0,127},[131]={11,75,127},[132]={7,0,255},[133]={50,0,31},[134]={11,0,31},[135]={10,0,31},[136]={18,0,31},[137]={36,0,255},[138]={33,75,31},[139]={33,75,31},[140]={33,4,31},[141]={33,4,31},[142]={69,46,31},[143]={17,47,31},[144]={46,0,255},[145]={46,0,255},[146]={46,0,255},[147]={61,0,127},[148]={61,0,127},[149]={39,0,127},[150]={46,0,255},[151]={28,0,255},[152]={65,0,31},[153]={65,0,31},[154]={65,0,31},[155]={66,0,31},[156]={66,0,31},[157]={66,0,31},[158]={67,0,31},[159]={67,0,31},[160]={67,0,31},[161]={50,51,127},[162]={50,51,127},[163]={15,51,127},[164]={15,51,127},[165]={68,48,127},[166]={68,48,127},[167]={68,15,127},[168]={68,15,127},[169]={39,0,127},[170]={10,35,127},[171]={10,35,127},[172]={9,0,127},[173]={56,0,191},[174]={56,0,191},[175]={55,32,31},[176]={55,32,31},[177]={28,48,127},[178]={28,48,127},[179]={9,0,127},[180]={9,0,127},[181]={9,0,127},[182]={34,0,127},[183]={47,37,127},[184]={47,37,127},[185]={5,69,127},[186]={11,6,127},[187]={34,0,127},[188]={34,0,127},[189]={34,0,127},[190]={50,53,127},[191]={34,0,127},[192]={34,0,127},[193]={3,14,127},[194]={6,11,127},[195]={6,11,127},[196]={28,0,31},[197]={28,0,31},[198]={15,0,127},[199]={12,20,127},[200]={26,0,127},[201]={26,0,255},[202]={23,0,127},[203]={39,48,127},[204]={5,0,127},[205]={5,0,127},[206]={32,50,127},[207]={52,8,127},[208]={69,5,127},[209]={22,50,191},[210]={22,22,191},[211]={38,33,127},[212]={68,0,127},[213]={5,0,127},[214]={68,62,127},[215]={39,51,127},[216]={53,0,127},[217]={62,0,127},[218]={40,49,127},[219]={40,49,127},[220]={12,0,127},[221]={12,0,127},[222]={55,30,191},[223]={55,0,127},[224]={21,0,127},[225]={72,55,127},[226]={33,11,127},[227]={51,5,127},[228]={48,18,127},[229]={48,18,127},[230]={33,0,127},[231]={53,0,127},[232]={5,0,127},[233]={36,0,255},[234]={22,0,127},[235]={20,0,127},[236]={62,0,0},[237]={22,0,0},[238]={12,0,254},[239]={9,0,63},[240]={49,0,63},[241]={47,0,254},[242]={30,32,254},[243]={46,0,255},[244]={46,0,255},[245]={46,0,255},[246]={62,0,127},[247]={61,0,127},[248]={45,0,127},[249]={46,0,255},[250]={46,0,255},[251]={30,0,255},[277]={65,0,31},[278]={65,0,31},[279]={65,0,31},[280]={66,0,31},[281]={66,0,31},[282]={66,0,31},[283]={67,0,31},[284]={67,0,31},[285]={67,0,31},[286]={50,0,127},[287]={22,0,127},[288]={53,0,127},[289]={53,0,127},[290]={19,0,127},[291]={61,0,127},[292]={68,0,127},[293]={61,0,127},[294]={19,0,127},[295]={33,44,127},[296]={33,44,127},[297]={33,44,127},[298]={34,48,127},[299]={34,48,127},[300]={34,48,127},[301]={14,0,127},[302]={3,0,127},[303]={25,0,255},[304]={62,0,127},[305]={62,0,127},[306]={27,0,127},[307]={27,0,127},[308]={20,0,127},[309]={51,0,127},[310]={51,0,127},[311]={33,0,127},[312]={22,0,127},[313]={41,12,127},[314]={41,12,127},[315]={56,0,191},[316]={56,0,191},[317]={16,0,127},[318]={26,0,255},[319]={26,0,255},[320]={5,42,127},[321]={73,0,127},[322]={51,0,127},[323]={12,0,127},[324]={12,0,127},[325]={33,0,191},[326]={52,75,127},[327]={52,75,127},[328]={33,0,127},[329]={63,0,127},[330]={24,0,127},[331]={24,0,127},[332]={52,71,127},[333]={26,26,127},[334]={26,26,127},[335]={47,62,63},[336]={47,62,63},[337]={9,31,127},[338]={9,31,127},[339]={12,0,127},[340]={40,0,127},[341]={47,0,127},[342]={47,0,127},[343]={47,0,127},[344]={8,0,127},[345]={8,0,127},[346]={39,0,127},[347]={39,0,127},[348]={26,0,255},[349]={26,0,255},[350]={47,37,191},[351]={47,20,127},[352]={47,20,127},[353]={57,0,127},[354]={58,0,127},[355]={52,22,127},[356]={74,0,127},[357]={74,0,127},[358]={30,0,127},[359]={30,0,127},[360]={23,0,127},[361]={26,0,127},[362]={46,0,127},[363]={30,38,127},[364]={54,0,127},[365]={72,0,127},[366]={54,0,127},[367]={64,60,127},[368]={64,60,127},[369]={34,0,127},[370]={43,0,127},[371]={43,0,127},[372]={43,0,127},[373]={75,0,127},[374]={33,0,127},[375]={33,0,127},[376]={46,0,127},[377]={15,0,127},[378]={15,0,127},[379]={61,0,127},[380]={17,0,127},[381]={33,69,31},[382]={5,69,127},[383]={5,69,127},[384]={5,69,127},[385]={59,0,127},[386]={35,68,0},[387]={12,0,254},[388]={21,0,31},[389]={21,0,31},[390]={4,0,31},[391]={4,0,31},[392]={28,36,127},[393]={28,36,127},[394]={28,36,127},[395]={69,0,127},[396]={69,0,127},[397]={22,0,127},[398]={29,0,255},[399]={29,0,255},[400]={29,0,255},[401]={29,0,255},[402]={29,0,255},[403]={29,0,255},[404]={2,0,255},[405]={70,0,255},[406]={77,0,255},[407]={26,0,254},[408]={26,0,0},[409]={32,0,255},[410]={46,0,255},[411]={26,0,127}}
+local TT_SPECX = {[1]={65,0,31},[2]={65,0,31},[3]={65,0,31},[4]={66,0,31},[5]={66,0,31},[6]={66,0,31},[7]={67,0,31},[8]={67,0,31},[9]={67,0,31},[10]={19,0,127},[11]={61,0,127},[12]={14,0,127},[13]={19,0,127},[14]={61,0,127},[15]={68,0,127},[16]={51,0,127},[17]={51,0,127},[18]={51,0,127},[19]={50,62,127},[20]={50,62,127},[21]={51,0,127},[22]={51,0,127},[23]={22,61,127},[24]={22,61,127},[25]={9,0,127},[26]={9,0,127},[27]={8,0,127},[28]={8,0,127},[29]={38,0,254},[30]={38,0,254},[31]={38,0,254},[32]={38,0,0},[33]={38,0,0},[34]={38,0,0},[35]={56,0,191},[36]={56,0,191},[37]={18,0,191},[38]={18,0,191},[39]={56,0,191},[40]={56,0,191},[41]={39,0,127},[42]={39,0,127},[43]={34,0,127},[44]={34,0,127},[45]={34,0,127},[46]={27,0,127},[47]={27,0,127},[48]={14,0,127},[49]={19,0,127},[50]={8,71,127},[51]={8,71,127},[52]={53,0,127},[53]={7,0,127},[54]={6,13,127},[55]={6,13,127},[56]={72,0,127},[57]={72,0,127},[58]={22,18,63},[59]={22,18,63},[60]={11,6,127},[61]={11,6,127},[62]={11,6,127},[63]={28,39,63},[64]={28,39,63},[65]={28,39,63},[66]={62,0,63},[67]={62,0,63},[68]={62,0,63},[69]={34,0,127},[70]={34,0,127},[71]={34,0,127},[72]={29,64,127},[73]={29,64,127},[74]={69,5,127},[75]={69,5,127},[76]={69,5,127},[77]={50,18,127},[78]={50,18,127},[79]={12,20,127},[80]={12,20,127},[81]={42,5,255},[82]={42,5,255},[83]={51,39,127},[84]={50,48,127},[85]={50,48,127},[86]={47,0,127},[87]={47,0,127},[88]={1,60,127},[89]={1,60,127},[90]={75,0,127},[91]={75,0,127},[92]={26,0,127},[93]={26,0,127},[94]={26,0,127},[95]={69,5,127},[96]={15,0,127},[97]={15,0,127},[98]={52,75,127},[99]={52,75,127},[100]={43,9,255},[101]={43,9,255},[102]={34,0,127},[103]={34,0,127},[104]={69,31,127},[105]={69,31,127},[106]={7,0,0},[107]={51,0,0},[108]={20,12,127},[109]={26,0,127},[110]={26,0,127},[111]={31,69,127},[112]={31,69,127},[113]={30,32,254},[114]={34,0,127},[115]={48,0,254},[116]={33,0,127},[117]={38,0,127},[118]={33,41,127},[119]={33,41,127},[120]={35,30,255},[121]={35,30,255},[122]={43,0,127},[123]={68,0,127},[124]={12,0,254},[125]={9,0,63},[126]={49,0,63},[127]={52,0,127},[128]={22,0,0},[129]={33,0,127},[130]={22,0,127},[131]={11,75,127},[132]={7,0,255},[133]={50,0,31},[134]={11,0,31},[135]={10,0,31},[136]={18,0,31},[137]={36,0,255},[138]={33,75,31},[139]={33,75,31},[140]={33,4,31},[141]={33,4,31},[142]={69,46,31},[143]={17,47,31},[144]={46,0,255},[145]={46,0,255},[146]={46,0,255},[147]={61,0,127},[148]={61,0,127},[149]={39,0,127},[150]={46,0,255},[151]={28,0,255},[152]={65,0,31},[153]={65,0,31},[154]={65,0,31},[155]={66,0,31},[156]={66,0,31},[157]={66,0,31},[158]={67,0,31},[159]={67,0,31},[160]={67,0,31},[161]={50,51,127},[162]={50,51,127},[163]={15,51,127},[164]={15,51,127},[165]={68,48,127},[166]={68,48,127},[167]={68,15,127},[168]={68,15,127},[169]={39,0,127},[170]={10,35,127},[171]={10,35,127},[172]={9,0,127},[173]={56,0,191},[174]={56,0,191},[175]={55,32,31},[176]={55,32,31},[177]={28,48,127},[178]={28,48,127},[179]={9,0,127},[180]={9,0,127},[181]={9,0,127},[182]={34,0,127},[183]={47,37,127},[184]={47,37,127},[185]={5,69,127},[186]={11,6,127},[187]={34,0,127},[188]={34,0,127},[189]={34,0,127},[190]={50,53,127},[191]={34,0,127},[192]={34,0,127},[193]={3,14,127},[194]={6,11,127},[195]={6,11,127},[196]={28,0,31},[197]={28,0,31},[198]={15,0,127},[199]={12,20,127},[200]={26,0,127},[201]={26,0,255},[202]={23,0,127},[203]={39,48,127},[204]={5,0,127},[205]={5,0,127},[206]={32,50,127},[207]={52,8,127},[208]={69,5,127},[209]={22,50,191},[210]={22,22,191},[211]={38,33,127},[212]={68,0,127},[213]={5,0,127},[214]={68,62,127},[215]={39,51,127},[216]={53,0,127},[217]={62,0,127},[218]={40,49,127},[219]={40,49,127},[220]={12,0,127},[221]={12,0,127},[222]={55,30,191},[223]={55,0,127},[224]={21,0,127},[225]={72,55,127},[226]={33,11,127},[227]={51,5,127},[228]={48,18,127},[229]={48,18,127},[230]={33,0,127},[231]={53,0,127},[232]={5,0,127},[233]={36,0,255},[234]={22,0,127},[235]={20,0,127},[236]={62,0,0},[237]={22,0,0},[238]={12,0,254},[239]={9,0,63},[240]={49,0,63},[241]={47,0,254},[242]={30,32,254},[243]={46,0,255},[244]={46,0,255},[245]={46,0,255},[246]={62,0,127},[247]={61,0,127},[248]={45,0,127},[249]={46,0,255},[250]={46,0,255},[251]={30,0,255},[277]={65,0,31},[278]={65,0,31},[279]={65,0,31},[280]={66,0,31},[281]={66,0,31},[282]={66,0,31},[283]={67,0,31},[284]={67,0,31},[285]={67,0,31},[286]={50,0,127},[287]={22,0,127},[288]={53,0,127},[289]={53,0,127},[290]={19,0,127},[291]={61,0,127},[292]={68,0,127},[293]={61,0,127},[294]={19,0,127},[295]={33,44,127},[296]={33,44,127},[297]={33,44,127},[298]={34,48,127},[299]={34,48,127},[300]={34,48,127},[301]={14,0,127},[302]={3,0,127},[303]={25,0,255},[304]={62,0,127},[305]={62,0,127},[306]={27,0,127},[307]={27,0,127},[308]={20,0,127},[309]={51,0,127},[310]={51,0,127},[311]={33,0,127},[312]={22,0,127},[313]={41,12,127},[314]={41,12,127},[315]={56,0,191},[316]={56,0,191},[317]={16,0,127},[318]={26,0,255},[319]={26,0,255},[320]={5,42,127},[321]={73,0,127},[322]={51,0,127},[323]={12,0,127},[324]={12,0,127},[325]={33,0,191},[326]={52,75,127},[327]={52,75,127},[328]={33,0,127},[329]={63,0,127},[330]={24,0,127},[331]={24,0,127},[332]={52,71,127},[333]={26,26,127},[334]={26,26,127},[335]={47,62,63},[336]={47,62,63},[337]={9,31,127},[338]={9,31,127},[339]={12,0,127},[340]={40,0,127},[341]={47,0,127},[342]={47,0,127},[343]={47,0,127},[344]={8,0,127},[345]={8,0,127},[346]={39,0,127},[347]={39,0,127},[348]={26,0,255},[349]={26,0,255},[350]={47,37,191},[351]={47,20,127},[352]={47,20,127},[353]={57,0,127},[354]={58,0,127},[355]={52,22,127},[356]={74,0,127},[357]={74,0,127},[358]={30,0,127},[359]={30,0,127},[360]={23,0,127},[361]={26,0,127},[362]={46,0,127},[363]={30,38,127},[364]={54,0,127},[365]={72,0,127},[366]={54,0,127},[367]={64,60,127},[368]={64,60,127},[369]={34,0,127},[370]={43,0,127},[371]={43,0,127},[372]={43,0,127},[373]={75,0,127},[374]={33,0,127},[375]={33,0,127},[376]={46,0,127},[377]={15,0,127},[378]={15,0,127},[379]={61,0,127},[380]={17,0,127},[381]={33,69,31},[382]={5,69,127},[383]={5,69,127},[384]={5,69,127},[385]={59,0,127},[386]={35,68,0},[387]={12,0,254},[388]={21,0,31},[389]={21,0,31},[390]={4,0,31},[391]={4,0,31},[392]={28,36,127},[393]={28,36,127},[394]={28,36,127},[395]={69,0,127},[396]={69,0,127},[397]={22,0,127},[398]={29,0,255},[399]={29,0,255},[400]={29,0,255},[401]={29,0,255},[402]={29,0,255},[403]={29,0,255},[404]={2,0,255},[405]={70,0,255},[406]={77,0,255},[407]={26,0,254},[408]={26,0,0},[409]={32,0,255},[410]={46,0,255},[411]={26,0,127}}
 
 
 -- ------------------------- Version / addresses ---------------------
@@ -2267,6 +2321,84 @@ local gameCode = read8(0x080000AE)
 local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
 local gameName = (gameCode == 0x52 and "FireRed") or (gameCode == 0x47 and "LeafGreen") or nil
+-- Game profile (ADR-0015): what changes between FireRed / LeafGreen builds, in one place.
+-- Included right after the bot reads the ROM header (gameLang, gameName, gameRev1).
+local Game = (function()
+  local G = {}
+  local build = gameName and (gameName .. (gameRev1 and "1" or "0"))
+  if gameLang == 0x45 and build then
+    -- Field menus (pokefirered "symbols" branch). RAM is the same in the four USA builds
+    -- (FireRed / LeafGreen 1.0 and 1.1); the functions differ. Other builds: no verified map,
+    -- so taking items falls back to pausing.
+    local fn = ({
+      FireRed0   = { 0x0806F1F0, 0x0811EBA0, 0x0811FB28, 0x08122C5C, 0x0810C670 },
+      FireRed1   = { 0x0806F204, 0x0811EC18, 0x0811FBA0, 0x08122CD4, 0x0810C6E8 },
+      LeafGreen0 = { 0x0806F1F0, 0x0811EB78, 0x0811FB00, 0x08122C34, 0x0810C648 },
+      LeafGreen1 = { 0x0806F204, 0x0811EBF0, 0x0811FB78, 0x08122CAC, 0x0810C6C0 },
+    })[build]
+    if fn then
+      G.menu = {
+        startCursor = 0x020370F4, startCount = 0x020370F5, startOrder = 0x020370F6,
+        partyMenu = 0x0203B0A0, partyInternal = 0x0203B09C, menuCursor = 0x0203ADE6, tasks = 0x03005090,
+        -- functions (+1: Thumb code)
+        taskStartMenu = fn[1] + 1, cbParty = fn[2] + 1, taskChooseMon = fn[3] + 1, taskSelection = fn[4] + 1,
+        taskVsSeeker = fn[5] + 1,
+      }
+    end
+    -- gWildMonHeaders (pret symbols): in LeafGreen 1.1 the FireRed 1.0 address falls on the
+    -- table's 18th header, so the right one per build matters
+    G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
+                       LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
+  end
+  -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
+  -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
+  -- advance as pending, so the next emu.frameadvance() stops the script with "can't call
+  -- vba.frameadvance() from here". So the bots only ask here and the main loop pauses.
+  function G.pauseSoon() G.pausePending = true end
+  return G
+end)()
+-- Pure decision rules (ADR-0015): they take data and never read memory, so they are unit
+-- tested without the emulator (shared/tests/test_rules.py). The bots read the game and ask.
+local Rules = (function()
+  local R = {
+    -- pret battle_main.c IsRunningFromBattleImpossible and constants/*.h
+    ITEM_SMOKE_BALL = 194, AB_RUN_AWAY = 50, AB_SHADOW_TAG = 23, AB_ARENA_TRAP = 71, AB_MAGNET_PULL = 42,
+    AB_LEVITATE = 26, TYPE_FLYING = 2, TYPE_STEEL = 8,
+    STATUS2_TRAPPED = 0x0400E000,              -- STATUS2_ESCAPE_PREVENTION | STATUS2_WRAPPED
+  }
+
+  -- Can't run from this wild battle? me = {item, ability, type1, type2, trappedBits} (yours),
+  -- foe = {ability}. Returns the trapping ability id, "move" (Mean Look, Wrap...) or nil.
+  function R.trappedBy(me, foe)
+    if me.item == R.ITEM_SMOKE_BALL or me.ability == R.AB_RUN_AWAY then return nil end
+    local a = foe.ability
+    if a == R.AB_SHADOW_TAG then return a end
+    if a == R.AB_ARENA_TRAP and me.ability ~= R.AB_LEVITATE and me.type1 ~= R.TYPE_FLYING
+       and me.type2 ~= R.TYPE_FLYING then return a end
+    if a == R.AB_MAGNET_PULL and (me.type1 == R.TYPE_STEEL or me.type2 == R.TYPE_STEEL) then return a end
+    if me.trappedBits and me.trappedBits ~= 0 then return "move" end
+    return nil
+  end
+
+  -- What beating a Pokemon that gives `gain` EVs does to `evs` (6 stats, memory order) with the
+  -- goal `target`. Returns over, useful: `over` is the first stat index pushed past the goal
+  -- (allowOvershoot only allows it for stats that are part of the goal), `useful` whether any
+  -- missing stat grows. Caps: 255 per stat, 510 in total.
+  function R.evStep(evs, gain, target, allowOvershoot)
+    local total = 0
+    for i = 1, 6 do total = total + evs[i] end
+    local room, useful = 510 - total, false
+    for i = 1, 6 do
+      if gain[i] > 0 and room > 0 and evs[i] < 255 then
+        local after = evs[i] + math.min(gain[i], 255 - evs[i], room)
+        if after > target[i] and not (allowOvershoot and target[i] > 0) then return i, useful end
+        if evs[i] < target[i] then useful = true end
+      end
+    end
+    return nil, useful
+  end
+  return R
+end)()
 
 local A = {}
 if gameLang == 0x45 then        -- USA
@@ -2471,6 +2603,17 @@ local function interpretConfig(problems)
   if tcfg.wanted and wn == 0 then tcfg.wanted = nil end
   if wn > 4 then problems[#problems + 1] = TX"wantedMoves tiene " .. wn .. TX" ataques (maximo 4)" end
   if CONFIG.notify ~= nil and type(CONFIG.notify) ~= "table" then problems[#problems + 1] = TX"notify debe ser {\"ntfy\": \"tema\"}" end
+  -- Pickup (optional): off unless it is set
+  tcfg.pickup = nil
+  if CONFIG.pickup ~= nil and CONFIG.pickup ~= false then
+    local pk = (CONFIG.pickup == true) and "auto" or simplify(tostring(CONFIG.pickup))
+    if pk == "auto" or pk == "pause" then tcfg.pickup = pk
+    else problems[#problems + 1] = TX"pickup debe ser \"auto\", \"pause\" o null" end
+  end
+  local ta = CONFIG.pickupTakeAt
+  if ta ~= nil and (not tonumber(ta) or tonumber(ta) < 1 or tonumber(ta) > 5) then
+    problems[#problems + 1] = TX"pickupTakeAt debe ser un numero del 1 al 5"
+  end
 end
 
 local function loadConfig()
@@ -2482,7 +2625,7 @@ local function loadConfig()
     local cfg = jsonDecode(data)
     if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     local optional = { evs = 1, targetLevel = 1, maxLevel = 1, species = 1, avoidSpecies = 1, keepMoves = 1, wantedMoves = 1,
-                       askTimeout = 1, notify = 1 }
+                       askTimeout = 1, notify = 1, pickup = 1, pickupTakeAt = 1 }
     for k, v in pairs(cfg) do
       if CONFIG[k] == nil and not optional[k] then problems[#problems + 1] = TX"opcion desconocida: " .. k end
       CONFIG[k] = v
@@ -2749,8 +2892,26 @@ local function bestMove(blocked)
   return best, bestScore
 end
 
--- PP left in damaging moves (outside battle, from the party)
-local function usefulPP(mon)
+-- Can a move of type `mtype` hurt species `sp` at all? Type immunity, or an ability that
+-- blocks it whichever of its abilities the species has (Levitate on Gastly / Haunter...)
+local IMMUNE_ABIL = { [ABIL_LEVITATE] = 4, [ABIL_VOLT] = 13, [ABIL_WATER] = 11, [ABIL_FLASHFIRE] = 10 }
+local function hitsSpecies(mtype, sp)
+  local t = TT_SPEC[sp]
+  if not t then return true end
+  local mult = typeMult(mtype, t[1], t[2])
+  if mult == 0 then return false end
+  local x = TT_SPECX[sp]
+  if not x then return true end
+  local a1, a2 = x[1], (x[2] ~= 0) and x[2] or x[1]
+  if IMMUNE_ABIL[a1] == mtype and IMMUNE_ABIL[a2] == mtype then return false end
+  if a1 == ABIL_WONDERGUARD and a2 == ABIL_WONDERGUARD and mult <= 1 then return false end
+  return true
+end
+
+-- PP left in damaging moves (outside battle, from the party). With a 'species' list, only moves
+-- that can hurt one of them count: Normal moves don't touch Gastly, so with only those PP left
+-- it must go and heal instead of running from every battle. full: count max PP (as after healing).
+local function usefulPP(mon, full)
   local total = 0
   for i = 1, 4 do
     local mv = TT_MOVE[mon.moves[i]]
@@ -2758,7 +2919,16 @@ local function usefulPP(mon)
        or mv[4] == EF.SONICBOOM or mv[4] == EF.SUPER_FANG or mv[4] == EF.PSYWAVE or mv[4] == EF.HIDDEN_POWER
        or mv[4] == EF.RETURN or mv[4] == EF.FRUSTRATION or mv[4] == EF.FLAIL or mv[4] == EF.ERUPTION
        or mv[4] == EF.LOW_KICK or mv[4] == EF.MAGNITUDE) then
-      total = total + mon.pp[i]
+      local hits = true
+      if tcfg.only then
+        local mtype = mv[2]
+        if mv[4] == EF.HIDDEN_POWER and mon.ivWord then mtype = hiddenPower(mon.ivWord) end
+        hits = false
+        for sp in pairs(tcfg.only) do if hitsSpecies(mtype, sp) then hits = true; break end end
+      end
+      if hits then
+        total = total + (full and floor(mv[5] * (5 + band(rshift(mon.ppBonuses or 0, (i - 1) * 2), 3)) / 5) or mon.pp[i])
+      end
     end
   end
   return total
@@ -2877,19 +3047,8 @@ local function shouldFight(mon, species)
   if not tcfg.target then return true, "nivel" end
   local g = evGain(mon, species)
   if not g then return false, TX"sin datos" end
-  local total = evTotal(mon)
-  local room = 510 - total
-  local useful = false
-  for i = 1, 6 do
-    if g[i] > 0 and room > 0 and mon.evs[i] < 255 then
-      local add = math.min(g[i], 255 - mon.evs[i], room)
-      local after = mon.evs[i] + add
-      if after > tcfg.target[i] and not (CONFIG.allowOvershoot and tcfg.target[i] > 0) then
-        return false, TX"daria EVs de " .. TX(STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[i]])
-      end
-      if mon.evs[i] < tcfg.target[i] then useful = true end
-    end
-  end
+  local over, useful = Rules.evStep(mon.evs, g, tcfg.target, CONFIG.allowOvershoot)
+  if over then return false, TX"daria EVs de " .. TX(STAT_LABEL[({ 1, 2, 3, 6, 4, 5 })[over]]) end
   if useful then return true, "EVs" end
   if evsDone(mon) and CONFIG.targetLevel and mon.level < CONFIG.targetLevel then return true, "nivel" end
   return false, TX"no da los EVs que faltan"
@@ -3132,7 +3291,7 @@ local function halt(msg)
   bot.msg = msg
   logLine(msg)
   notify(msg)
-  pcall(emu.pause)            -- pause so you see it
+  Game.pauseSoon()            -- pause so you see it
 end
 local function leadOk()
   local m = lead()
@@ -3183,6 +3342,16 @@ local function startWalk()
 end
 
 local function beginHeal(reason)
+  -- not even full PP would be enough (no move that hurts the 'species' list): healing won't help
+  local lead1 = lead()
+  if lead1 and usefulPP(lead1, true) < CONFIG.minPP then
+    local names = {}
+    for sp in pairs(tcfg.only or {}) do names[#names + 1] = speciesName(sp) end
+    table.sort(names)
+    halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+      speciesName(lead1.species), table.concat(names, "/")))
+    return
+  end
   if not route.go then
     halt(TX"Necesita curarse (" .. reason .. TX"): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
     return
@@ -3195,12 +3364,335 @@ local function beginHeal(reason)
   bot.st, bot.t = "heal_go", 0
 end
 
--- After a battle: decide what comes next
-local function afterBattleDecide()
-  local m = leadOk()
-  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
-  -- EVs gained in the last battle
-  if bot.prevEvs then
+-- Party / START menu automation and the escape rules, shared by the Train Bot and the Farm Bot
+-- (ADR-0015). Every menu step is checked in memory. Included where the bot already defines:
+-- A, read8/read16/read32, band, rshift, bot, queue, tap, halt, logLine, notify, stopBot,
+-- zeroEnemy, inOverworld, partyCount, readPartyMon, lead, speciesName, battleMon,
+-- TT_ITEMNAME, TT_ABILNAME, TX, Game (shared/lua/game.lua) and Rules (shared/lua/rules.lua).
+local Menus = (function()
+  local M = {
+    OPT_ITEM = 3, OPT_TAKE = 5, OPT_SHIFT = 10, OPT_SEND_OUT = 11,   -- CURSOR_OPTION_* (party_menu.h)
+    STARTMENU_POKEMON = 1, CMD_CHOOSEPOKEMON = 22,                    -- CONTROLLER_CHOOSEPOKEMON
+  }
+  M.MENU = Game.menu
+
+  function M.itemName(id) return TT_ITEMNAME[id] or ("#" .. id) end
+  function M.mon(i) return readPartyMon(A.party + i * 0x64) end
+  function M.taskActive(fnAddr)
+    for i = 0, 15 do
+      local t = M.MENU.tasks + i * 40
+      if read8(t + 4) ~= 0 and read32(t) == fnAddr then return true end
+    end
+    return false
+  end
+  function M.s8(v) if v >= 0x80 then return v - 0x100 end return v end
+  -- the action list of the selected Pokemon (SUMMARY, SWITCH, ITEM...)
+  function M.actions()
+    local p = read32(M.MENU.partyInternal)
+    if p < 0x02000000 or p >= 0x02040000 then return {} end
+    local n, t = read8(p + 0x17), {}
+    if n > 8 then return {} end
+    for k = 0, n - 1 do t[#t + 1] = read8(p + 0x0F + k) end
+    return t
+  end
+  function M.indexOf(list, v) for k, x in ipairs(list) do if x == v then return k - 1 end end return nil end
+  function M.cursorTo(cur, want) if want > cur then tap("down", 8) else tap("up", 8) end end
+
+  -- In a wild battle the game asks for another Pokemon: the lead fainted and "Use next Pokemon?
+  -- NO" could not run away. That party screen can't be closed with B, and its cursor starts on
+  -- the fainted lead. Send out the healthy Pokemon with the highest level (never an egg) and
+  -- run (bot.forceRun). After the battle the party is back in field order
+  -- (UpdatePartyToFieldOrder), so the fainted lead is still first and goes to heal.
+  function M.sendOut()
+    local MENU = M.MENU
+    if not MENU then
+      halt(TX"Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7")
+      return
+    end
+    bot.fight, bot.forceRun, bot.lastWhy = false, true, TX"debilitado: huir"
+    if not bot.sendSlot then
+      local best, lv
+      for i = 1, partyCount() - 1 do
+        local m = M.mon(i)
+        if m and m.hp > 0 and band(rshift(m.ivWord, 30), 1) == 0 and (not lv or m.level > lv) then best, lv = i, m.level end
+      end
+      if not best then halt(TX"Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"); return end
+      bot.sendSlot, bot.sendT = best, 0
+      local l, s = lead(), M.mon(best)
+      logLine(string.format(TX"%s se debilito: saco a %s (Nv.%d) para huir", l and speciesName(l.species) or "?",
+        speciesName(s.species), s.level))
+    end
+    bot.sendT = bot.sendT + 1
+    if bot.sendT > 1800 then halt(TX"No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"); return end
+    if M.taskActive(MENU.taskSelection) then
+      -- SHIFT / SUMMARY / CANCEL: pick SHIFT (or SEND OUT)
+      local acts = M.actions()
+      local want = M.indexOf(acts, M.OPT_SHIFT) or M.indexOf(acts, M.OPT_SEND_OUT)
+      if not want then tap("B", 10); return end
+      local cur = M.s8(read8(MENU.menuCursor))
+      if cur == want then tap("A", 20) else M.cursorTo(cur, want) end
+      return
+    end
+    if not M.taskActive(MENU.taskChooseMon) then
+      if bot.sendT % 40 == 0 then tap("B", 10) end      -- a message over the party screen
+      return
+    end
+    local cur = M.s8(read8(MENU.partyMenu + 9))
+    if cur == bot.sendSlot then tap("A", 20)
+    elseif cur < bot.sendSlot or cur > 5 then tap("down", 8) else tap("up", 8) end
+  end
+
+  -- Why this wild battle can't be run from (text for the log), or nil. Reads gBattleMons
+  -- (0 = yours, 1 = the wild one; 0x58 bytes each) and asks Rules.trappedBy.
+  function M.trapped()
+    local b0, b1 = A.battleMons, A.battleMons + 0x58
+    local why = Rules.trappedBy(
+      { item = read16(b0 + 0x2E), ability = read8(b0 + 0x20), type1 = read8(b0 + 0x21), type2 = read8(b0 + 0x22),
+        trappedBits = band(read32(b0 + 0x50), Rules.STATUS2_TRAPPED) },
+      { ability = read8(b1 + 0x20) })
+    if why == "move" then return TX"atrapado por un ataque" end
+    return why and (TT_ABILNAME[why] or "?") or nil
+  end
+  -- Any move with PP left (when it has to fight but no move is "useful")
+  function M.anyMove(blocked)
+    local me = battleMon(0)
+    for k = 1, 4 do
+      if me.moves[k] ~= 0 and me.pp[k] > 0 and not (blocked and blocked[k]) then return k end
+    end
+    return nil
+  end
+
+  -- Take held items: START > POKEMON > (Pokemon) > ITEM > TAKE, checking every step in memory.
+  -- held = { {slot, item}, ... }; pause = pause and tell the player instead (or no verified menus);
+  -- resume = what to do once the menus are closed again.
+  function M.beginTake(held, pause, resume)
+    local names = {}
+    for _, h in ipairs(held) do names[#names + 1] = M.itemName(h.item) end
+    if pause or not M.MENU then
+      stopBot()
+      bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
+      logLine(bot.msg)
+      notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
+      Game.pauseSoon()
+      return
+    end
+    logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
+    queue = {}
+    zeroEnemy()
+    bot.take = { list = held, i = 1, phase = "settle", tries = 0, resume = resume }
+    bot.st, bot.t = "take", 0
+  end
+  function M.stepTake()
+    bot.t = bot.t + 1
+    if #queue > 0 then return end
+    local T, MENU = bot.take, M.MENU
+    local function fail(why)
+      bot.take = nil
+      halt(TX"No pude quitar los objetos: " .. why .. TX". Terminalo tu en el menu y pulsa 7")
+    end
+    local function go(phase) T.phase, bot.t = phase, 0 end
+    if T.phase == "settle" then
+      -- on the map, standing still, before opening the menu
+      if inOverworld() then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
+      if T.ow >= 30 then tap("start", 20); go("startmenu") end
+      if bot.t > 600 then fail(TX"no vuelve el mapa") end
+    elseif T.phase == "startmenu" then
+      if not M.taskActive(MENU.taskStartMenu) then
+        if bot.t > 90 then
+          T.tries = T.tries + 1
+          if T.tries > 3 then fail(TX"el menu START no se abre") return end
+          go("settle")
+        end
+        return
+      end
+      local n = read8(MENU.startCount)
+      local want
+      for k = 0, math.min(n, 9) - 1 do if read8(MENU.startOrder + k) == M.STARTMENU_POKEMON then want = k end end
+      if not want then fail(TX"no hay opcion POKEMON en el menu START") return end
+      local cur = read8(MENU.startCursor)
+      if cur == want then tap("A", 30); go("party")
+      elseif bot.t > 300 then fail(TX"el cursor del menu START no llega a POKEMON")
+      else M.cursorTo(cur, want) end
+    elseif T.phase == "party" then
+      if read32(A.callback2) == MENU.cbParty and M.taskActive(MENU.taskChooseMon) then
+        T.ready = (T.ready or 0) + 1
+        if T.ready > 20 then T.ready = nil; go("pick") end
+      elseif bot.t > 600 then fail(TX"no se abrio la pantalla del equipo") end
+    elseif T.phase == "pick" then
+      local e = T.list[T.i]
+      if not e then go("exit") return end
+      local m = M.mon(e.slot)
+      if not m or m.item == 0 then T.i = T.i + 1 return end
+      if not M.taskActive(MENU.taskChooseMon) then
+        if bot.t > 300 then fail(TX"la pantalla del equipo no responde") end
+        if bot.t % 30 == 0 then tap("B", 10) end
+        return
+      end
+      local cur = M.s8(read8(MENU.partyMenu + 9))
+      if cur == e.slot then tap("A", 20); go("actions")
+      elseif bot.t > 300 then fail(TX"no llego al Pokemon " .. (e.slot + 1))
+      elseif cur < e.slot or cur > 5 then tap("down", 8) else tap("up", 8) end
+    elseif T.phase == "actions" or T.phase == "itemmenu" then
+      local opt = (T.phase == "actions") and M.OPT_ITEM or M.OPT_TAKE
+      local acts = M.actions()
+      local want = M.taskActive(MENU.taskSelection) and M.indexOf(acts, opt) or nil
+      if not want then
+        if bot.t > 240 then fail(T.phase == "actions" and TX"no aparece OBJETO" or TX"no aparece QUITAR") end
+        return
+      end
+      local cur = M.s8(read8(MENU.menuCursor))
+      if cur == want then
+        tap("A", 20)
+        if T.phase == "actions" then go("itemmenu") else go("taking") end
+      elseif bot.t > 240 then fail(TX"el cursor no llega a la opcion")
+      else M.cursorTo(cur, want) end
+    elseif T.phase == "taking" then
+      local e = T.list[T.i]
+      local m = M.mon(e.slot)
+      if m and m.item == 0 then
+        -- "Received X": close the message and go back to the party list
+        if M.taskActive(MENU.taskChooseMon) and bot.t > 30 then T.i = T.i + 1; go("pick") return end
+        if bot.t % 12 == 0 then tap("B", 8) end
+      elseif bot.t > 240 then
+        fail(TX"la mochila no tiene espacio para " .. M.itemName(e.item))
+      end
+    elseif T.phase == "exit" then
+      -- leave the party and close the START menu (B until on the map with no menu)
+      local onMap = inOverworld() and not M.taskActive(MENU.taskStartMenu)
+      if onMap then T.ow = (T.ow or 0) + 1 else T.ow = 0 end
+      if T.ow >= 40 then
+        local resume = T.resume
+        bot.take = nil
+        bot.st, bot.t = "after", 0
+        resume()
+        return
+      end
+      if not onMap and bot.t % 20 == 0 then tap("B", 10) end
+      if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
+    end
+  end
+  return M
+end)()
+
+-- ---------- Pickup: take what the Pickup Pokemon in slots 2-6 find ----------
+-- Optional (pickup = "auto" / "pause"): with it off nothing here runs. The lead (slot 1)
+-- is never touched, it may hold a Macho Brace on purpose. Pickup only works after a won
+-- battle, which is what training does. Taking the items is Menus.beginTake / stepTake
+-- (shared/lua/menus.lua, the same code as the Farm Bot's, ADR-0015).
+-- Everything lives in one table: Lua 5.1 allows 200 locals per block.
+local PK = { ABILITY = 53 }     -- ABILITY_PICKUP
+PK.itemName, PK.mon = Menus.itemName, Menus.mon
+-- Party slots 2-6 (1-5 here) whose Pokemon has Pickup
+function PK.slots()
+  local t = {}
+  for i = 1, partyCount() - 1 do
+    local m = PK.mon(i)
+    local sx = m and TT_SPECX[m.species]
+    local ab = sx and ((m.abilityBit == 1 and sx[2] ~= 0) and sx[2] or sx[1]) or 0
+    if ab == PK.ABILITY then t[#t + 1] = i end
+  end
+  return t
+end
+-- The ones holding an item; logs what is new and counts as stored what is gone
+function PK.scan()
+  local held, now = {}, {}
+  for _, i in ipairs(PK.slots()) do
+    local m = PK.mon(i)
+    if m and m.item ~= 0 then held[#held + 1] = { slot = i, item = m.item }; now[i] = m.item end
+  end
+  for slot, item in pairs(bot.pkSeen) do
+    if not now[slot] then
+      bot.pkItems = bot.pkItems + 1
+      logLine(string.format(TX"Guardado en la mochila: %s", PK.itemName(item)))
+      bot.pkSeen[slot] = nil
+    end
+  end
+  for _, h in ipairs(held) do
+    if not bot.pkSeen[h.slot] then
+      bot.pkSeen[h.slot] = h.item
+      bot.pkFound = bot.pkFound + 1
+      local who = PK.mon(h.slot)
+      logLine(string.format(TX"%s consiguio %s", who and speciesName(who.species) or "?", PK.itemName(h.item)))
+    end
+  end
+  return held
+end
+-- After a battle: true if it went to take the items (enough of them hold one, or training ends)
+function PK.check(finishing)
+  local n = #PK.slots()
+  if n == 0 then return false end
+  local held = PK.scan()
+  local at = math.min(tonumber(CONFIG.pickupTakeAt) or math.ceil(n / 2), n)   -- default: half of them
+  if #held == 0 or (#held < at and not finishing) then return false end
+  Menus.beginTake(held, tcfg.pickup == "pause", PK.resume)
+  return true
+end
+-- EVs still missing, as text ("252 Vel, 6 PS")
+function PK.missing(m)
+  local t = {}
+  for st = 1, 6 do
+    local i = EV_OF_STAT[st]
+    local need = tcfg.target and (tcfg.target[i] - m.evs[i]) or 0
+    if need > 0 then t[#t + 1] = need .. " " .. TX(STAT_LABEL[st]) end
+  end
+  return table.concat(t, ", ")
+end
+-- This spot is finished although training isn't: a plan in phases (e.g. Attack on Route 24,
+-- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
+-- or many battles in a row had no useful opponent. Returns the message, or nil.
+PK.USELESS_LIMIT = 40
+-- Battles in a row against a wanted opponent the lead can't hurt with any move (e.g. only Normal
+-- moves against Gastly): it would run from all of them forever, so it stops and says why
+PK.NOMOVE_LIMIT = 3
+function PK.phaseDone(m)
+  if not tcfg.target then return nil end
+  -- 510 in total: the missing EVs can't fit any more
+  if evTotal(m) >= 510 and not evsDone(m) then
+    return string.format(TX"FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)", PK.missing(m))
+  end
+  if tcfg.only then
+    for sp in pairs(tcfg.only) do if shouldFight(m, sp) then return nil end end
+    return string.format(TX"FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies",
+      PK.missing(m))
+  end
+  if (bot.useless or 0) >= PK.USELESS_LIMIT then
+    return string.format(TX"FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona",
+      bot.useless, PK.missing(m))
+  end
+  return nil
+end
+-- Training (or this phase) is over: heal first if a route to the Center is recorded, then pause
+function PK.finish(m, done, phaseMsg)
+  if route.go and not bot.finishHealed and not partyHealed() then
+    bot.finishHealed = true                    -- one trip: then it stops whatever happens
+    beginHeal(TX"fin del entrenamiento")
+    return
+  end
+  stopBot()
+  bot.done, bot.finishHealed = done, nil
+  bot.msg = done and string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
+    table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")) or phaseMsg
+  logLine(bot.msg)
+  notify(bot.msg)
+  emu.pause()
+end
+-- The stat (STAT_LABEL index) that beating this species would push past the goal, or nil.
+-- Same rule as shouldFight; used when it can't run, so it never fights its way past the EVs.
+function PK.overshoot(m, species)
+  if not tcfg.target then return nil end
+  local g = evGain(m, species)
+  if not g then return nil end
+  local over = Rules.evStep(m.evs, g, tcfg.target, CONFIG.allowOvershoot)
+  return over and ({ 1, 2, 3, 6, 4, 5 })[over] or nil
+end
+
+-- After a battle: decide what comes next. Chain of responsibility: each step looks at the
+-- lead and either takes over (returns true: it started something or stopped the bot) or lets
+-- the next one decide. The order matters: pickup before finishing, finishing before healing.
+PK.AFTER = {
+  -- 1. EVs gained in the last battle (for the panel)
+  function(m)
+    if not bot.prevEvs then return false end
     local parts = {}
     for st = 1, 6 do
       local i = EV_OF_STAT[st]
@@ -3212,24 +3704,29 @@ local function afterBattleDecide()
       bot.lastGain = table.concat(parts, ", ") .. (bot.lastFoe and (" (" .. speciesName(bot.lastFoe.species) .. ")") or "")
     end
     for i = 1, 6 do bot.prevEvs[i] = m.evs[i] end
-  end
-  if m.species ~= bot.leadSpecies then
-    logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
-    bot.leadSpecies = m.species
-  end
-  if trainingDone(m) then
-    stopBot()
-    bot.done = true
-    bot.msg = string.format(TX"ENTRENAMIENTO COMPLETO: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
-      table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/"))
-    logLine(bot.msg)
-    notify(bot.msg)
-    emu.pause()
-    return
-  end
-  -- With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
-  -- and going over is not allowed, it could never finish.
-  if tcfg.target and not CONFIG.allowOvershoot then
+    return false
+  end,
+  -- 2. it evolved
+  function(m)
+    if m.species ~= bot.leadSpecies then
+      logLine(string.format(TX"%s evoluciono a %s", speciesName(bot.leadSpecies), speciesName(m.species)))
+      bot.leadSpecies = m.species
+    end
+    return false
+  end,
+  -- 3. Pickup items (also when training is about to end, so none are left), then the end of
+  --    training or of this phase
+  function(m)
+    local done = trainingDone(m)
+    local phase = (not done) and PK.phaseDone(m) or nil
+    if tcfg.pickup and PK.check(done or phase ~= nil) then return true end
+    if done or phase then PK.finish(m, done, phase); return true end
+    return false
+  end,
+  -- 4. With Pokerus or Macho Brace each battle gives 2 or 4 EVs: if less than that is missing
+  --    and going over is not allowed, it could never finish
+  function(m)
+    if not tcfg.target or CONFIG.allowOvershoot then return false end
     local mult = ((m.pokerus ~= 0) and 2 or 1) * ((m.item == ITEM_MACHO_BRACE) and 2 or 1)
     for s = 1, 6 do
       local i = EV_OF_STAT[s]
@@ -3237,26 +3734,41 @@ local function afterBattleDecide()
       if need > 0 and need < mult and evTotal(m) < 510 then
         halt(string.format(TX"Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo",
           need, TX(STAT_LABEL[s]), mult))
-        return
+        return true
       end
     end
-  end
-  local why = needHeal(m)
-  if why then beginHeal(why); return end
-  -- If it is not at the training spot (e.g. it lost and woke up at the Center)
-  local p = playerPos()
-  if bot.spot and p and not (p.g == bot.spot.g and p.n == bot.spot.n and math.abs(p.x - bot.spot.x) <= 2
-     and math.abs(p.y - bot.spot.y) <= 2) then
+    return false
+  end,
+  -- 5. heal
+  function(m)
+    local why = needHeal(m)
+    if why then beginHeal(why); return true end
+    return false
+  end,
+  -- 6. not at the training spot (e.g. it lost and woke up at the Center)
+  function()
+    local p = playerPos()
+    if not (bot.spot and p and not (p.g == bot.spot.g and p.n == bot.spot.n and math.abs(p.x - bot.spot.x) <= 2
+       and math.abs(p.y - bot.spot.y) <= 2)) then return false end
     if route.back then
       for k = 1, #route.back do
-        if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return end
+        if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return true end
       end
     end
     halt(TX"El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
-    return
+    return true
+  end,
+}
+local function afterBattleDecide()
+  local m = leadOk()
+  if not m then halt(TX"No se pudo leer el Pokemon del equipo"); return end
+  for _, step in ipairs(PK.AFTER) do
+    if step(m) then return end
   end
-  startWalk()
+  startWalk()                               -- nothing to do: look for the next battle
 end
+
+PK.resume = afterBattleDecide
 
 -- Only one Train Bot at a time: if another Lua window was left running (for example
 -- an old version), both would press buttons at the same time.
@@ -3301,6 +3813,16 @@ local function startBot()
   bot.startTime = 0
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
+  bot.pkSeen, bot.pkItems, bot.pkFound = {}, 0, 0
+  bot.useless, bot.finishHealed, PK.noMove = 0, nil, 0
+  if tcfg.pickup then
+    local n = #PK.slots()
+    if n == 0 then logLine(TX"pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6")
+    else logLine(string.format(TX"Recogida: %d Pokemon en el equipo", n)) end
+    if tcfg.pickup == "auto" and not Menus.MENU then
+      logLine(TX"Aviso: menus no verificados en esta version: para quitar objetos el bot pausara y te avisara")
+    end
+  end
   logLine(string.format(TX"Entrenamiento iniciado: %s Nv.%d  EVs %s", speciesName(m.species), m.level,
     table.concat({ m.evs[1], m.evs[2], m.evs[3], m.evs[5], m.evs[6], m.evs[4] }, "/")))
   local ws = wantedStatus(m)
@@ -3321,6 +3843,8 @@ local function enterBattle(returnTo)
   bot.returnTo = returnTo
   bot.blocked, bot.lastMoveSlot, bot.sawMove = {}, nil, false
   bot.outT = 0
+  bot.sendSlot = nil
+  bot.runTries, bot.trapped = 0, nil
   bot.battles = bot.battles + 1
 end
 
@@ -3339,6 +3863,7 @@ local function stepBattle()
     if foe then
       bot.foe = foe
       bot.lastFoe = foe
+      bot.noMoveCounted = false
       if foe.sv < 8 and CONFIG.stopOnShiny then
         stopBot()
         bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
@@ -3350,10 +3875,18 @@ local function stepBattle()
       local m = lead()
       if bot.forceRun then bot.fight, bot.lastWhy = false, TX"camino al Centro"
       elseif m then bot.fight, bot.lastWhy = shouldFight(m, foe.species) end
-      if bot.fight then bot.fought = bot.fought + 1 else bot.fled = bot.fled + 1 end
+      if bot.fight then bot.fought = bot.fought + 1; bot.useless = 0
+      else
+        bot.fled = bot.fled + 1
+        if not bot.forceRun then bot.useless = (bot.useless or 0) + 1 end    -- no useful opponent here
+      end
     end
   end
   if #queue > 0 then return end
+
+  -- The game asks for another Pokemon (the lead fainted): before the evolution check,
+  -- because the party screen also changes callback2
+  if band(read32(A.execFlags), 1) ~= 0 and read8(A.bufferA) == Menus.CMD_CHOOSEPOKEMON then Menus.sendOut(); return end
 
   -- Evolution scene: the game shows it with gMain.inBattle still set,
   -- but on another screen (callback2 differs from the battle one). Before, this
@@ -3368,7 +3901,7 @@ local function stepBattle()
         bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
         notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
-        pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
+        Game.pauseSoon()        -- pause: unpause, finish the scene and the bot carries on by itself
         return
       end
       -- The animation advances by itself; only if it stays on a text for a long time, press A
@@ -3424,10 +3957,43 @@ local function stepBattle()
     local me = battleMon(0)
     local run = not bot.fight or bot.forceRun
     if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
-    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
+    if not run and not bestMove(bot.blocked) then
+      run = true; bot.lastWhy = TX"sin ataques utiles"
+      if not bot.noMoveCounted then            -- once per battle
+        bot.noMoveCounted = true
+        PK.noMove = (PK.noMove or 0) + 1
+        local l = lead()
+        if PK.noMove >= PK.NOMOVE_LIMIT and l then
+          halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+            speciesName(l.species), speciesName(bot.foe.species)))
+          return
+        end
+      end
+    elseif not run then PK.noMove = 0 end
+    -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
+    if run and not bot.trapped then
+      local why = Menus.trapped()
+      if not why and bot.runTries >= 3 then why = TX"no logra huir" end
+      if why then
+        -- the trained Pokemon is the one out (none was sent out for it): would fighting push its
+        -- EVs past the goal? Then don't fight: pause, the player finishes it (catching gives no EVs)
+        local l = lead()
+        local over = not bot.sendSlot and l and bot.foe and PK.overshoot(l, bot.foe.species)
+        if over then
+          halt(string.format(TX"%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7",
+            speciesName(bot.foe.species), why, TX(STAT_LABEL[over])))
+          return
+        end
+        bot.trapped = true
+        logLine(string.format(TX"No puede huir de %s (%s): pelea", bot.foe and speciesName(bot.foe.species) or "?", why))
+      end
+    end
+    if bot.trapped then run = false; bot.lastWhy = TX"no puede huir" end
     local want = run and 3 or 0
     local c = band(read8(A.actionCursor), 3)
-    if c == want then tap("A", 16)
+    if c == want then
+      if run then bot.runTries = bot.runTries + 1 end
+      tap("A", 16)
     elseif band(c, 1) ~= band(want, 1) then tap(band(want, 1) == 1 and "right" or "left", 4)
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
@@ -3438,6 +4004,7 @@ local function stepBattle()
       bot.blocked[bot.lastMoveSlot] = true
     end
     local slot = bestMove(bot.blocked)
+    if not slot and bot.trapped then slot = Menus.anyMove(bot.blocked) end     -- trapped: any move with PP
     if not slot then tap("B", 10); bot.forceRun = true; return end
     local want = slot - 1
     local c = band(read8(A.moveCursor), 3)
@@ -3458,7 +4025,7 @@ local function stepAfter()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
     bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
-    pcall(emu.pause)
+    Game.pauseSoon()
     notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
@@ -3682,7 +4249,7 @@ end
 -- ------------------------------- Panel -------------------------------
 local PHASE = { idle = "Detenido", walk = "Buscando combate", battle = "Combate", after = "Fin del combate",  --@i18n
   heal_tile = "Curando", manual = "Esperando tu decision", learn_pick = "Aprendiendo ataque", heal_go = "Yendo al Centro", nurse = "Curando", nurse_exit = "Curando",  --@i18n
-  heal_back = "Volviendo al punto" }  --@i18n
+  heal_back = "Volviendo al punto", take = "Guardando objetos" }  --@i18n
 
 -- EV progress block: bar per stat, total, session, rate and estimated time
 local function evBlock(m, line)
@@ -3825,6 +4392,9 @@ local function draw()
         route.go and string.format(TX"%d/%d pasos", #route.go, #route.back) or TX"no grabada"))
     end
     line(string.format(TX"Combates %d  peleados %d  huidos %d  curas %d", bot.battles, bot.fought, bot.fled, bot.heals))
+    if tcfg.pickup and bot.pkFound then
+      line(string.format(TX"Recogida: %d encontrados, %d guardados", bot.pkFound, bot.pkItems))
+    end
   end
   if bot.lastFoe and bot.running then
     line(string.format(TX"Rival: %s Nv.%d  -> %s (%s)", speciesName(bot.lastFoe.species), bot.lastFoe.level,
@@ -3856,6 +4426,13 @@ print(TX"7 = iniciar/detener   6 = grabar ruta al Centro   8 = ver Pokemon (stat
 reportConfig(cfgOk, cfgMsg, cfgProblems)
 if route.go then print(string.format(TX"Ruta al Centro cargada: %d pasos de ida, %d de vuelta", #route.go, #route.back)) end
 
+-- State pattern: the function that runs every frame in each state (bot.st)
+local STEP = {
+  walk = stepWalk, battle = stepBattle, after = stepAfter, manual = stepManual,
+  heal_go = stepHealGo, nurse = stepNurse, heal_tile = stepHealTile, nurse_exit = stepNurseExit,
+  heal_back = stepHealBack, learn_pick = stepLearnPick, take = Menus.stepTake,
+}
+
 local badFrames = 0
 while true do
   gFrame = gFrame + 1
@@ -3871,19 +4448,12 @@ while true do
   end
   if bot.running then
     local busy = runQueue()
-    local st = bot.st
-    if st == "walk" then stepWalk()
-    elseif st == "battle" then stepBattle()
-    elseif st == "after" then stepAfter()
-    elseif st == "manual" then stepManual()
-    elseif st == "heal_go" then stepHealGo()
-    elseif st == "nurse" then stepNurse()
-    elseif st == "heal_tile" then stepHealTile()
-    elseif st == "nurse_exit" then stepNurseExit()
-    elseif st == "heal_back" then stepHealBack()
-    elseif st == "learn_pick" then stepLearnPick() end
+    local step = STEP[bot.st]
+    if step then step() end
     if not busy then runQueue() end
   end
   draw()
+  -- the pause the bot asked for (Game.pauseSoon), here at the top level, never inside pcall
+  if Game.pausePending then Game.pausePending = false; emu.pause() end
   emu.frameadvance()
 end

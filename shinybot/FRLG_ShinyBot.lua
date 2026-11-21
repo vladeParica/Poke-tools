@@ -120,7 +120,10 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s is evolving into %s",
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s has no move that damages %s: teach it one and press 7",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (%d per hour of play)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -255,12 +258,17 @@ local LANG = {
     ["Esperando el frame"] = "Waiting for the frame",
     ["Esperando tu decision"] = "Waiting for your decision",
     ["Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"] = "It's evolving: finish it yourself (new moves, texts). The bot carries on by itself after",
+    ["Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui"] = "State saved near the target (advance %d): the tries start from here",
     ["Estatico"] = "Static",
     ["Estatico RNG"] = "Static RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "This ROM is not FireRed / LeafGreen. The bot won't run.",
+    ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "This map (%d.%d) has no %s encounters: start the mode in the grass or cave where you hunt",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARMING DONE: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE DONE: %d battles in a row without an opponent that gives the missing EVs (%s). Change area",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE DONE: no species in 'species' gives the missing EVs (%s). Change area and species",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE DONE: it already has 510 EVs in total and the missing ones don't fit (%s)",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "%d %s EVs missing but each battle gives %d: set allowOvershoot or use another method",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -279,6 +287,7 @@ local LANG = {
     ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "RECORDING WAY BACK: go back to the start point (where you use the VS Seeker) and press 5",
     ["GUARDAR"] = "SAVE",
     ["Graba la ruta de los entrenadores con la tecla 5"] = "Record the trainer route with key 5",
+    ["Guardado en la mochila: %s"] = "Stored in the bag: %s",
     ["Guardado en la mochila: %s (tienes %d)"] = "Stored in the bag: %s (you have %d)",
     ["Guardados %d%s  encontrados %d%s"] = "Stored %d%s  found %d%s",
     ["Guardando en la mochila: "] = "Storing in the bag: ",
@@ -323,6 +332,7 @@ local LANG = {
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "No party Pokemon has the Pickup ability",
     ["Niveles +%d desde el inicio%s"] = "Levels +%d since the start%s",
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
+    ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "Couldn't find the encounter table in the ROM: reload the script with the game already running",
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
@@ -331,9 +341,11 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "I couldn't heal: the way there must end INSIDE the Center, facing the nurse (record another with 6)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "I couldn't read the encounter table: remove the 'species' filter",
     ["No pude quitar los objetos: "] = "I couldn't take the items: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Couldn't send out another Pokemon: pick it yourself, run and press 7",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "I couldn't follow the route to the Center (record another with 6)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "I couldn't follow the trainer route (record another with 5)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "I couldn't get back to the training spot (record another route with 6)",
+    ["No puede huir de %s (%s): pelea"] = "Can't run from %s (%s): fighting",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "I can't use the VS Seeker: the character doesn't stay still on the map",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "The Teachy TV didn't open: register it on SELECT. Waiting at normal speed.",
     ["No se aprendio "] = "Didn't learn ",
@@ -386,7 +398,9 @@ local LANG = {
     ["REGISTRAR"] = "REGISTER",
     ["RETIRARSE"] = "RETIRE",
     ["Recogida (hay que ganar)"] = "Pickup (must win)",
+    ["Recogida: %d Pokemon en el equipo"] = "Pickup: %d Pokemon in the party",
     ["Recogida: %d en el equipo  llevan objeto: %s"] = "Pickup: %d in the party  holding items: %s",
+    ["Recogida: %d encontrados, %d guardados"] = "Pickup: %d found, %d stored",
     ["Regalo"] = "Gift",
     ["Regalo RNG"] = "Gift RNG",
     ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Register the VS Seeker on SELECT (Bag > VS Seeker > Register)",
@@ -445,6 +459,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Your Pokemon is evolving: finish the scene and the bot carries on by itself",
     ["Tu Pokemon evoluciono a "] = "Your Pokemon evolved into ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Your Pokemon fainted against a trainer: pick the next one yourself and finish the battle",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Your Pokemon fainted and the game asks for another: pick it yourself, run and press 7",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Your Pokemon fainted and no healthy one is left: pick it yourself and press 7",
     ["Ultimo:"] = "Last:",
     ["Ultimo: "] = "Last: ",
     ["Usando Buscapelea"] = "Using VS Seeker",
@@ -462,14 +478,18 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
     ["ataque desconocido en "] = "unknown move in ",
+    ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
     ["camino al Centro"] = "on the way to the Center",
     ["cerrado"] = "closed",
     ["combate "] = "battle ",
     ["cursor inesperado"] = "unexpected cursor",
     ["daria EVs de "] = "would give EVs in ",
+    ["de agua"] = "water",
     ["de camino"] = "on the way",
+    ["de hierba"] = "grass",
     ["debilitado"] = "fainted",
+    ["debilitado: huir"] = "fainted: run",
     ["dinero"] = "money",
     ["el archivo debe ser un objeto { ... }"] = "the file must be an object { ... }",
     ["el cursor del menu START no llega a POKEMON"] = "the START menu cursor doesn't reach POKEMON",
@@ -489,6 +509,7 @@ local LANG = {
     ["falta ',' o ']'"] = "missing ',' or ']'",
     ["falta ',' o '}'"] = "missing ',' or '}'",
     ["falta ':'"] = "missing ':'",
+    ["fin del entrenamiento"] = "end of training",
     ["huir"] = "run",
     ["la mochila no tiene espacio para "] = "the bag has no room for ",
     ["la pantalla del equipo no responde"] = "the party screen doesn't respond",
@@ -514,7 +535,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "there is no POKEMON option in the START menu",
     ["no llego al Pokemon "] = "can't reach Pokemon ",
     ["no lleva objeto"] = "holds no item",
+    ["no logra huir"] = "running keeps failing",
     ["no pude cerrar los menus"] = "I couldn't close the menus",
+    ["no puede huir"] = "can't run",
     ["no se abrio la pantalla del equipo"] = "the party screen didn't open",
     ["no se pudo robar"] = "couldn't steal",
     ["no ubico el titulo"] = "can't find the title screen",
@@ -526,6 +549,9 @@ local LANG = {
     ["objetos (Recogida)"] = "items (Pickup)",
     ["opcion desconocida: "] = "unknown option: ",
     ["pelear"] = "fight",
+    ["pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6"] = "pickup is on, but there is no Pokemon with Pickup in slots 2 to 6",
+    ["pickup debe ser \"auto\", \"pause\" o null"] = "pickup must be \"auto\", \"pause\" or null",
+    ["pickupTakeAt debe ser un numero del 1 al 5"] = "pickupTakeAt must be a number from 1 to 5",
     ["prediccion fallida"] = "prediction failed",
     ["rango elegido"] = "chosen range",
     ["robado: "] = "stolen: ",
@@ -601,7 +627,10 @@ local LANG = {
     ["%s esta evolucionando a %s"] = "%s ga %s ni shinka chuu",
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
+    ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s ni %s ni kiku waza ga nai: waza wo oboesasete 7 wo osu",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
+    ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
     ["%s: %d   (%d por hora de juego)"] = "%s: %d   (play 1 jikan atari %d)",
     ["%s: %s%s Nv.%d%s"] = "%s: %s%s Lv.%d%s",
@@ -736,12 +765,17 @@ local LANG = {
     ["Esperando el frame"] = "Frame wo matte iru",
     ["Esperando tu decision"] = "Anata no handan wo matte iru",
     ["Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"] = "Shinka chuu: jibun de owarasete (atarashii waza, message). Sono ato bot ga tsuzukemasu",
+    ["Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui"] = "Mokuhyou no chikaku de state wo hozon (%d): kore kara no shikou wa koko kara",
     ["Estatico"] = "Symbol",
     ["Estatico RNG"] = "Symbol RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "Kono ROM wa FireRed / LeafGreen dewa arimasen. Bot wa ugokimasen.",
+    ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "Kono map (%d.%d) ni wa %s no deai ga nai: kusamura ka doukutsu de mode wo hajimete",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
     ["FARMEO COMPLETO: "] = "FARM KANRYO: ",
+    ["FASE TERMINADA: %d combates seguidos sin un rival que de los EVs que faltan (%s). Cambia de zona"] = "PHASE KANRYOU: %d kai renzoku de nokori no EV (%s) wo kureru aite ga inai. Basho wo kaete",
+    ["FASE TERMINADA: ninguna especie de 'species' da los EVs que faltan (%s). Cambia de zona y de especies"] = "PHASE KANRYOU: 'species' no dono Pokemon mo nokori no EV (%s) wo kurenai. Basho to shurui wo kaete",
+    ["FASE TERMINADA: ya tiene 510 EVs en total y no caben los que faltan (%s)"] = "PHASE KANRYOU: EV goukei ga 510 de, nokori (%s) wa hairanai",
     ["Faltan %d EVs de %s pero cada combate da %d: pon allowOvershoot o usa otro metodo"] = "Doryokuchi ga %d (%s) tarinai ga 1 kai %d: allowOvershoot ka betsu no houhou wo",
     ["Fantasma"] = "Ghost",
     ["Farmear v1.0 [%s]: %s"] = "Farm v1.0 [%s]: %s",
@@ -760,6 +794,7 @@ local LANG = {
     ["GRABANDO VUELTA: vuelve al punto de inicio (donde usas el Buscapelea) y pulsa 5"] = "KAERI KIROKU CHUU: kaishi point (Battle Searcher wo tsukau basho) ni modotte 5 wo oshite",
     ["GUARDAR"] = "REPORT",
     ["Graba la ruta de los entrenadores con la tecla 5"] = "5 key de trainer route wo kiroku shite",
+    ["Guardado en la mochila: %s"] = "Bag ni shimatta: %s",
     ["Guardado en la mochila: %s (tienes %d)"] = "Bag ni shimatta: %s (shoji %d)",
     ["Guardados %d%s  encontrados %d%s"] = "Shuunou %d%s  hakken %d%s",
     ["Guardando en la mochila: "] = "Bag ni shimatte iru: ",
@@ -804,6 +839,7 @@ local LANG = {
     ["Ningun Pokemon del equipo tiene la habilidad Recogida (Pickup)"] = "Temochi ni tokusei Monohiroi no Pokemon ga inai",
     ["Niveles +%d desde el inicio%s"] = "Kaishi kara Lv +%d%s",
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
+    ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "ROM ni deai table ga nai: game wo kidou shite kara script wo saiyomikomi shite",
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
@@ -812,9 +848,11 @@ local LANG = {
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "Kaifuku dekinakatta: iki wa Center no NAKA, Joy-san no mae de owaru hitsuyou (6 de kiroku shinaoshite)",
     ["No pude leer la tabla de encuentros: quita el filtro 'species'"] = "Encount table wo yomenakatta: 'species' no jouken wo hazushite",
     ["No pude quitar los objetos: "] = "Dougu wo hazusenakatta: ",
+    ["No pude sacar otro Pokemon: eligelo tu, huye y pulsa 7"] = "Tsugi no Pokemon wo dasenakatta: jibun de erande nigete 7 wo oshite",
     ["No pude seguir la ruta al Centro (graba otra con 6)"] = "Center e no route wo tadorenakatta (6 de kiroku shinaoshite)",
     ["No pude seguir la ruta de los entrenadores (graba otra con 5)"] = "Trainer route wo tadorenakatta (5 de kiroku shinaoshite)",
     ["No pude volver al punto de entreno (graba otra ruta con 6)"] = "Tokkun point ni modorenakatta (6 de route wo kiroku shinaoshite)",
+    ["No puede huir de %s (%s): pelea"] = "%s kara nigerarenai (%s): tatakau",
     ["No puedo usar el Buscapelea: el personaje no se queda quieto en el mapa"] = "Battle Searcher wo tsukaenai: shujinkou ga map de tomaranai",
     ["No se abrio la Tele Pokemon: registrala en SELECT. Esperando a velocidad normal."] = "TV ga hirakanakatta: SELECT ni touroku shite. Futsuu no hayasa de machimasu.",
     ["No se aprendio "] = "Oboenakatta: ",
@@ -867,7 +905,9 @@ local LANG = {
     ["REGISTRAR"] = "TOUROKU",
     ["RETIRARSE"] = "RETIRE",
     ["Recogida (hay que ganar)"] = "Monohiroi (katsu hitsuyou ari)",
+    ["Recogida: %d Pokemon en el equipo"] = "Monohiroi: temochi ni %d hiki",
     ["Recogida: %d en el equipo  llevan objeto: %s"] = "Monohiroi: temochi ni %d  mochimono: %s",
+    ["Recogida: %d encontrados, %d guardados"] = "Monohiroi: %d ko mitsuketa, %d ko shimatta",
     ["Regalo"] = "Morau",
     ["Regalo RNG"] = "Morau RNG",
     ["Registra el Buscapelea en SELECT (mochila > Buscapelea > Registrar)"] = "Battle Searcher wo SELECT ni touroku shite (Bag > Battle Searcher > Touroku)",
@@ -926,6 +966,8 @@ local LANG = {
     ["Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo"] = "Pokemon ga shinka chuu: scene wo owaraseru to bot ga tsuzukemasu",
     ["Tu Pokemon evoluciono a "] = "Pokemon ga shinka: ",
     ["Tu Pokemon se debilito contra un entrenador: elige tu el siguiente y termina el combate"] = "Trainer sen de Pokemon ga hinshi: tsugi wo erande battle wo owarasete",
+    ["Tu Pokemon se debilito y el juego pide otro: eligelo tu, huye y pulsa 7"] = "Pokemon ga taoreta, tsugi wo erande nigete kara 7 wo oshite",
+    ["Tu Pokemon se debilito y no queda otro sano: eligelo tu y pulsa 7"] = "Pokemon ga taoreta, genki na Pokemon ga inai: jibun de erande 7 wo oshite",
     ["Ultimo:"] = "Saigo:",
     ["Ultimo: "] = "Saigo: ",
     ["Usando Buscapelea"] = "Battle Searcher shiyou chuu",
@@ -943,14 +985,18 @@ local LANG = {
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
     ["ataque desconocido en "] = "fumei na waza: ",
+    ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
     ["camino al Centro"] = "Center e idou chuu",
     ["cerrado"] = "tojite iru",
     ["combate "] = "battle ",
     ["cursor inesperado"] = "yoki shinai cursor",
     ["daria EVs de "] = "doryokuchi wo kureru: ",
+    ["de agua"] = "mizu",
     ["de camino"] = "idou chuu",
+    ["de hierba"] = "kusa",
     ["debilitado"] = "hinshi",
+    ["debilitado: huir"] = "taoreta: nigeru",
     ["dinero"] = "okozukai",
     ["el archivo debe ser un objeto { ... }"] = "file wa object { ... } de aru hitsuyou ga aru",
     ["el cursor del menu START no llega a POKEMON"] = "START menu no cursor ga POKEMON ni todokanai",
@@ -970,6 +1016,7 @@ local LANG = {
     ["falta ',' o ']'"] = "',' ka ']' ga nai",
     ["falta ',' o '}'"] = "',' ka '}' ga nai",
     ["falta ':'"] = "':' ga nai",
+    ["fin del entrenamiento"] = "kunren shuuryou",
     ["huir"] = "nigeru",
     ["la mochila no tiene espacio para "] = "bag ni aki ga nai: ",
     ["la pantalla del equipo no responde"] = "temochi gamen ga hannou shinai",
@@ -995,7 +1042,9 @@ local LANG = {
     ["no hay opcion POKEMON en el menu START"] = "START menu ni POKEMON ga nai",
     ["no llego al Pokemon "] = "Pokemon ni todokanai: ",
     ["no lleva objeto"] = "dougu wo motte inai",
+    ["no logra huir"] = "nigerarenai",
     ["no pude cerrar los menus"] = "menu wo tojirarenakatta",
+    ["no puede huir"] = "nigerarenai",
     ["no se abrio la pantalla del equipo"] = "temochi gamen ga hirakanakatta",
     ["no se pudo robar"] = "nusumenakatta",
     ["no ubico el titulo"] = "title gamen ga mitsukaranai",
@@ -1007,6 +1056,9 @@ local LANG = {
     ["objetos (Recogida)"] = "dougu (Monohiroi)",
     ["opcion desconocida: "] = "fumei na settei: ",
     ["pelear"] = "tatakau",
+    ["pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6"] = "pickup wa ON da ga, 2-6 ban ni Monohiroi no Pokemon ga inai",
+    ["pickup debe ser \"auto\", \"pause\" o null"] = "pickup wa \"auto\", \"pause\" ka null",
+    ["pickupTakeAt debe ser un numero del 1 al 5"] = "pickupTakeAt wa 1 kara 5 no kazu",
     ["prediccion fallida"] = "yosoku shippai",
     ["rango elegido"] = "erabareta hanni",
     ["robado: "] = "nusunda: ",
@@ -1125,6 +1177,42 @@ local gameCode = read8(0x080000AE)
 local gameLang = read8(0x080000AF)
 local gameRev1 = read8(0x080000BC) == 0x1
 local gameName = (gameCode == 0x52 and "FireRed") or (gameCode == 0x47 and "LeafGreen") or nil
+-- Game profile (ADR-0015): what changes between FireRed / LeafGreen builds, in one place.
+-- Included right after the bot reads the ROM header (gameLang, gameName, gameRev1).
+local Game = (function()
+  local G = {}
+  local build = gameName and (gameName .. (gameRev1 and "1" or "0"))
+  if gameLang == 0x45 and build then
+    -- Field menus (pokefirered "symbols" branch). RAM is the same in the four USA builds
+    -- (FireRed / LeafGreen 1.0 and 1.1); the functions differ. Other builds: no verified map,
+    -- so taking items falls back to pausing.
+    local fn = ({
+      FireRed0   = { 0x0806F1F0, 0x0811EBA0, 0x0811FB28, 0x08122C5C, 0x0810C670 },
+      FireRed1   = { 0x0806F204, 0x0811EC18, 0x0811FBA0, 0x08122CD4, 0x0810C6E8 },
+      LeafGreen0 = { 0x0806F1F0, 0x0811EB78, 0x0811FB00, 0x08122C34, 0x0810C648 },
+      LeafGreen1 = { 0x0806F204, 0x0811EBF0, 0x0811FB78, 0x08122CAC, 0x0810C6C0 },
+    })[build]
+    if fn then
+      G.menu = {
+        startCursor = 0x020370F4, startCount = 0x020370F5, startOrder = 0x020370F6,
+        partyMenu = 0x0203B0A0, partyInternal = 0x0203B09C, menuCursor = 0x0203ADE6, tasks = 0x03005090,
+        -- functions (+1: Thumb code)
+        taskStartMenu = fn[1] + 1, cbParty = fn[2] + 1, taskChooseMon = fn[3] + 1, taskSelection = fn[4] + 1,
+        taskVsSeeker = fn[5] + 1,
+      }
+    end
+    -- gWildMonHeaders (pret symbols): in LeafGreen 1.1 the FireRed 1.0 address falls on the
+    -- table's 18th header, so the right one per build matters
+    G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
+                       LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
+  end
+  -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
+  -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
+  -- advance as pending, so the next emu.frameadvance() stops the script with "can't call
+  -- vba.frameadvance() from here". So the bots only ask here and the main loop pauses.
+  function G.pauseSoon() G.pausePending = true end
+  return G
+end)()
 
 local A = {}
 local gMainVerified = false
@@ -1579,6 +1667,9 @@ local function playerIDs()
   local sb2 = read32(A.sb2)
   if not validPtr(sb2) then return nil end
   local ids = read32(sb2 + 0xA)
+  -- On the title screen / intro (after a reset) the pointer is already valid but the save is
+  -- not loaded yet: the IDs read 0/0. Treat that as "no save" instead of TID 0 / SID 0.
+  if ids == 0 then return nil end
   return ids % 0x10000, floor(ids / 0x10000)
 end
 
@@ -1613,6 +1704,13 @@ local function kind()
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
+-- The mode the Initial seed mode hands over to (afterSeedMode), or nil
+local function afterSeedIndex()
+  local after = CONFIG.afterSeedMode
+  if not after then return nil end
+  for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then return i end end
+  return nil
+end
 local function isWildRng() return bot.mode == 8 end
 
 local function push(buttons, frames) queue[#queue + 1] = { b = buttons, n = frames } end
@@ -1935,7 +2033,8 @@ local function ivsFromCalls(i1, i2)
            floor(i2 / 32) % 32, floor(i2 / 1024) % 32, i2 % 32 }
 end
 
-local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000 }
+local rng = { preDelay = 40, pressEvery = 14, pressCount = 60, M = 1600, block = 50000,
+              nearLead = 1800, nearGap = 3000, nearMin = 60 }
 local rngState = nil
 local wr = { r = {}, built = 0 }   -- r[k] = k-th call to Random() from the base seed
 
@@ -1950,9 +2049,17 @@ end
 
 local pendingZero = 0
 local function rngLoad()
-  savestate.load(rngState)
+  -- A state saved shortly before the target (see saveNear) skips the long wait from the base.
+  -- Advances keep counting from the base, so targets and tries are unchanged.
+  local n = rng.near
+  if n and n.base == rngState and rng.pressAt and rng.pressAt >= n.adv + rng.nearMin then
+    savestate.load(n.state)
+    rng.seed, rng.adv, rng.prevAdv = n.seed, n.adv, n.adv
+  else
+    savestate.load(rngState)
+    rng.seed, rng.adv, rng.prevAdv = rng.seed0, 0, 0
+  end
   queue = {}
-  rng.seed, rng.adv, rng.prevAdv = rng.seed0, 0, 0
   bot.armed = false
   monWatch = {}
   if kind() == 2 or kind() == 1 then
@@ -2047,13 +2154,40 @@ local function validHeaderTable(base)
   return false
 end
 
+-- One header: map group, map number, 2 bytes of padding, then 4 pointers (0 or into the ROM)
+local function wildEntryOk(a)
+  if read8(a) > 0x30 or read8(a + 2) ~= 0 or read8(a + 3) ~= 0 then return false end
+  local any = false
+  for o = 4, 16, 4 do
+    local q = read32(a + o)
+    if q ~= 0 then
+      if q < 0x08000000 or q >= 0x0A000000 then return false end
+      any = true
+    end
+  end
+  return any
+end
+
+-- gWildMonHeaders per USA build: Game.wildHeaders (shared/lua/game.lua). Each address is
+-- checked to be the FIRST header: in LeafGreen 1.1 the FireRed 1.0 address falls on its
+-- 18th header, and the maps before it (Viridian Forest among them) were missing.
+local function wildTableStart(a)
+  while wildEntryOk(a - 20) do a = a - 20 end
+  return a
+end
+
 local function findWildTable()
-  if wildTableBase ~= nil then return wildTableBase end
-  wildTableBase = false
-  if validHeaderTable(0x083C9CB8) then wildTableBase = 0x083C9CB8; return wildTableBase end
+  -- only a table that was found is remembered: a failed search (e.g. the script ran before
+  -- the ROM was loaded) is tried again next time
+  if wildTableBase then return wildTableBase end
+  local known = Game.wildHeaders
+  if known and validHeaderTable(known) and not wildEntryOk(known - 20) then
+    wildTableBase = known; return known
+  end
+  -- other languages: search, then go back to the first header of the table
   for a = 0x08300000, 0x08500000, 4 do
     if read8(a) < 0x30 and read8(a + 2) == 0 and read8(a + 3) == 0 and validHeaderTable(a) then
-      wildTableBase = a; return a
+      wildTableBase = wildTableStart(a); return wildTableBase
     end
   end
   return false
@@ -2427,7 +2561,35 @@ local function wantedTarget(pid, ivs, lo, hi)
   return isWanted({ pid = pid, ivs = ivs, sv = bxor(bxor(bot.tid, bot.sid), bxor(lo, hi)) })
 end
 
+-- What would stop `mode` from working here, or nil. A gift needs a free party slot (with a
+-- full party it goes to the PC, the bot never sees it and keeps retrying); the roamer must
+-- not be out yet. Also reads bot.baseParty, the party size the gift is detected against.
+local function modeProblem(mode)
+  local saved = bot.mode
+  bot.mode = mode or bot.mode
+  local k = kind()
+  bot.mode = saved
+  bot.baseParty = read8(A.partyCnt)
+  if k == 3 and bot.baseParty >= 6 then return TX"Equipo lleno: deja un espacio libre para el regalo" end
+  if k == 4 then
+    local r = readRoamer()
+    if r and r.active then return TX"El roamer ya esta activo: usa un save de ANTES del evento" end
+  end
+  return nil
+end
+
 local function rngStart()
+  -- also when the Initial seed mode hands over: the save was just loaded, read the party again
+  local problem = modeProblem()
+  if problem then
+    stopBot()
+    bot.msg = problem
+    print(bot.msg)
+    return
+  end
+  -- the shiny check needs this save's IDs: read them again now that it is loaded
+  local tid, sid = playerIDs()
+  if tid then bot.tid, bot.sid = tid, sid end
   rebaseHere()
   rng.nextSearch = nil
   rng.delay, rng.target, rng.targetPid, rng.tries = nil, nil, nil, 0
@@ -2471,6 +2633,17 @@ local function retryOrNext(hit)
   end
 end
 
+-- Far target without the Teachy TV: save a state nearLead advances before pressing, so the
+-- tries after the first one reload there instead of waiting from the base again.
+local function saveNear()
+  local from = (rng.near and rng.near.base == rngState) and rng.near.adv or 0
+  if rng.adv < rng.pressAt - rng.nearLead or rng.adv - from < rng.nearGap then return end
+  local st = savestate.create()
+  savestate.save(st)
+  rng.near = { base = rngState, state = st, adv = rng.adv, seed = rng.seed }
+  print(string.format(TX"Estado guardado cerca del objetivo (avance %d): los reintentos empiezan desde aqui", rng.adv))
+end
+
 local function stepRng()
   if isReseedState() then stepReseed(); return end
   if bot.st == "far" then stepFar(); return end
@@ -2485,6 +2658,8 @@ local function stepRng()
       bot.t = 0
       pushPressSchedule()
       bot.st = "pressed"
+    elseif rng.target then
+      saveNear()
     end
   elseif bot.st == "pressed" then
     local mon = targetReady()
@@ -2834,9 +3009,7 @@ local function stepSeedBot()
         if seed == t then
           print(string.format(TX"Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
           logLine(string.format(TX"[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
-          local after = CONFIG.afterSeedMode
-          local idx = nil
-          if after then for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then idx = i end end end
+          local idx = afterSeedIndex()
           if idx and idx ~= 10 then
             bot.mode = idx
             bot.noReseed = true
@@ -2952,7 +3125,16 @@ local function wildSetup()
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
-    bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    -- say what failed: the table itself, or this map (group.number) has no such encounters
+    local sb1 = read32(A.sb1)
+    if not findWildTable() then
+      bot.msg = TX"No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"
+    elseif validPtr(sb1) then
+      bot.msg = string.format(TX"Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas", read8(sb1 + 4), read8(sb1 + 5),
+                              wr.water and TX"de agua" or TX"de hierba")
+    else
+      bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    end
     print(bot.msg); bot.running = false; bot.st = "idle"; return
   end
   bot.st = "wbuild"
@@ -3162,17 +3344,11 @@ local function startBot()
     print(bot.msg); return
   end
   bot.tid, bot.sid = tid, sid
-  bot.baseParty = read8(A.partyCnt)
-  if kind() == 3 and bot.baseParty >= 6 then
-    bot.msg = TX"Equipo lleno: deja un espacio libre para el regalo"
+  -- Initial seed: check now the mode it will hand over to, not after the seed is found
+  local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
+  if problem then
+    bot.msg = problem
     print(bot.msg); return
-  end
-  if kind() == 4 then
-    local r = readRoamer()
-    if r and r.active then
-      bot.msg = TX"El roamer ya esta activo: usa un save de ANTES del evento"
-      print(bot.msg); return
-    end
   end
   -- New game: the TID only exists once you name your character (the seed word is 0 before)
   if bot.mode == 9 and read16(0x02020000) == 0 then

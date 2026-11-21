@@ -15,6 +15,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BOT_SOURCES = ['shinybot/src/bot_body.lua', 'trainbot/src/train_body.lua', 'farmbot/src/farm_body.lua']
+# code shared by several bots (inserted by shared/buildlib.py, ADR-0015)
+_SHARED_LUA = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'shared', 'lua')
+BOT_SOURCES += sorted('shared/lua/' + f for f in os.listdir(_SHARED_LUA) if f.endswith('.lua'))
 FMT = re.compile(r'%[-+ #0]*\d*(?:\.\d+)?[sdqxXfgicoeEuA%]')
 
 
