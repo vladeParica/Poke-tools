@@ -7,6 +7,8 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 ## [Unreleased]
 
 ### Added
+- Shiny Bot: `pauseAfterSeed` (Initial seed). Pauses once the save is loaded on the seed so you can
+  keep a savestate and resume the hunt from it without hitting the seed again.
 - Shiny Bot: mode 11 **Pesca** (fishing). It uses the rod registered on SELECT while you face the
   water, closes the fishing texts with B (A facing water would offer Surf) and runs from every
   battle until the target appears, like *Salvaje*; `species` works too. It refuses to start without
@@ -77,6 +79,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Shiny Bot, *Salvaje RNG*: when it hits the target's advance and PID but the game interrupts that
+  generation (other IVs), it says so, logs the IVs and stops after a second try with what to
+  change, instead of repeating the same result. Discarded shinies are logged with their IVs.
 - Shiny Bot, *Salvaje RNG* / *Pesca RNG*: one calibration encounter with an extra RNG call (VBlank's
   `Random()` landing mid-generation, which looks like H-4) made the bot search every target with
   that call order, so exact IV targets were never found ("No hay objetivo con esos filtros"). The

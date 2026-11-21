@@ -93,7 +93,10 @@
           help: 'Valores hex de 4 cifras. Dependen de tu TID/SID: calcúlalas con tools/rng. Cuantas más, más rápido.',
           comment: 'semillas del titulo (hex)' },
         { key: 'afterSeedMode', type: 'enum', options: RNG, def: null, nullable: true, label: 'Modo después de la semilla',
-          help: 'El modo RNG que se lanza al caer en la semilla.', comment: 'modo a lanzar al caer en la semilla' }
+          help: 'El modo RNG que se lanza al caer en la semilla.', comment: 'modo a lanzar al caer en la semilla' },
+        { key: 'pauseAfterSeed', type: 'bool', def: false, label: 'Pausar al cargar la semilla',
+          help: 'Para guardar un savestate (Shift+F1) y retomar desde ahí sin volver a buscar la semilla.',
+          comment: 'pausar al cargar la partida en la semilla, para guardar un savestate' }
       ] },
       { id: 'newgame', title: 'TID / SID', icon: 'mode-newgame', desc: 'Solo en el modo Partida nueva: reinicia hasta que TID xor SID sea uno de estos. Cómo se usa: partida nueva, pon tu nombre y el del rival; cuando Oak diga «His name is [RIVAL]!», no pulses A: pulsa 0 y luego 7.', showIf: modeIn(['Partida nueva']), fields: [
         { key: 'newGameTSV', type: 'hexlist', digits: 4, def: null, nullable: true, label: 'TSV buscados (TID xor SID)',

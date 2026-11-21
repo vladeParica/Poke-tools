@@ -49,6 +49,17 @@ If you press 7 too early, the bot tells you: before naming your character there 
 (TID 0) and it refuses to start; before naming the rival, its presses land on the naming
 keyboard, so after two tries without a SID it stops and says when to press 7.
 
+### Initial seed (mode 10): resume from the seed
+
+Hitting a seed can take hundreds of soft resets. With `"pauseAfterSeed": true` the bot pauses
+once the save is loaded on the seed: save a state (Shift+F1) and unpause. To try again later,
+load that state, set `"mode"` to the mode you hand over to (for example `"Salvaje RNG"`) and
+`"reseed": false`, and press 7: the search starts from there.
+
+If the bot hits the target's advance and PID but the IVs differ, the game interrupted that very
+generation (VBlank's `Random()` in the middle). Retrying gives the same result, so the bot says
+so and stops: stand on another tile (or change `walkAxis`) and start again from the savestate.
+
 For far targets, **register the Teachy TV on SELECT**: the bot opens it to advance the RNG
 about 313 times per frame.
 

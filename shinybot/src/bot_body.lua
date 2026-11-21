@@ -62,6 +62,7 @@ local CONFIG = {
 
   -- On finding / several instances
   savestateSlot = nil,          -- nil = don't save by itself (in VBA-rr v22 it gives "Error creating file")
+  pauseAfterSeed = false,       -- Initial seed: pause once the save is loaded on the seed, to keep a savestate
   logFile       = "shiny_log.txt",
   stopOthers    = true,
   sharedDir     = nil,
@@ -722,7 +723,10 @@ local function evaluate(mon)
   mon.shiny = mon.sv < 8
   bot.last = mon
   if isWanted(mon) then onShiny(mon); return true end
-  if mon.shiny then logLine(string.format(TX"Shiny descartado por filtros: %s PID %08X", speciesName(mon.species), mon.pid)) end
+  if mon.shiny then
+    logLine(string.format(TX"Shiny descartado por filtros: %s PID %08X  IVs %s", speciesName(mon.species), mon.pid,
+            mon.ivs and table.concat(mon.ivs, "/") or "?"))
+  end
   return false
 end
 
@@ -1413,6 +1417,14 @@ local function stepReseed()
   elseif bot.st == "rsettle" then
     if bot.t >= 60 then
       bot.selfReset = false
+      if bot.noReseed and CONFIG.pauseAfterSeed and not bot.seedPaused then
+        -- the seed costs many tries: a savestate here lets the hunt start again from it
+        -- (load it, choose the handed-over mode, set "reseed": false and press 7)
+        bot.seedPaused = true
+        bot.msg = TX"Semilla cargada: guarda un savestate (Shift+F1) para retomar desde aqui. Quita la pausa para seguir"
+        logLine(bot.msg)
+        emu.pause()
+      end
       if isFishRng() then
         zeroEnemy()
         rng.casts, rng.castT, rng.hookAt = 0, nil, nil
@@ -2241,6 +2253,22 @@ local function stepWildRng()
       local E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect, wr.layout)
       if not E and wr.layout then E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect) end
       if evaluate(mon) then return end
+      if E and rng.target and E == rng.target and mon.pid == rng.targetPid then
+        -- The right advance and the right PID, but other IVs: VBlank's Random() landed in the
+        -- middle of this very generation. The emulator is deterministic, so the same attempt
+        -- gives the same thing again: what the game does on that frame has to change (another
+        -- tile shows other parts of the map and other people), not the RNG.
+        rng.interrupted = (rng.interrupted or 0) + 1
+        logLine(string.format(TX"Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s",
+                mon.pid, table.concat(mon.ivs, "/")))
+        if rng.interrupted >= 2 then
+          stopBot()
+          bot.msg = TX"El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7"
+          logLine(bot.msg)
+          return
+        end
+        bot.st = "wait"; rngLoad(); return
+      end
       if not E and rng.delay and rng.target then
         -- at the target: that frame gave an encounter that doesn't match (the game
         -- interrupted itself mid-generation). Try the neighboring frame.

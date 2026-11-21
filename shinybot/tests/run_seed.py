@@ -22,14 +22,14 @@ src = (base.replace('initialSeeds  = nil,', 'initialSeeds  = %s,' % SEEDS)
 assert src.count('"Regalo RNG",') >= 1 and SEEDS in src
 
 
-def run(party, at_title=False):
+def run(party, at_title=False, src_=None):
     lua = L.LuaRuntime()
     out = []
     lua.globals().py_out = out.append
     lua.execute('PARTY_N = %d; START_AT_TITLE = %s; io.write = function(s) py_out(s) end'
                 % (party, 'true' if at_title else 'nil'))
     ls = lua.eval('function(s,n) return assert(loadstring(s,n)) end')
-    r = tuple(ls(mock, 'mock')('seed', 0, True, True)(ls(src, 'bot')))
+    r = tuple(ls(mock, 'mock')('seed', 0, True, True)(ls(src_ or src, 'bot')))
     return str(r[1]), int(r[2]), ''.join(out)
 
 
@@ -50,6 +50,13 @@ if not ok:
 err, frames, text = run(2, at_title=True)
 ok = 'Carga tu partida' in text and 'TID 0 / SID 0' not in text and 'conseguida' not in text
 print('%s at title    err=%s frames=%d' % ('ok  ' if ok else 'FAIL', err.split(':')[-1].strip(), frames))
+bad += not ok
+if not ok:
+    print(text[-1200:])
+# pauseAfterSeed: it pauses once the save is loaded on the seed, before the gift mode starts
+err, frames, text = run(2, src_=src.replace('pauseAfterSeed = false,', 'pauseAfterSeed = true,'))
+ok = 'PAUSED' in err and 'Semilla cargada: guarda un savestate' in text and 'Shift+F1' in text
+print('%s pause seed  err=%s frames=%d' % ('ok  ' if ok else 'FAIL', err.split(':')[-1].strip(), frames))
 bad += not ok
 if not ok:
     print(text[-1200:])

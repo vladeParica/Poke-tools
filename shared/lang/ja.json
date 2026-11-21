@@ -28,7 +28,7 @@
   " | corrida iniciada ": " | kaishi ",
   "[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s": "[%s] %s  PID %08X  %s  IVs %s  %d kai de hakken (%s mode)%s",
   "ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo": "HAKKEN! Ichiji teishi: state wo hozon (Shift+F1) shite tsukamaete",
-  "Shiny descartado por filtros: %s PID %08X": "Irochigai wo jouken de miokuri: %s PID %08X",
+  "Shiny descartado por filtros: %s PID %08X  IVs %s": "Irochigai wo jouken de miokuri: %s PID %08X  IVs %s",
   "Aviso: no se pudo confirmar la huida": "Chui: nigeta ka kakunin dekinakatta",
   "Nueva semilla (%s)": "Atarashii seed (%s)",
   "no volvio al mapa": "map ni modoranakatta",
@@ -526,5 +526,8 @@
   "Zona: pesca con la Cana %s%s": "Zone: %s tsurizao de tsuri%s",
   "Lanzamientos: %d": "Nageta kaisuu: %d",
   "Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio": "%s tsurizao de wa koko ni 'species' no Pokemon wa denai: sao ka basho wo kaeru",
-  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Yobun na call no aru sougu (%s): warikomi to minashite H-1 de sagasu"
+  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Yobun na call no aru sougu (%s): warikomi to minashite H-1 de sagasu",
+  "Semilla cargada: guarda un savestate (Shift+F1) para retomar desde aqui. Quita la pausa para seguir": "Seed load zumi: koko kara saikai dekiru you ni savestate wo hozon (Shift+F1). Pause wo toite tsuzukeru",
+  "Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s": "Mokuhyou (PID %08X) ni atatta ga game ga seisei wo warikonda: IV %s ni natta",
+  "El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7": "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu"
 }

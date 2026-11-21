@@ -31,6 +31,7 @@
 | `newGameTSV` | list of hex text | `null` = TSVs that give a shiny 6×31 Ditto | New game |
 | `initialSeeds` | list of hex text | `null` | Seeds for Initial seed mode |
 | `afterSeedMode` | text | `null` | Mode to launch after hitting the seed |
+| `pauseAfterSeed` | bool | `false` | Pause once the save is loaded on the seed, to keep a savestate and resume from it |
 | `walkAxis` | `"left"` \| `"right"` \| `"up"` \| `"down"` (`"horizontal"` = left, `"vertical"` = up) | `"horizontal"` | The neighbour tile it steps to and back (it never walks further) |
 | `walkFrames` | number | `16` | Frames per step |
 | `holdB` | bool | `false` | Run (Wild only) |
