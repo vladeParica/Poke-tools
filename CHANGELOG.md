@@ -81,6 +81,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - Train Bot: against a wanted opponent the lead can't hurt with any move (e.g. only Normal moves
   against Gastly) it ran from every battle forever. After 3 such battles in a row it now stops and
   says the lead needs a move that damages that species.
+- Train Bot: with a `species` list, the PP that decide when to heal only count moves that can hurt
+  one of those species. Normal moves kept the count up against Gastly, so once Bite ran out it never
+  went to heal. If not even full PP would help, it stops and says why instead of healing in a loop.
 - Train Bot and Farm Bot: Bulbasaur had no game data (its row was stored under index 0), so a
   wild Bulbasaur counted as "no data" and a trained one had no types for the damage formula.
 - Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the

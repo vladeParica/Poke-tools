@@ -87,6 +87,8 @@ if SCEN == "pokerus" then leadM.pokerus = 0x13 end
 if SCEN == "full510" then leadM.evs = { 3, 252, 0, 255, 0, 0 } end
 -- "ghost": only Normal moves (Scratch, Growl) and only Gastly around (Ghost/Poison: Normal does nothing)
 if SCEN == "ghost" then leadM.moves = { 10, 45, 0, 0 }; leadM.pp = { 35, 40, 0, 0 } end
+-- "ghostpp": Bite (4 PP left) and Scratch: once Bite is out it must heal, Scratch PP don't count
+if SCEN == "ghostpp" then leadM.moves = { 44, 10, 0, 0 }; leadM.pp = { 4, 35, 0, 0 } end
 local function syncParty() encodeMon(PARTY, leadM); encodeMon(PARTY + 0x64, secondM); w8(PCNT, 2) end
 syncParty()
 
@@ -107,7 +109,7 @@ local SPECIES = {
   [19] = { 0, 0, 0, 1, 0, 0 }, [16] = { 0, 0, 0, 1, 0, 0 }, [43] = { 0, 0, 0, 0, 1, 0 },
   [56] = { 0, 1, 0, 0, 0, 0 }, [23] = { 0, 1, 0, 0, 0, 0 } }
 local POOL = { 19, 16, 43, 56, 23 }
-if SCEN == "ghost" then POOL = { 92 } end
+if SCEN == "ghost" or SCEN == "ghostpp" then POOL = { 92 }; SPECIES[92] = { 0, 0, 0, 0, 1, 0 } end
 
 local function setBattleMon(i, sp, lvl, hp, maxHP, moves, pp, types)
   local b = BMONS + i * 0x58
@@ -286,7 +288,7 @@ local function nurseFrame()
   elseif d.step == 3 then
     if d.t == 60 then
       leadM.hp = leadM.maxHP
-      local BASEPP = { [10] = 35, [45] = 40, [52] = 25, [43] = 30, [53] = 15, [232] = 35, [108] = 20, [33] = 35 }
+      local BASEPP = { [10] = 35, [45] = 40, [52] = 25, [43] = 30, [53] = 15, [232] = 35, [108] = 20, [33] = 35, [44] = 25 }
       for k = 1, 4 do leadM.pp[k] = BASEPP[leadM.moves[k]] or 0 end
       secondM.hp = secondM.maxHP; secondM.pp[1] = 35; syncParty()
       stats.heals = stats.heals + 1; ev("healed")
@@ -329,7 +331,7 @@ local function worldFrame()
     W.x, W.y = nx, ny; W.walkT = 16
     if SCEN == "tile" and W.g == 4 and nx == 5 and ny == 5 then
       leadM.hp = leadM.maxHP
-      local BASEPP = { [10] = 35, [45] = 40, [52] = 25, [43] = 30, [53] = 15, [232] = 35, [108] = 20, [33] = 35 }
+      local BASEPP = { [10] = 35, [45] = 40, [52] = 25, [43] = 30, [53] = 15, [232] = 35, [108] = 20, [33] = 35, [44] = 25 }
       for k = 1, 4 do leadM.pp[k] = BASEPP[leadM.moves[k]] or 0 end
       secondM.hp = secondM.maxHP; syncParty(); stats.heals = stats.heals + 1; ev("tile heal")
       W.dialog = { step = 5, t = 0 }

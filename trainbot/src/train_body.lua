@@ -562,8 +562,26 @@ local function bestMove(blocked)
   return best, bestScore
 end
 
--- PP left in damaging moves (outside battle, from the party)
-local function usefulPP(mon)
+-- Can a move of type `mtype` hurt species `sp` at all? Type immunity, or an ability that
+-- blocks it whichever of its abilities the species has (Levitate on Gastly / Haunter...)
+local IMMUNE_ABIL = { [ABIL_LEVITATE] = 4, [ABIL_VOLT] = 13, [ABIL_WATER] = 11, [ABIL_FLASHFIRE] = 10 }
+local function hitsSpecies(mtype, sp)
+  local t = TT_SPEC[sp]
+  if not t then return true end
+  local mult = typeMult(mtype, t[1], t[2])
+  if mult == 0 then return false end
+  local x = TT_SPECX[sp]
+  if not x then return true end
+  local a1, a2 = x[1], (x[2] ~= 0) and x[2] or x[1]
+  if IMMUNE_ABIL[a1] == mtype and IMMUNE_ABIL[a2] == mtype then return false end
+  if a1 == ABIL_WONDERGUARD and a2 == ABIL_WONDERGUARD and mult <= 1 then return false end
+  return true
+end
+
+-- PP left in damaging moves (outside battle, from the party). With a 'species' list, only moves
+-- that can hurt one of them count: Normal moves don't touch Gastly, so with only those PP left
+-- it must go and heal instead of running from every battle. full: count max PP (as after healing).
+local function usefulPP(mon, full)
   local total = 0
   for i = 1, 4 do
     local mv = TT_MOVE[mon.moves[i]]
@@ -571,7 +589,16 @@ local function usefulPP(mon)
        or mv[4] == EF.SONICBOOM or mv[4] == EF.SUPER_FANG or mv[4] == EF.PSYWAVE or mv[4] == EF.HIDDEN_POWER
        or mv[4] == EF.RETURN or mv[4] == EF.FRUSTRATION or mv[4] == EF.FLAIL or mv[4] == EF.ERUPTION
        or mv[4] == EF.LOW_KICK or mv[4] == EF.MAGNITUDE) then
-      total = total + mon.pp[i]
+      local hits = true
+      if tcfg.only then
+        local mtype = mv[2]
+        if mv[4] == EF.HIDDEN_POWER and mon.ivWord then mtype = hiddenPower(mon.ivWord) end
+        hits = false
+        for sp in pairs(tcfg.only) do if hitsSpecies(mtype, sp) then hits = true; break end end
+      end
+      if hits then
+        total = total + (full and floor(mv[5] * (5 + band(rshift(mon.ppBonuses or 0, (i - 1) * 2), 3)) / 5) or mon.pp[i])
+      end
     end
   end
   return total
@@ -985,6 +1012,16 @@ local function startWalk()
 end
 
 local function beginHeal(reason)
+  -- not even full PP would be enough (no move that hurts the 'species' list): healing won't help
+  local lead1 = lead()
+  if lead1 and usefulPP(lead1, true) < CONFIG.minPP then
+    local names = {}
+    for sp in pairs(tcfg.only or {}) do names[#names + 1] = speciesName(sp) end
+    table.sort(names)
+    halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+      speciesName(lead1.species), table.concat(names, "/")))
+    return
+  end
   if not route.go then
     halt(TX"Necesita curarse (" .. reason .. TX"): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
     return

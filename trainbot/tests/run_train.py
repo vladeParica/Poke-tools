@@ -35,6 +35,10 @@ if __name__=='__main__':
     r,_=run('ghost', {"evs":{"spa":4},"species":["Gastly"],"healBelow":40}, route=route, show=show)
     if 'no tiene ningun ataque' not in r[9] or r[2] > 4:
         print('FAIL: ghost, battles=%d'%r[2]); print(r[9][-600:]); BAD.append('ghost')
+    # Bite runs out and only Scratch is left (no use against Gastly): go and heal, don't run from everything
+    r,_=run('ghostpp', {"evs":{"spa":3},"species":["Gastly"],"healBelow":40}, route=route, show=show)
+    if r[5] < 1 or 'no tiene ningun ataque' in r[9] or r[3] < 2:
+        print('FAIL: ghostpp, heals=%d fought=%d'%(r[5],r[3])); print(r[9][-600:]); BAD.append('ghostpp')
     if BAD:
         print('FAIL:', BAD)
         sys.exit(1)
