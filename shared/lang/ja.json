@@ -525,5 +525,6 @@
   "Pulsa B": "B wo osu",
   "Zona: pesca con la Cana %s%s": "Zone: %s tsurizao de tsuri%s",
   "Lanzamientos: %d": "Nageta kaisuu: %d",
-  "Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio": "%s tsurizao de wa koko ni 'species' no Pokemon wa denai: sao ka basho wo kaeru"
+  "Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio": "%s tsurizao de wa koko ni 'species' no Pokemon wa denai: sao ka basho wo kaeru",
+  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Yobun na call no aru sougu (%s): warikomi to minashite H-1 de sagasu"
 }
