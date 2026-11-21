@@ -27,7 +27,7 @@
 | `minIVs` / `maxIVs` | object stat → 0–31 | `null` | IV range |
 | `minIVTotal` | number 0–186 | `null` | Minimum IV sum |
 | `hiddenPower` | `{type, minPower}` | `null` | Hidden Power |
-| `mode` | text | `null` (the bundled JSON uses `"Salvaje RNG"`) | Mode on load (Spanish name; `"Pesca"` = fishing, mode 11) |
+| `mode` | text | `null` (the bundled JSON uses `"Salvaje RNG"`) | Mode on load (Spanish name; `"Pesca"` = fishing, mode 11; `"Pesca RNG"`, mode 12) |
 | `newGameTSV` | list of hex text | `null` = TSVs that give a shiny 6×31 Ditto | New game |
 | `initialSeeds` | list of hex text | `null` | Seeds for Initial seed mode |
 | `afterSeedMode` | text | `null` | Mode to launch after hitting the seed |
@@ -38,6 +38,7 @@
 | `pressGapMin` / `pressGapMax` | number | `2` / `24` | Random wait between A presses |
 | `resetTimeout` | number | `5400` | Frames without a result before resetting |
 | `farSearch` | number | `20000000` | Advances to scan for a target |
+| `fishSearch` | number | `1000000` | Fishing RNG: advances to scan for a target (no Teachy TV there) |
 | `teachy` | bool | `true` | Use the Teachy TV (registered on SELECT) |
 | `teachyBeyond` | number | `5000` | Use it if it saves more than this many advances |
 | `teachyMargin` | number | `null` = delay + 1500 | Close it this many advances before |

@@ -21,6 +21,7 @@ Template: [`.ai-dlc/templates/adr.md`](../../../.ai-dlc/templates/adr.md).
 | [ADR-0013](0013-official-artwork-behind-the-configurator-forms.md) | Pokémon sprites behind the configurator forms, loaded at runtime | accepted | 2026-10-30 |
 | [ADR-0014](0014-interface-in-spanish-english-and-japanese.md) | Interface in Spanish, English and Japanese | accepted | 2026-10-31 |
 | [ADR-0015](0015-single-game-data-extractor-and-shared-lua-modules.md) | One game data extractor and shared Lua modules | accepted | 2026-11-20 |
+| [ADR-0016](0016-fishing-rng-presses-b-on-the-hook-text.md) | Fishing RNG presses B on the "on the hook!" text | accepted | 2026-11-21 |
 
 ADRs 0001–0007 were recorded after the decision was made (retroactive documentation):
 they describe how the code is built today.

@@ -11,6 +11,12 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   water, closes the fishing texts with B (A facing water would offer Surf) and runs from every
   battle until the target appears, like *Salvaje*; `species` works too. It refuses to start without
   a rod on SELECT and stops if nothing bites. New `mode` value `"Pesca"`; existing modes keep their numbers.
+- Shiny Bot: mode 12 **Pesca RNG** (ADR-0016). It casts until something bites, saves a state on
+  "A POKéMON's on the hook!" (that text waits for a button while the RNG keeps advancing) and, like
+  the Static RNG modes, calibrates the B press and presses it on the exact frame of the target,
+  with the fishing slots of the registered rod and the map's fishing table. USA FireRed/LeafGreen
+  1.0/1.1 only (it reads the fishing task by its address). New option `fishSearch` (default
+  1000000): no Teachy TV while fishing. `afterSeedMode` can hand over to it.
 - **Farm Bot 1.0** (`farmbot/`): farms levels, items with Pickup, items stolen with Thief/Covet,
   and money from trainer rematches with the VS Seeker; takes held items through the party menu
   on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.

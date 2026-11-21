@@ -4,8 +4,8 @@
 (function (root) {
   'use strict';
 
-  var WILD = ['Salvaje', 'Salvaje RNG', 'Pesca'];
-  var RNG = ['Estatico RNG', 'Regalo RNG', 'Roamer RNG', 'Salvaje RNG'];
+  var WILD = ['Salvaje', 'Salvaje RNG', 'Pesca', 'Pesca RNG'];
+  var RNG = ['Estatico RNG', 'Regalo RNG', 'Roamer RNG', 'Salvaje RNG', 'Pesca RNG'];
   function modeIn(list) { return function (c) { return list.indexOf(c.mode) !== -1; }; }
 
   var STATS = [
@@ -28,7 +28,8 @@
     { value: 'Salvaje RNG', label: 'Salvaje RNG', icon: 'mode-wild', rng: true, desc: 'Se acerca a un paso del encuentro y lo da en el frame exacto.' },
     { value: 'Partida nueva', label: 'Partida nueva', icon: 'mode-newgame', desc: 'Reinicia hasta conseguir el TID/SID que pides.' },
     { value: 'Semilla inicial', label: 'Semilla inicial', icon: 'mode-seed', desc: 'Cae en una semilla del título y lanza otro modo.' },
-    { value: 'Pesca', label: 'Pesca', icon: 'mode-wild', desc: 'Pesca con la caña registrada en SELECT y huye hasta que sale lo que buscas.' }
+    { value: 'Pesca', label: 'Pesca', icon: 'mode-wild', desc: 'Pesca con la caña registrada en SELECT y huye hasta que sale lo que buscas.' },
+    { value: 'Pesca RNG', label: 'Pesca RNG', icon: 'mode-wild', rng: true, desc: 'Pesca hasta que pica y pulsa B en el frame exacto del objetivo.' }
   ];
 
   var FARM_MODES = [
@@ -108,6 +109,7 @@
       ] },
       { id: 'rng', title: 'RNG', icon: 'dice', advanced: true, desc: 'Búsqueda del objetivo, Tele Pokémon y cambios de semilla. Los valores por defecto sirven casi siempre.', fields: [
         { key: 'farSearch', half: true, type: 'int', min: 1000, max: 100000000, def: 20000000, label: 'Avances a revisar', comment: 'avances a revisar buscando el objetivo' },
+        { key: 'fishSearch', half: true, type: 'int', min: 1000, max: 100000000, def: 1000000, label: 'Avances a revisar pescando', help: 'Sin Tele Pokémon: el bot espera en el texto de la caña (1 avance por frame).', showIf: modeIn(['Pesca RNG']), comment: 'Pesca RNG: avances a revisar (sin Tele Pokemon)' },
         { key: 'teachy', type: 'bool', def: true, label: 'Usar la Tele Pokémon', help: 'Regístrala en SELECT.', comment: 'usar la Tele Pokemon registrada en SELECT' },
         { key: 'teachyBeyond', half: true, type: 'int', min: 0, max: 100000000, def: 5000, label: 'Usar la Tele si ahorra más de', unit: 'avances', comment: 'usar la Tele si ahorra mas de estos avances' },
         { key: 'teachyMargin', half: true, type: 'int', min: 0, max: 1000000, def: null, nullable: true, label: 'Cerrar la Tele antes', unit: 'avances', help: 'Vacío = automático.', comment: 'null = automatico' },
