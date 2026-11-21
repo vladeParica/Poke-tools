@@ -1660,6 +1660,9 @@ local function playerIDs()
   local sb2 = read32(A.sb2)
   if not validPtr(sb2) then return nil end
   local ids = read32(sb2 + 0xA)
+  -- On the title screen / intro (after a reset) the pointer is already valid but the save is
+  -- not loaded yet: the IDs read 0/0. Treat that as "no save" instead of TID 0 / SID 0.
+  if ids == 0 then return nil end
   return ids % 0x10000, floor(ids / 0x10000)
 end
 
@@ -2577,6 +2580,9 @@ local function rngStart()
     print(bot.msg)
     return
   end
+  -- the shiny check needs this save's IDs: read them again now that it is loaded
+  local tid, sid = playerIDs()
+  if tid then bot.tid, bot.sid = tid, sid end
   rebaseHere()
   rng.nextSearch = nil
   rng.delay, rng.target, rng.targetPid, rng.tries = nil, nil, nil, 0

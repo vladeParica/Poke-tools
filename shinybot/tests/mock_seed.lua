@@ -49,6 +49,8 @@ local function loadSave()
   w8(0x02037078, 1); w16(SB1 + 0x296, REG_ITEM or 366)
 end
 bootRAM(); loadSave()
+-- START_AT_TITLE: 7 is pressed before the save is loaded (pointer valid, IDs still 0)
+if rawget(_G, "START_AT_TITLE") then w32(SB2 + 0xA, 0) end
 
 local function growthOff(o) if o <= 5 then return 0 elseif o % 6 <= 1 then return 12 elseif o % 2 == 0 then return 24 else return 36 end end
 local function miscOff(o) if o >= 18 then return 0 elseif o % 6 >= 4 then return 12 elseif o % 2 == 1 then return 24 else return 36 end end
