@@ -77,6 +77,11 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Shiny Bot, *Salvaje* / *Salvaje RNG*: it only walks between the tile where the hunt starts and
+  one neighbour, always back to the start. It alternated left/right blindly, so after the
+  preparation steps it could start from the neighbour and step a tile further: surfing in a
+  small pond (Viridian City) that tile can be the shore. `walkAxis` also takes `"left"`,
+  `"right"`, `"up"` or `"down"` to pick the neighbour; if that step is blocked it uses the other side.
 - Shiny Bot, *Semilla inicial* handing over to *Regalo RNG* (e.g. Eevee) with a full party: the gift
   went to the PC, the bot never saw it and kept retrying ("Comprobando" forever). It now checks the
   mode in `afterSeedMode` when you press 7 (a free party slot for a gift, the roamer not out yet),

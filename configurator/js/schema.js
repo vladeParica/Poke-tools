@@ -100,8 +100,12 @@
           help: 'Vacío = los que hacen shiny a un Ditto 6×31 (9630, B378, 79F8).', comment: 'TID xor SID en hex; null = Ditto 6x31' }
       ] },
       { id: 'walk', title: 'Caminar', icon: 'mode-wild', desc: 'Cómo camina en la hierba en los modos Salvaje.', showIf: modeIn(['Salvaje', 'Salvaje RNG']), fields: [
-        { key: 'walkAxis', type: 'enum', options: [{ value: 'horizontal', label: 'Izquierda / derecha' }, { value: 'vertical', label: 'Arriba / abajo' }],
-          def: 'horizontal', half: true, label: 'Eje', comment: '"horizontal" o "vertical"' },
+        { key: 'walkAxis', type: 'enum', options: [{ value: 'horizontal', label: 'Izquierda / derecha' }, { value: 'vertical', label: 'Arriba / abajo' },
+          { value: 'left', label: 'Casilla de la izquierda' }, { value: 'right', label: 'Casilla de la derecha' },
+          { value: 'up', label: 'Casilla de arriba' }, { value: 'down', label: 'Casilla de abajo' }],
+          def: 'horizontal', half: true, label: 'Eje',
+          help: 'Solo pisa tu casilla y la de ese lado. Surfeando, elige un lado con agua.',
+          comment: 'casilla vecina: "left", "right", "up", "down" ("horizontal" = "left", "vertical" = "up")' },
         { key: 'walkFrames', type: 'int', min: 1, max: 120, def: 16, half: true, label: 'Frames por paso', help: '16 = una casilla caminando.', comment: 'frames por paso' },
         { key: 'holdB', type: 'bool', def: false, label: 'Correr con B', help: 'Solo modo Salvaje.', showIf: modeIn(['Salvaje']), comment: 'correr con B (solo Salvaje)' },
         { key: 'wildOneStep', type: 'bool', def: true, label: 'Acercarse a un paso del encuentro', showIf: modeIn(['Salvaje RNG']),

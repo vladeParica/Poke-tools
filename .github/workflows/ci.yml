@@ -66,6 +66,7 @@ jobs:
           python run_seed.py
           python run_fish.py
           python run_fishrng.py
+          python run_pond.py
 
   trainbot:
     name: Train Bot simulator

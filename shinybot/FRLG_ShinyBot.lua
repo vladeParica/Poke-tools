@@ -32,7 +32,8 @@ local CONFIG = {
   mode          = nil,          -- mode on start, e.g. "Salvaje RNG"
 
   -- Caminar
-  walkAxis      = "horizontal", -- "horizontal" (left/right) or "vertical" (up/down)
+  walkAxis      = "horizontal", -- the neighbour tile it steps to and back: "left", "right", "up", "down"
+                                --   ("horizontal" = "left", "vertical" = "up")
   walkFrames    = 16,           -- frames per step (16 = 1 tile walking)
   holdB         = false,        -- run with B (normal Salvaje mode only)
 
@@ -1744,7 +1745,36 @@ local bot = {
   last = nil, panel = 1, msg = "",     -- panel: 1 compact, 2 full, 0 hidden
 }
 local queue = {}
-local walkToggle = false
+-- Walking for encounters: only between the tile where the hunt starts (the anchor) and ONE
+-- neighbour (walkAxis), always back to the anchor. Alternating blindly could drift to a third
+-- tile (after the preparation steps it may stand on the neighbour): surfing in a small pond
+-- that third tile can be the shore, and stepping on it ends the surfing.
+local WK = { AWAY = { horizontal = "left", vertical = "up", left = "left", right = "right", up = "up", down = "down" },
+             BACK = { left = "right", right = "left", up = "down", down = "up" } }
+function WK.away()
+  local d = WK.AWAY[CONFIG.walkAxis] or "left"
+  if WK.flip then d = WK.BACK[d] end
+  return d
+end
+function WK.pos()
+  local sb1 = read32(A.sb1)
+  if not validPtr(sb1) then return nil end
+  return read32(sb1)                    -- SaveBlock1 +0: x, y (16 bits each)
+end
+function WK.start() WK.anchor, WK.flip, WK.lastPos, WK.lastAway = WK.pos(), false, nil, nil end
+-- Next step from where the player stands now
+function WK.next()
+  local p = WK.pos()
+  if not p or not WK.anchor then return WK.away() end
+  if p == WK.anchor then
+    -- the step away didn't move it (a wall, the shore): use the other neighbour
+    if WK.lastAway and WK.lastPos == p then WK.flip = not WK.flip end
+    WK.lastAway, WK.lastPos = true, p
+    return WK.away()
+  end
+  WK.lastAway, WK.lastPos = false, p
+  return WK.BACK[WK.away()]
+end
 local stopBot   -- defined further down
 local function kind()
   if bot.mode == 8 then return 1 end
@@ -1872,11 +1902,7 @@ end
 
 -- ---------------------------- Wild mode ---------------------------
 local function pushWalk()
-  local d1, d2 = "left", "right"
-  if CONFIG.walkAxis == "vertical" then d1, d2 = "up", "down" end
-  walkToggle = not walkToggle
-  local dir = walkToggle and d1 or d2
-  local b = { [dir] = true }
+  local b = { [WK.next()] = true }
   if CONFIG.holdB then b.B = true end
   push(b, CONFIG.walkFrames)
   wait(math.random(0, 3))   -- variation so each instance gets different encounters
@@ -2549,6 +2575,7 @@ local function stepReseed()
         bot.st = "fcast"
       elseif bot.mode == 8 then
         zeroEnemy()
+        WK.start()                      -- the saved tile, just loaded
         bot.prepPos, bot.prepCnt, bot.prepSteps = nil, nil, 0
         bot.returnState = "prep"
         bot.st = "prep"
@@ -3171,10 +3198,12 @@ end
 --     RNG calls (calibration).
 --  3. Search for the target (up to millions of advances), get there with the Teachy
 --     TV if it is far, and start walking on the exact advance.
+-- i-th step from the base: away from the anchor and back, or the other way round when the
+-- base stands on the neighbour (rng.atAnchor0, read when the base was saved)
 local function stepDir(i)
-  local d1, d2 = "left", "right"
-  if CONFIG.walkAxis == "vertical" then d1, d2 = "up", "down" end
-  return (i % 2 == 1) and d1 or d2
+  local away, back = WK.away(), WK.BACK[WK.away()]
+  if rng.atAnchor0 == false then away, back = back, away end
+  return (i % 2 == 1) and away or back
 end
 
 -- The player is standing still (gPlayerAvatar.runningState and tileTransitionState = 0)
@@ -3224,6 +3253,7 @@ local function wildSetup()
   rng.calFails = 0
   rng.pressAt = rng.preDelay
   rng.base0State, rng.base0Seed, rng.base0Frame = rngState, rng.seed0, rng.baseFrame
+  rng.atAnchor0 = (WK.anchor == nil) or (WK.pos() == WK.anchor)
   rng.oneStep, rng.noOneStep, rng.approachK = false, false, nil
   wr.layout = nil
   wr.water = band(read8(A.avatar), 0x08) ~= 0
@@ -3652,7 +3682,7 @@ local function startBot()
   queue = {}
   bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried, bot.noReseed = nil, false, 0, 1, false
   if bot.mode == 1 then
-    zeroEnemy(); bot.st = "walk"
+    zeroEnemy(); bot.st = "walk"; WK.start()
   elseif isFishing() then
     zeroEnemy(); bot.st, bot.idle = "fish", 0
   elseif bot.mode == 9 then
@@ -3662,7 +3692,7 @@ local function startBot()
   elseif isWildRng() then
     zeroEnemy()
     bot.prepPos, bot.prepCnt, bot.prepSteps = nil, nil, 0
-    bot.st = "prep"
+    bot.st = "prep"; WK.start()
   elseif isFishRng() then
     zeroEnemy()
     rng.casts, rng.castT, rng.hookAt, rng.noTask = 0, nil, nil, 0
