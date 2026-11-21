@@ -225,6 +225,8 @@ PT.i18n.add('en', {
   'Reinicia hasta conseguir el TID/SID que pides.': 'Resets until it gets the TID/SID you ask for.',
   'Semilla inicial': 'Initial seed',
   'Cae en una semilla del título y lanza otro modo.': 'Hits a title-screen seed and launches another mode.',
+  'Pesca': 'Fishing',
+  'Pesca con la caña registrada en SELECT y huye hasta que sale lo que buscas.': 'Fishes with the rod registered on SELECT and runs until what you want shows up.',
   'PS': 'HP', 'Ataque': 'Attack', 'At': 'Atk', 'Defensa': 'Defense', 'Df': 'Def',
   'At. Esp.': 'Sp. Atk', 'AtE': 'SpA', 'Def. Esp.': 'Sp. Def', 'DfE': 'SpD', 'Velocidad': 'Speed', 'Vel': 'Spe',
   // Shiny Bot schema

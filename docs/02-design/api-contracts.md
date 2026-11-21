@@ -27,7 +27,7 @@
 | `minIVs` / `maxIVs` | object stat → 0–31 | `null` | IV range |
 | `minIVTotal` | number 0–186 | `null` | Minimum IV sum |
 | `hiddenPower` | `{type, minPower}` | `null` | Hidden Power |
-| `mode` | text | `null` (the bundled JSON uses `"Salvaje RNG"`) | Mode on load (Spanish name) |
+| `mode` | text | `null` (the bundled JSON uses `"Salvaje RNG"`) | Mode on load (Spanish name; `"Pesca"` = fishing, mode 11) |
 | `newGameTSV` | list of hex text | `null` = TSVs that give a shiny 6×31 Ditto | New game |
 | `initialSeeds` | list of hex text | `null` | Seeds for Initial seed mode |
 | `afterSeedMode` | text | `null` | Mode to launch after hitting the seed |

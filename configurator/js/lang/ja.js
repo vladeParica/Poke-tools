@@ -226,6 +226,8 @@ PT.i18n.add('ja', {
   'Reinicia hasta conseguir el TID/SID que pides.': '指定した TID/SID になるまでやり直します。',
   'Semilla inicial': '初期シード',
   'Cae en una semilla del título y lanza otro modo.': 'タイトル画面でシードを当て、別のモードを開始します。',
+  'Pesca': '釣り',
+  'Pesca con la caña registrada en SELECT y huye hasta que sale lo que buscas.': 'SELECT に登録した釣り竿で釣りをし、目当てのポケモンが出るまで逃げ続けます。',
   'PS': 'HP', 'Ataque': 'こうげき', 'At': 'A', 'Defensa': 'ぼうぎょ', 'Df': 'B',
   'At. Esp.': 'とくこう', 'AtE': 'C', 'Def. Esp.': 'とくぼう', 'DfE': 'D', 'Velocidad': 'すばやさ', 'Vel': 'S',
   // Shiny Bot schema

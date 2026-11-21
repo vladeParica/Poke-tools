@@ -64,6 +64,7 @@ jobs:
           python run_near.py
           python run_wildtable.py
           python run_seed.py
+          python run_fish.py
 
   trainbot:
     name: Train Bot simulator

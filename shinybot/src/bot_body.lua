@@ -558,8 +558,8 @@ end
 
 -- ------------------------------ Estado -------------------------------
 local MODES = { "Salvaje", "Estatico", "Regalo", "Roamer", "Estatico RNG", "Regalo RNG", "Roamer RNG", "Salvaje RNG",  --@i18n
-                "Partida nueva", "Semilla inicial" }  --@i18n
--- 1 = wild, 2 = static, 3 = gift, 4 = roamer (RNG modes use the same type)
+                "Partida nueva", "Semilla inicial", "Pesca" }  --@i18n
+-- 1 = wild, 2 = static, 3 = gift, 4 = roamer (RNG modes use the same type); 11 = wild by fishing
 
 local bot = {
   mode = 1, running = false, found = false, st = "idle", t = 0,
@@ -575,6 +575,7 @@ local function kind()
   if bot.mode == 8 then return 1 end
   if bot.mode == 9 then return 5 end
   if bot.mode == 10 then return 6 end
+  if bot.mode == 11 then return 1 end
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
@@ -586,6 +587,9 @@ local function afterSeedIndex()
   return nil
 end
 local function isWildRng() return bot.mode == 8 end
+local function isFishing() return bot.mode == 11 end
+-- Wild modes that hunt by species (walking, Wild RNG, fishing)
+local function huntsSpecies() return bot.mode == 1 or bot.mode == 8 or bot.mode == 11 end
 
 local function push(buttons, frames) queue[#queue + 1] = { b = buttons, n = frames } end
 local function wait(frames) if frames > 0 then push(nil, frames) end end
@@ -611,7 +615,7 @@ end
 
 -- shinyNeeded=false to check only the other filters
 local function passesFilters(mon)
-  if filt.species and mon.species and (bot.mode == 1 or bot.mode == 8) then
+  if filt.species and mon.species and huntsSpecies() then
     if not filt.species[simplify(speciesName(mon.species))] then return false end
   end
   if filt.natures and not filt.natures[natureOf(mon.pid)] then return false end
@@ -714,6 +718,24 @@ local function pushFleeCycle()
   end
 end
 
+-- Fishing (pret field_player_avatar.c): SELECT uses the registered rod; after the dots either
+-- "A POKeMON's on the hook!" (the wild Pokemon is created when it closes) or "Not even a
+-- nibble..." shows, both waiting for a button. FRLG has no reel-in timing. B closes them and,
+-- unlike A, does nothing on the map (A facing water would offer Surf). SELECT while the rod
+-- is out is ignored, so the cycle just repeats.
+local ROD = { [262] = true, [263] = true, [264] = true }      -- ITEM_OLD_ROD / GOOD_ROD / SUPER_ROD
+local function rodRegistered()
+  local sb1 = read32(A.sb1)
+  return validPtr(sb1) and ROD[read16(sb1 + 0x296)] == true
+end
+local function pushFish()
+  push({ select = true }, 2); wait(10)
+  for _ = 1, 5 do push({ B = true }, 2); wait(12) end
+  wait(math.random(0, 3))   -- variation so each instance gets different encounters
+end
+local FISH_NOTHING = 6000      -- frames without a bite (~20 casts at 50% each): not facing water
+local function wildHome() return isFishing() and "fish" or "walk" end
+
 local function enterFlee(sawBattle)
   queue = {}
   write8(A.battleOutcome, 0)         -- clear the previous battle's outcome
@@ -721,14 +743,25 @@ local function enterFlee(sawBattle)
 end
 
 local function stepWild()
-  if bot.st == "walk" then
+  if bot.st == "walk" or bot.st == "fish" then
     local mon = decodeMon(A.enemy)
     if mon then
       queue = {}
+      bot.idle = 0
       if evaluate(mon) then return end
       enterFlee(false)
     elseif inBattle() then
+      bot.idle = 0
       enterFlee(true)                  -- battle without a detected Pokemon: run anyway
+    elseif bot.st == "fish" then
+      bot.idle = (bot.idle or 0) + 1
+      if bot.idle > FISH_NOTHING then
+        stopBot()
+        bot.msg = TX"Pesca: no pica nada. Mira hacia el agua y registra la Cana en SELECT"
+        print(bot.msg)
+        return
+      end
+      if #queue == 0 then pushFish() end
     elseif #queue == 0 then
       pushWalk()
     end
@@ -744,7 +777,7 @@ local function stepWild()
       local back = (bot.sawBattle and bot.outFrames >= 20)
                 or (not bot.sawBattle and bot.t - bot.ranAt > 240)
       if back then
-        queue = {}; zeroEnemy(); bot.st = bot.returnState or "walk"
+        queue = {}; zeroEnemy(); bot.st = bot.returnState or wildHome()
       elseif #queue == 0 and (ib or not bot.sawBattle) then
         tap("B"); wait(10)
       end
@@ -755,14 +788,14 @@ local function stepWild()
       -- the battle ended without running (e.g. you ended it)
       queue = {}
       bot.outFrames = bot.outFrames + 1
-      if bot.outFrames >= 20 then zeroEnemy(); bot.st = bot.returnState or "walk" end
+      if bot.outFrames >= 20 then zeroEnemy(); bot.st = bot.returnState or wildHome() end
       return
     end
 
     if bot.t > 3000 then               -- safety net: something odd, go back to walking
       bot.msg = TX"Aviso: no se pudo confirmar la huida"
       print(bot.msg)
-      queue = {}; zeroEnemy(); bot.st = bot.returnState or "walk"
+      queue = {}; zeroEnemy(); bot.st = bot.returnState or wildHome()
       return
     end
     if #queue == 0 then pushFleeCycle() end
@@ -2218,6 +2251,10 @@ local function startBot()
     print(bot.msg); return
   end
   bot.tid, bot.sid = tid, sid
+  if isFishing() and not rodRegistered() then
+    bot.msg = TX"Pesca: registra la Cana (Vieja, Buena o Super) en SELECT y mira hacia el agua"
+    print(bot.msg); return
+  end
   -- Initial seed: check now the mode it will hand over to, not after the seed is found
   local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
   if problem then
@@ -2236,6 +2273,8 @@ local function startBot()
   bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried, bot.noReseed = nil, false, 0, 1, false
   if bot.mode == 1 then
     zeroEnemy(); bot.st = "walk"
+  elseif isFishing() then
+    zeroEnemy(); bot.st, bot.idle = "fish", 0
   elseif bot.mode == 9 then
     ngStart()
   elseif bot.mode == 10 then
@@ -2336,7 +2375,7 @@ end
 local function filterSummary()
   local parts = {}
   parts[#parts + 1] = filt.shiny and "Shiny" or TX"Sin shiny"
-  if filt.species and (bot.mode == 1 or bot.mode == 8) then
+  if filt.species and huntsSpecies() then
     local t = {}
     for _, n in ipairs(toList(CONFIG.species) or {}) do t[#t + 1] = tostring(n) end
     parts[#parts + 1] = table.concat(t, "/")
@@ -2379,7 +2418,7 @@ local PHASE_SHORT = { prep = "Preparando", settle = "Preparando", wbuild = "Calc
   tv_settle = "Cerrando Tele", rboot = "Nueva semilla", rquest = "Nueva semilla", rsettle = "Nueva semilla",  --@i18n
   walk = "Caminando", reset = "Reset", boot = "Reset", idle = "Detenido", found = "ENCONTRADO",  --@i18n
   sb_reset = "Reiniciando", sb_find = "Buscando el titulo", sb_title = "Preparando titulo",  --@i18n
-  sb_try = "Probando semilla", approach = "Acercandose a un paso" }  --@i18n
+  sb_try = "Probando semilla", approach = "Acercandose a un paso", fish = "Pescando" }  --@i18n
 
 local function drawCompact()
   local y = 1
@@ -2409,8 +2448,8 @@ local function drawCompact()
         line(string.format(TX"Pulsar A en %d frames   intento %d", math.max(rng.pressAt - (rng.adv or 0), 0), rng.tries or 0))
       elseif bot.st == "ngsearch" then line(bot.msg) end
     end
-  elseif m <= 4 then
-    local label = (m == 1) and "Encuentros" or "Resets"
+  elseif m <= 4 or m == 11 then
+    local label = (m == 1 or m == 11) and "Encuentros" or "Resets"
     local t = string.format("%s: %d", label, bot.encounters)
     if filt.shiny then t = t .. string.format(TX"   Prob: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100) end
     line(t)
@@ -2464,17 +2503,17 @@ local function draw()
   line(string.format(TX"Frame: %s   (frame del emulador: %d)", frameText, emu.framecount()))
 
   local m = bot.mode
-  if m <= 4 then
+  if m <= 4 or m == 11 then
     -- Blind hunt: what matters is the attempt count and the cumulative probability
     local frames = emu.framecount() - bot.startFrame
     local perHour = 0
     if bot.encounters > 0 and frames > 0 then perHour = floor(bot.encounters * 216000 / frames) end
-    local label = (m == 1) and "Encuentros" or "Resets"
+    local label = (m == 1 or m == 11) and "Encuentros" or "Resets"
     line(string.format(TX"%s: %d   (%d por hora de juego)", label, bot.encounters, perHour))
     if filt.shiny then
       line(string.format(TX"Prob. de haber visto un shiny: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100))
     end
-    if m == 1 then
+    if m == 1 or m == 11 then
       line(string.format(TX"Combate:%s Cursor:%d Res:%d%s", inBattle() and "1" or "0",
            band(read8(A.actionCursor), 3), read8(A.battleOutcome), gMainVerified and "" or " (?)"))
     elseif bot.timeouts > 0 then
@@ -2586,7 +2625,7 @@ while true do
   handleHotkeys()
   checkStopFlag()
   if bot.running then
-    if bot.mode == 1 then stepWild() elseif isWildRng() then stepWildRng() elseif bot.mode == 9 then stepNewGame()
+    if bot.mode == 1 or isFishing() then stepWild() elseif isWildRng() then stepWildRng() elseif bot.mode == 9 then stepNewGame()
     elseif bot.mode == 10 then stepSeedBot()
     elseif isRngMode() then stepRng() else stepReset() end
     runQueue()

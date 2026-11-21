@@ -7,6 +7,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 ## [Unreleased]
 
 ### Added
+- Shiny Bot: mode 11 **Pesca** (fishing). It uses the rod registered on SELECT while you face the
+  water, closes the fishing texts with B (A facing water would offer Surf) and runs from every
+  battle until the target appears, like *Salvaje*; `species` works too. It refuses to start without
+  a rod on SELECT and stops if nothing bites. New `mode` value `"Pesca"`; existing modes keep their numbers.
 - **Farm Bot 1.0** (`farmbot/`): farms levels, items with Pickup, items stolen with Thief/Covet,
   and money from trainer rematches with the VS Seeker; takes held items through the party menu
   on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.

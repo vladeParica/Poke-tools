@@ -152,9 +152,10 @@ Party struct (100 bytes): PID, OTID, checksum +0x1C, 4 encrypted substructures
 
 ## Shiny Bot (`shinybot/`, v4.3)
 
-Modes 1–10 (in-game names in Spanish): Salvaje (Wild), Estático (Static), Regalo (Gift),
+Modes 1–11 (in-game names in Spanish): Salvaje (Wild), Estático (Static), Regalo (Gift),
 Roamer, Estático RNG, Regalo RNG, Roamer RNG, Salvaje RNG, Partida nueva (New game, pick
-SID), Semilla inicial (Initial seed, chains `afterSeedMode`).
+SID), Semilla inicial (Initial seed, chains `afterSeedMode`), Pesca (Fishing: registered rod on SELECT,
+B closes the texts; A facing water would offer Surf).
 Keys: 7 start/stop, 8 mode, 9 panel, 0 reload JSON.
 Multi-instance (`inst_N.lock`, `shiny_stop.flag`); logs in `logs/`.
 Wild RNG: walks to one step before the encounter and takes the step on the exact frame.

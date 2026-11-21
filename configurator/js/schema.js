@@ -4,7 +4,7 @@
 (function (root) {
   'use strict';
 
-  var WILD = ['Salvaje', 'Salvaje RNG'];
+  var WILD = ['Salvaje', 'Salvaje RNG', 'Pesca'];
   var RNG = ['Estatico RNG', 'Regalo RNG', 'Roamer RNG', 'Salvaje RNG'];
   function modeIn(list) { return function (c) { return list.indexOf(c.mode) !== -1; }; }
 
@@ -27,7 +27,8 @@
     { value: 'Roamer RNG', label: 'Roamer RNG', icon: 'mode-roamer', rng: true, desc: 'Frame exacto para el legendario errante.' },
     { value: 'Salvaje RNG', label: 'Salvaje RNG', icon: 'mode-wild', rng: true, desc: 'Se acerca a un paso del encuentro y lo da en el frame exacto.' },
     { value: 'Partida nueva', label: 'Partida nueva', icon: 'mode-newgame', desc: 'Reinicia hasta conseguir el TID/SID que pides.' },
-    { value: 'Semilla inicial', label: 'Semilla inicial', icon: 'mode-seed', desc: 'Cae en una semilla del título y lanza otro modo.' }
+    { value: 'Semilla inicial', label: 'Semilla inicial', icon: 'mode-seed', desc: 'Cae en una semilla del título y lanza otro modo.' },
+    { value: 'Pesca', label: 'Pesca', icon: 'mode-wild', desc: 'Pesca con la caña registrada en SELECT y huye hasta que sale lo que buscas.' }
   ];
 
   var FARM_MODES = [
@@ -97,7 +98,7 @@
         { key: 'newGameTSV', type: 'hexlist', digits: 4, def: null, nullable: true, label: 'TSV buscados (TID xor SID)',
           help: 'Vacío = los que hacen shiny a un Ditto 6×31 (9630, B378, 79F8).', comment: 'TID xor SID en hex; null = Ditto 6x31' }
       ] },
-      { id: 'walk', title: 'Caminar', icon: 'mode-wild', desc: 'Cómo camina en la hierba en los modos Salvaje.', showIf: modeIn(WILD), fields: [
+      { id: 'walk', title: 'Caminar', icon: 'mode-wild', desc: 'Cómo camina en la hierba en los modos Salvaje.', showIf: modeIn(['Salvaje', 'Salvaje RNG']), fields: [
         { key: 'walkAxis', type: 'enum', options: [{ value: 'horizontal', label: 'Izquierda / derecha' }, { value: 'vertical', label: 'Arriba / abajo' }],
           def: 'horizontal', half: true, label: 'Eje', comment: '"horizontal" o "vertical"' },
         { key: 'walkFrames', type: 'int', min: 1, max: 120, def: 16, half: true, label: 'Frames por paso', help: '16 = una casilla caminando.', comment: 'frames por paso' },
