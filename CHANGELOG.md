@@ -77,6 +77,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Shiny Bot, *Salvaje RNG* / *Pesca RNG*: one calibration encounter with an extra RNG call (VBlank's
+  `Random()` landing mid-generation, which looks like H-4) made the bot search every target with
+  that call order, so exact IV targets were never found ("No hay objetivo con esos filtros"). The
+  search now leaves H-1 only when the same order shows up twice in a row.
 - Shiny Bot, *Salvaje* / *Salvaje RNG*: it only walks between the tile where the hunt starts and
   one neighbour, always back to the start. It alternated left/right blindly, so after the
   preparation steps it could start from the neighbour and step a tile further: surfing in a

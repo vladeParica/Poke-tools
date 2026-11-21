@@ -1194,9 +1194,27 @@ local LAYOUTS = {
   { name = "H-4", s = 1, l = 2, a = 3, b = 0, i1 = 2, i2 = 4 },
 }
 
+-- The call order of one calibration encounter. wr.layout (tried first when matching the next
+-- encounters) follows it, but the target search (wr.searchLayout) only leaves H-1 when the same
+-- other order shows up twice in a row: a single one is usually VBlank's Random() landing in the
+-- middle of that one generation, and searching with it misses every normal H-1 target.
+function wr.noteLayout(lay)
+  if lay == LAYOUTS[1] then
+    wr.layout, wr.searchLayout, wr.oddLayout = lay, nil, nil
+    return
+  end
+  if wr.oddLayout == lay then
+    if wr.searchLayout ~= lay then print(TX"Orden de llamadas detectado: " .. lay.name) end
+    wr.layout, wr.searchLayout = lay, lay
+  else
+    print(string.format(TX"Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1", lay.name))
+    wr.layout, wr.oddLayout = lay, lay
+  end
+end
+
 -- What the game would generate if the encounter starts at seed E
 local function predictWild(E, lay)
-  lay = lay or wr.layout or LAYOUTS[1]
+  lay = lay or wr.searchLayout or LAYOUTS[1]
   local r = wr.r
   local roll = r[E + lay.s]
   if not roll then return nil end
@@ -1301,7 +1319,7 @@ local function scanFarBlock()
   local needShiny, tsv, natOk = filt.shiny, fast.tsv, fast.nat
   local best = far.best
   if wildTarget() then
-    local lay = wr.layout or LAYOUTS[1]
+    local lay = wr.searchLayout or LAYOUTS[1]
     local pre = lay.a + 1 + lay.b
     local slotOk = far.slotOk
     for q = bs, be do
@@ -2081,7 +2099,7 @@ local function wildSetup()
   rng.base0State, rng.base0Seed, rng.base0Frame = rngState, rng.seed0, rng.baseFrame
   rng.atAnchor0 = (WK.anchor == nil) or (WK.pos() == WK.anchor)
   rng.oneStep, rng.noOneStep, rng.approachK = false, false, nil
-  wr.layout = nil
+  wr.layout, wr.searchLayout, wr.oddLayout = nil, nil, nil
   wr.water = band(read8(A.avatar), 0x08) ~= 0
   wr.info = currentWildInfo(wr.water)
   if filt.species and not wr.info then
@@ -2256,10 +2274,7 @@ local function stepWildRng()
         print(string.format(TX"Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d",
               speciesName(mon.species), level))
       end
-      if not wr.layout or wr.layout ~= lay then
-        wr.layout = lay
-        if lay ~= LAYOUTS[1] then print(TX"Orden de llamadas detectado: " .. lay.name) end
-      end
+      wr.noteLayout(lay)
       local d = E - rng.pressedAdv
       if not rng.delay then
         if CONFIG.wildOneStep ~= false and not rng.oneStep and not rng.noOneStep and (rng.stepsToEnc or 0) >= 1 then
@@ -2322,7 +2337,7 @@ function FR.setup(rod)
   rng.anchors, far, rng.near = nil, nil, nil
   rng.calFails = 0
   rng.pressAt = rng.preDelay
-  wr.layout = nil
+  wr.layout, wr.searchLayout, wr.oddLayout = nil, nil, nil
   wr.water, wr.fish = false, rod
   wr.info = currentWildInfo("fish")
   if filt.species and not wr.info then
@@ -2450,10 +2465,7 @@ function FR.step()
         print(string.format(TX"Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d",
               speciesName(mon.species), level))
       end
-      if not wr.layout or wr.layout ~= lay then
-        wr.layout = lay
-        if lay ~= LAYOUTS[1] then print(TX"Orden de llamadas detectado: " .. lay.name) end
-      end
+      wr.noteLayout(lay)
       local d = E - rng.pressedAdv
       if not rng.delay then
         rng.delay = d

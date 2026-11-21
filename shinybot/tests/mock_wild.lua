@@ -1,5 +1,6 @@
 REG_ITEM = rawget(_G, "REG_ITEM")
 POND = rawget(_G, "POND")
+INTERRUPT_FIRST = rawget(_G, "INTERRUPT_FIRST")
 USER_RESET_AT = rawget(_G, "USER_RESET_AT")
 -- Minimal VBA-rr + FRLG game simulator to test the bot logic
 local MODE_TO_TEST, SHINY_AT, CLEAR_ON_RESET, RNG = ...
@@ -106,6 +107,7 @@ end
 w32(0x03005000, 0x1EE7); w16(0x02020000, 0x1EE7)
 local stats = { encounters = 0, resets = 0, flees = 0, resetFrames = {} }
 local g = { walkHeld = 0, steps = 0, battle = nil, loadAt = nil, aCount = 0, made = 0 }
+local interruptedOnce = false   -- outside g: a savestate load must not bring it back
 
 local function edge(b) return held[b] and not prevHeld[b] end
 
@@ -188,7 +190,10 @@ local function gameFrame()
             local nature = Rand() % 25
             local pid
             repeat local lo = Rand(); local hi = Rand(); pid = hi * 65536 + lo until pid % 25 == nature
-            local i1 = Rand() % 32768; local i2 = Rand() % 32768
+            local i1 = Rand() % 32768
+            -- INTERRUPT_FIRST: the first encounter gets VBlank's Random() between the IVs (H-4)
+            if INTERRUPT_FIRST and not interruptedOnce then interruptedOnce = true; Rand() end
+            local i2 = Rand() % 32768
             local sp = ((slot - 1) % 4 == 0) and 25 or (16 + slot - 1)
             stats.encounters = stats.encounters + 1
             createMon(ENEMY, pid, sp, i1 + i2 * 32768, level)
