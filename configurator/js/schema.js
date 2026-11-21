@@ -4,8 +4,8 @@
 (function (root) {
   'use strict';
 
-  var WILD = ['Salvaje', 'Salvaje RNG'];
-  var RNG = ['Estatico RNG', 'Regalo RNG', 'Roamer RNG', 'Salvaje RNG'];
+  var WILD = ['Salvaje', 'Salvaje RNG', 'Pesca', 'Pesca RNG'];
+  var RNG = ['Estatico RNG', 'Regalo RNG', 'Roamer RNG', 'Salvaje RNG', 'Pesca RNG'];
   function modeIn(list) { return function (c) { return list.indexOf(c.mode) !== -1; }; }
 
   var STATS = [
@@ -27,7 +27,9 @@
     { value: 'Roamer RNG', label: 'Roamer RNG', icon: 'mode-roamer', rng: true, desc: 'Frame exacto para el legendario errante.' },
     { value: 'Salvaje RNG', label: 'Salvaje RNG', icon: 'mode-wild', rng: true, desc: 'Se acerca a un paso del encuentro y lo da en el frame exacto.' },
     { value: 'Partida nueva', label: 'Partida nueva', icon: 'mode-newgame', desc: 'Reinicia hasta conseguir el TID/SID que pides.' },
-    { value: 'Semilla inicial', label: 'Semilla inicial', icon: 'mode-seed', desc: 'Cae en una semilla del título y lanza otro modo.' }
+    { value: 'Semilla inicial', label: 'Semilla inicial', icon: 'mode-seed', desc: 'Cae en una semilla del título y lanza otro modo.' },
+    { value: 'Pesca', label: 'Pesca', icon: 'mode-wild', desc: 'Pesca con la caña registrada en SELECT y huye hasta que sale lo que buscas.' },
+    { value: 'Pesca RNG', label: 'Pesca RNG', icon: 'mode-wild', rng: true, desc: 'Pesca hasta que pica y pulsa B en el frame exacto del objetivo.' }
   ];
 
   var FARM_MODES = [
@@ -97,9 +99,13 @@
         { key: 'newGameTSV', type: 'hexlist', digits: 4, def: null, nullable: true, label: 'TSV buscados (TID xor SID)',
           help: 'Vacío = los que hacen shiny a un Ditto 6×31 (9630, B378, 79F8).', comment: 'TID xor SID en hex; null = Ditto 6x31' }
       ] },
-      { id: 'walk', title: 'Caminar', icon: 'mode-wild', desc: 'Cómo camina en la hierba en los modos Salvaje.', showIf: modeIn(WILD), fields: [
-        { key: 'walkAxis', type: 'enum', options: [{ value: 'horizontal', label: 'Izquierda / derecha' }, { value: 'vertical', label: 'Arriba / abajo' }],
-          def: 'horizontal', half: true, label: 'Eje', comment: '"horizontal" o "vertical"' },
+      { id: 'walk', title: 'Caminar', icon: 'mode-wild', desc: 'Cómo camina en la hierba en los modos Salvaje.', showIf: modeIn(['Salvaje', 'Salvaje RNG']), fields: [
+        { key: 'walkAxis', type: 'enum', options: [{ value: 'horizontal', label: 'Izquierda / derecha' }, { value: 'vertical', label: 'Arriba / abajo' },
+          { value: 'left', label: 'Casilla de la izquierda' }, { value: 'right', label: 'Casilla de la derecha' },
+          { value: 'up', label: 'Casilla de arriba' }, { value: 'down', label: 'Casilla de abajo' }],
+          def: 'horizontal', half: true, label: 'Eje',
+          help: 'Solo pisa tu casilla y la de ese lado. Surfeando, elige un lado con agua.',
+          comment: 'casilla vecina: "left", "right", "up", "down" ("horizontal" = "left", "vertical" = "up")' },
         { key: 'walkFrames', type: 'int', min: 1, max: 120, def: 16, half: true, label: 'Frames por paso', help: '16 = una casilla caminando.', comment: 'frames por paso' },
         { key: 'holdB', type: 'bool', def: false, label: 'Correr con B', help: 'Solo modo Salvaje.', showIf: modeIn(['Salvaje']), comment: 'correr con B (solo Salvaje)' },
         { key: 'wildOneStep', type: 'bool', def: true, label: 'Acercarse a un paso del encuentro', showIf: modeIn(['Salvaje RNG']),
@@ -107,6 +113,7 @@
       ] },
       { id: 'rng', title: 'RNG', icon: 'dice', advanced: true, desc: 'Búsqueda del objetivo, Tele Pokémon y cambios de semilla. Los valores por defecto sirven casi siempre.', fields: [
         { key: 'farSearch', half: true, type: 'int', min: 1000, max: 100000000, def: 20000000, label: 'Avances a revisar', comment: 'avances a revisar buscando el objetivo' },
+        { key: 'fishSearch', half: true, type: 'int', min: 1000, max: 100000000, def: 1000000, label: 'Avances a revisar pescando', help: 'Sin Tele Pokémon: el bot espera en el texto de la caña (1 avance por frame).', showIf: modeIn(['Pesca RNG']), comment: 'Pesca RNG: avances a revisar (sin Tele Pokemon)' },
         { key: 'teachy', type: 'bool', def: true, label: 'Usar la Tele Pokémon', help: 'Regístrala en SELECT.', comment: 'usar la Tele Pokemon registrada en SELECT' },
         { key: 'teachyBeyond', half: true, type: 'int', min: 0, max: 100000000, def: 5000, label: 'Usar la Tele si ahorra más de', unit: 'avances', comment: 'usar la Tele si ahorra mas de estos avances' },
         { key: 'teachyMargin', half: true, type: 'int', min: 0, max: 1000000, def: null, nullable: true, label: 'Cerrar la Tele antes', unit: 'avances', help: 'Vacío = automático.', comment: 'null = automatico' },

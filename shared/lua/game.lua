@@ -26,6 +26,10 @@ local Game = (function()
     -- table's 18th header, so the right one per build matters
     G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
                        LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
+    -- Task_Fishing (pret symbols, +1: Thumb code), to find the fishing task in gTasks
+    local fishing = ({ FireRed0 = 0x0805D304, FireRed1 = 0x0805D318,
+                       LeafGreen0 = 0x0805D304, LeafGreen1 = 0x0805D318 })[build]
+    G.taskFishing = fishing and (fishing + 1)
   end
   -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
   -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame

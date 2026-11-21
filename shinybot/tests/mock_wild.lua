@@ -1,4 +1,5 @@
 REG_ITEM = rawget(_G, "REG_ITEM")
+POND = rawget(_G, "POND")
 USER_RESET_AT = rawget(_G, "USER_RESET_AT")
 -- Minimal VBA-rr + FRLG game simulator to test the bot logic
 local MODE_TO_TEST, SHINY_AT, CLEAR_ON_RESET, RNG = ...
@@ -162,7 +163,10 @@ local function gameFrame()
     if not g.battle then
       if held.left or held.right then g.walkHeld = g.walkHeld + 1 else g.walkHeld = 0 end
       if RNG and g.walkHeld > 0 and g.walkHeld % 16 == 0 then
-        w16(SB1, (r16(SB1) + (held.left and -1 or 1)) % 65536)      -- posicion
+        local nx = (r16(SB1) + (held.left and -1 or 1)) % 65536
+        -- POND = { a, b }: the only two water tiles (x); any other one is the shore
+        if POND and nx ~= POND[1] and nx ~= POND[2] then error("LEFT THE WATER at x=" .. nx) end
+        w16(SB1, nx)      -- position
         local function Rand() local x = nextSeed(r32(0x03005000)); w32(0x03005000, x); return math.floor(x / 65536) end
         local function WRand() local x = (r32(WD) * 1103515245 + 12345) % 4294967296
           -- exact multiplication

@@ -41,8 +41,13 @@ local TID, SID = 12345, 54321
 local function bootRAM()
   w8(0x080000AE, 0x52); w8(0x080000AF, 0x45); w8(0x080000BC, 0)
 end
+-- fishing: FISH_ROD = registered item (default the Good Rod, 263; 0 = none),
+-- FISH_DRY = the player doesn't face water (the rod never gets a bite)
+local FISH_ROD = rawget(_G, "FISH_ROD") or 263
+local FISH_DRY = rawget(_G, "FISH_DRY")
 local function loadSave()
   w32(SB1P, SB1); w32(SB2P, SB2); w32(SB2 + 0xA, TID + SID * 65536); w8(PCNT, 2)
+  if MODE_TO_TEST == "fish" then w16(SB1 + 0x296, FISH_ROD) end
 end
 bootRAM(); loadSave()
 
@@ -73,7 +78,7 @@ end
 
 -- ---------- "game" state ----------
 local frame, held, prevHeld = 0, {}, {}
-local stats = { encounters = 0, resets = 0, flees = 0, resetFrames = {} }
+local stats = { encounters = 0, resets = 0, flees = 0, resetFrames = {}, casts = 0, mapA = 0 }
 local g = { walkHeld = 0, steps = 0, battle = nil, loadAt = nil, aCount = 0, made = 0 }
 
 local function edge(b) return held[b] and not prevHeld[b] end
@@ -100,7 +105,33 @@ local function gameFrame()
     return
   end
 
-  if MODE_TO_TEST == "wild" then
+  if MODE_TO_TEST == "fish" and not g.battle then
+    -- pret Task_Fishing: SELECT casts the registered rod; 1 s + 4..10 dots of 20 frames; then a
+    -- bite (50%: "on the hook!") or "Not even a nibble", both waiting for A or B. Not facing water:
+    -- a message (also closed with A/B) and no fishing. A on the map, facing water, would offer Surf.
+    local fsh = g.fish
+    if not fsh then
+      if edge("select") and FISH_ROD >= 262 and FISH_ROD <= 264 then
+        stats.casts = stats.casts + 1
+        if FISH_DRY then g.fish = { phase = "text", t = 0, bite = false }
+        else g.fish = { phase = "dots", t = 0, len = 60 + (math.random(4, 10) + 1) * 20 } end
+      elseif edge("A") then stats.mapA = stats.mapA + 1 end
+      return
+    end
+    fsh.t = fsh.t + 1
+    if fsh.phase == "dots" then
+      if fsh.t >= fsh.len then fsh.phase, fsh.t, fsh.bite = "text", 0, math.random() < 0.5 end
+    elseif fsh.t > 30 and (edge("A") or edge("B")) then
+      g.fish = nil
+      if fsh.bite then
+        stats.encounters = stats.encounters + 1
+        createMon(ENEMY, randPid(stats.encounters == SHINY_AT), 129, 0x3FFFFFFF)
+        g.battle = { start = frame, cx = 0, cy = 0, sub = false, ending = nil }
+      end
+    end
+    return
+  end
+  if MODE_TO_TEST == "wild" or MODE_TO_TEST == "fish" then
     if not g.battle then
       if held.left or held.right then g.walkHeld = g.walkHeld + 1 else g.walkHeld = 0 end
       if g.walkHeld > 0 and g.walkHeld % 16 == 0 then
@@ -177,7 +208,7 @@ _G.print = function(...) local t = {} for i = 1, select("#", ...) do t[#t + 1] =
 io = { open = function() return nil end, write = io.write }
 
 -- press 8 (change mode) as many times as needed and 7 to start
-local modeIndex = ({ wild = 1, static = 2, gift = 3, roamer = 4 })[MODE_TO_TEST]
+local modeIndex = ({ wild = 1, static = 2, gift = 3, roamer = 4, fish = 11 })[MODE_TO_TEST]
 local f = 300
 for i = 2, modeIndex do hotkeys[f] = { ["8"] = true }; f = f + 3 end
 hotkeys[f] = { ["7"] = true }
@@ -186,5 +217,6 @@ return function(chunk)
   local ok, err = pcall(chunk)
   local gaps = {}
   for i = 2, #stats.resetFrames do gaps[#gaps + 1] = stats.resetFrames[i] - stats.resetFrames[i - 1] end
-  return tostring(err), frame, stats.encounters, stats.resets, stats.flees, g.made, table.concat(gaps, ","), (g.battle ~= nil)
+  return tostring(err), frame, stats.encounters, stats.resets, stats.flees, g.made, table.concat(gaps, ","), (g.battle ~= nil),
+    stats.casts, stats.mapA
 end

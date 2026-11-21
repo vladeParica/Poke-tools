@@ -97,6 +97,7 @@ simulate memory, buttons and the minimum game logic.
   inherited (that's Emerald).
 - Physical/special **by type**: Normal, Fighting, Flying, Poison, Ground, Rock, Bug,
   Ghost, Steel = physical; the rest special.
+- The VBlank handler calls `Random()` once per frame, also while a text waits for a button.
 - Teachy TV (*Tele Pokémon*): 313 RNG calls per frame. The bot opens it from SELECT to
   reach far advances.
 - Initial seed: Timer1's value when A is pressed on the title screen is stored at
@@ -152,9 +153,11 @@ Party struct (100 bytes): PID, OTID, checksum +0x1C, 4 encrypted substructures
 
 ## Shiny Bot (`shinybot/`, v4.3)
 
-Modes 1–10 (in-game names in Spanish): Salvaje (Wild), Estático (Static), Regalo (Gift),
+Modes 1–12 (in-game names in Spanish): Salvaje (Wild), Estático (Static), Regalo (Gift),
 Roamer, Estático RNG, Regalo RNG, Roamer RNG, Salvaje RNG, Partida nueva (New game, pick
-SID), Semilla inicial (Initial seed, chains `afterSeedMode`).
+SID), Semilla inicial (Initial seed, chains `afterSeedMode`), Pesca (Fishing: registered rod on SELECT,
+B closes the texts; A facing water would offer Surf), Pesca RNG (casts until a bite, saves on the
+"on the hook!" text and presses B on the exact frame; reads `Task_Fishing` in gTasks, ADR-0016).
 Keys: 7 start/stop, 8 mode, 9 panel, 0 reload JSON.
 Multi-instance (`inst_N.lock`, `shiny_stop.flag`); logs in `logs/`.
 Wild RNG: walks to one step before the encounter and takes the step on the exact frame.
@@ -193,6 +196,7 @@ per build — table in `farm_body.lua`):
 | sPartyMenuInternal (ptr) | 0x0203B09C | actions[8] at +0x0F, numActions +0x17; ITEM = 3, TAKE = 5 |
 | sMenu (menu.c) | 0x0203ADE4 | cursorPos at +2 |
 | gTasks | 0x03005090 | 16 x 40 bytes: func +0, isActive +4 |
+| Task_Fishing | FR/LG 1.0 0x0805D304, 1.1 0x0805D318 | data[] at +8: step +8 (10 = "on the hook!" text), rod +38 |
 | gBattleTypeFlags | enemy − 0x14E0 | TRAINER 0x08, DOUBLE 0x01 |
 | SaveBlock1 | +0x290 money, +0x296 registered item, +0x310 bag, +0x638 VS Seeker charge | money/bag XOR SaveBlock2+0xF20 |
 

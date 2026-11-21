@@ -32,7 +32,8 @@ local CONFIG = {
   mode          = nil,          -- mode on start, e.g. "Salvaje RNG"
 
   -- Caminar
-  walkAxis      = "horizontal", -- "horizontal" (left/right) or "vertical" (up/down)
+  walkAxis      = "horizontal", -- the neighbour tile it steps to and back: "left", "right", "up", "down"
+                                --   ("horizontal" = "left", "vertical" = "up")
   walkFrames    = 16,           -- frames per step (16 = 1 tile walking)
   holdB         = false,        -- run with B (normal Salvaje mode only)
 
@@ -43,6 +44,7 @@ local CONFIG = {
 
   -- RNG
   farSearch     = 20000000,     -- advances to check when looking for the target
+  fishSearch    = 1000000,      -- Fishing RNG: advances to check (no Teachy TV there: SELECT holds the rod)
   teachy        = true,         -- use the Teachy TV (registered on SELECT) if the target is far
   teachyBeyond  = 5000,         -- use the Teachy TV if it saves more than this many advances of waiting
   teachyMargin  = nil,          -- close it this many advances before; nil = automatic (delay + 1500)
@@ -176,6 +178,7 @@ local LANG = {
     ["Bicho"] = "Bug",
     ["Bot iniciado: %s  (TID %d / SID %d)"] = "Bot started: %s  (TID %d / SID %d)",
     ["Bot iniciado: Partida nueva  (TID nuevo %d)"] = "Bot started: New game  (new TID %d)",
+    ["Buena"] = "Good",
     ["Busca: "] = "Looking for: ",
     ["Buscando SID... avance %d"] = "Searching for a SID... advance %d",
     ["Buscando combate"] = "Looking for a battle",
@@ -203,6 +206,7 @@ local LANG = {
     ["Compara con la pantalla; los cambios van al log."] = "Compare with the screen; changes go to the log.",
     ["Comprobando"] = "Checking",
     ["Con Recogida: %d  llevan objeto: %d"] = "With Pickup: %d  holding items: %d",
+    ["Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio"] = "With the %s Rod no species from 'species' shows up here: change rod or spot",
     ["Config cargada"] = "Config loaded",
     ["Config: "] = "Config: ",
     ["Contador de pasos: %d   pasos sin cambio: %d/2"] = "Step counter: %d   steps without change: %d/2",
@@ -262,6 +266,7 @@ local LANG = {
     ["Estatico"] = "Static",
     ["Estatico RNG"] = "Static RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "This ROM is not FireRed / LeafGreen. The bot won't run.",
+    ["Este mapa (%d.%d) no tiene Pokemon de pesca: quita el filtro 'species' o pesca en otro sitio"] = "This map (%d.%d) has no fishing Pokemon: remove the 'species' filter or fish somewhere else",
     ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "This map (%d.%d) has no %s encounters: start the mode in the grass or cave where you hunt",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "It evolved: finish the scene yourself (texts / new move). The bot carries on by itself after",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Friendship %d  Pokerus %s",
@@ -317,6 +322,8 @@ local LANG = {
     ["La Tele se paso del objetivo: busco el siguiente"] = "The Teachy TV overshot the target: looking for the next one",
     ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "The tile didn't heal the party: the way there must end INSIDE the healing zone (record another with 6)",
     ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "The seed changed (you loaded a state or reset). Bot stopped.",
+    ["Lanzamientos: %d"] = "Casts: %d",
+    ["Lanzando la cana (%d)"] = "Casting the rod (%d)",
     ["Lucha"] = "Fighting",
     ["MOCHILA"] = "BAG",
     ["MOV. CAMPO"] = "FIELD MOVE",
@@ -336,6 +343,7 @@ local LANG = {
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
+    ["No hay objetivo con esos filtros: sube fishSearch o quita filtros"] = "No target with those filters: raise fishSearch or remove filters",
     ["No pude caer en esa semilla. Prueba otras semillas o el Initial Seed Bot de FRLG_RNG_2.0"] = "I couldn't hit that seed. Try other seeds or the Initial Seed Bot from FRLG_RNG_2.0",
     ["No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."] = "I couldn't calibrate here (see the console). Try another part of the area.",
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "I couldn't heal: the way there must end INSIDE the Center, facing the nurse (record another with 6)",
@@ -379,6 +387,17 @@ local LANG = {
     ["Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando"] = "New game: name your character and your rival, and press 7 while Oak is still talking",
     ["Paso %d de %d   intento %d"] = "Step %d of %d   attempt %d",
     ["Pasos hasta el encuentro: %d%s"] = "Steps to the encounter: %d%s",
+    ["Pesca"] = "Fishing",
+    ["Pesca RNG"] = "Fishing RNG",
+    ["Pesca RNG: solo en Rojo Fuego / Verde Hoja USA (1.0 y 1.1). Usa el modo Pesca"] = "Fishing RNG: only on FireRed / LeafGreen USA (1.0 and 1.1). Use the Fishing mode",
+    ["Pesca: %d lanzamientos sin que pique nada. Prueba otra orilla"] = "Fishing: %d casts and nothing bit. Try another shore",
+    ["Pesca: no pica nada. Mira hacia el agua y registra la Cana en SELECT"] = "Fishing: nothing bites. Face the water and register a Rod on SELECT",
+    ["Pesca: no sale la cana. Mira hacia el agua y registra la Cana en SELECT"] = "Fishing: the rod does not come out. Face the water and register a Rod on SELECT",
+    ["Pesca: registra la Cana (Vieja, Buena o Super) en SELECT y mira hacia el agua"] = "Fishing: register a Rod (Old, Good or Super) on SELECT and face the water",
+    ["Pescando"] = "Fishing",
+    ["Pescando hasta que pique"] = "Fishing until something bites",
+    ["Pico algo con la Cana %s: estado guardado en el texto. Calibrando..."] = "Something bit on the %s Rod: state saved on the text. Calibrating...",
+    ["Pico! Esperando a que termine el texto"] = "A bite! Waiting for the text to finish",
     ["Planta"] = "Grass",
     ["Pon tus semillas en initialSeeds del .json (ej. [\"BC75\"])"] = "Put your seeds in initialSeeds in the .json (e.g. [\"BC75\"])",
     ["Preparando"] = "Preparing",
@@ -389,8 +408,10 @@ local LANG = {
     ["Probando semilla"] = "Trying seed",
     ["Psiquico"] = "Psychic",
     ["Pulsa A"] = "Press A",
+    ["Pulsa B"] = "Press B",
     ["Pulsar A"] = "Press A",
     ["Pulsar A en %d frames   intento %d"] = "Press A in %d frames   attempt %d",
+    ["Pulsar B"] = "Press B",
     ["QUITAR"] = "TAKE",
     ["QUITAR CARTA"] = "TAKE MAIL",
     ["Quita los objetos (START > POKEMON > OBJETO > QUITAR): "] = "Take the items (START > POKEMON > ITEM > TAKE): ",
@@ -442,6 +463,7 @@ local LANG = {
     ["Sin shiny"] = "No shiny",
     ["Siniestro"] = "Dark",
     ["Stat"] = "Stat",
+    ["Super"] = "Super",
     ["TID %d   SID objetivo: %s"] = "TID %d   target SID: %s",
     ["TID %d  SID %d"] = "TID %d  SID %d",
     ["TID %d  SID %d  (xor %04X)"] = "TID %d  SID %d  (xor %04X)",
@@ -466,6 +488,7 @@ local LANG = {
     ["Usando Buscapelea"] = "Using VS Seeker",
     ["Vel"] = "Spe",
     ["Veneno"] = "Poison",
+    ["Vieja"] = "Old",
     ["Volador"] = "Flying",
     ["Volviendo al inicio"] = "Going back to the start",
     ["Volviendo al punto"] = "Going back to the spot",
@@ -473,6 +496,7 @@ local LANG = {
     ["Vuelta %d: ningun entrenador quiere revancha todavia"] = "Lap %d: no trainer wants a rematch yet",
     ["Yendo al Centro"] = "Going to the Center",
     ["Zona: %s%s"] = "Area: %s%s",
+    ["Zona: pesca con la Cana %s%s"] = "Zone: fishing with the %s Rod%s",
     ["[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s"] = "[%s] %s  PID %08X  %s  IVs %s  after %d attempts (%s mode)%s",
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X hit after %d tries",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
@@ -683,6 +707,7 @@ local LANG = {
     ["Bicho"] = "Mushi",
     ["Bot iniciado: %s  (TID %d / SID %d)"] = "Bot kaishi: %s  (TID %d / SID %d)",
     ["Bot iniciado: Partida nueva  (TID nuevo %d)"] = "Bot kaishi: Saisho kara  (atarashii TID %d)",
+    ["Buena"] = "Ii",
     ["Busca: "] = "Sagasu: ",
     ["Buscando SID... avance %d"] = "SID wo sagashite imasu... shouhi %d",
     ["Buscando combate"] = "Battle wo sagashi chuu",
@@ -710,6 +735,7 @@ local LANG = {
     ["Compara con la pantalla; los cambios van al log."] = "Gamen to kurabete; henka wa log ni kirokusaremasu.",
     ["Comprobando"] = "Kakunin chuu",
     ["Con Recogida: %d  llevan objeto: %d"] = "Monohiroi: %d  mochimono ari: %d",
+    ["Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio"] = "%s tsurizao de wa koko ni 'species' no Pokemon wa denai: sao ka basho wo kaeru",
     ["Config cargada"] = "Settei yomikomi kanryo",
     ["Config: "] = "Settei: ",
     ["Contador de pasos: %d   pasos sin cambio: %d/2"] = "Hosuu counter: %d   henka nashi: %d/2",
@@ -769,6 +795,7 @@ local LANG = {
     ["Estatico"] = "Symbol",
     ["Estatico RNG"] = "Symbol RNG",
     ["Este ROM no es Rojo Fuego / Verde Hoja. El bot no se ejecutara."] = "Kono ROM wa FireRed / LeafGreen dewa arimasen. Bot wa ugokimasen.",
+    ["Este mapa (%d.%d) no tiene Pokemon de pesca: quita el filtro 'species' o pesca en otro sitio"] = "Kono map (%d.%d) ni tsureru Pokemon wa inai: 'species' filter wo hazusu ka betsu no basho de tsuru",
     ["Este mapa (%d.%d) no tiene encuentros %s: empieza el modo en la hierba o cueva donde cazas"] = "Kono map (%d.%d) ni wa %s no deai ga nai: kusamura ka doukutsu de mode wo hajimete",
     ["Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"] = "Shinka shita: jibun de scene wo owarasete (message / atarashii waza). Sono ato bot ga tsuzukemasu",
     ["Exp %d  Amistad %d  Pokerus %s"] = "Exp %d  Natsukido %d  Pokerus %s",
@@ -824,6 +851,8 @@ local LANG = {
     ["La Tele se paso del objetivo: busco el siguiente"] = "TV ga mokuhyo wo koeta: tsugi wo sagashimasu",
     ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "Kaifuku masu de kaifuku shinakatta: iki wa kaifuku zone no NAKA de owaru hitsuyou (6 de kiroku shinaoshite)",
     ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "Seed ga kawatta (state load ka reset). Bot teishi.",
+    ["Lanzamientos: %d"] = "Nageta kaisuu: %d",
+    ["Lanzando la cana (%d)"] = "Tsurizao wo nageru (%d)",
     ["Lucha"] = "Kakutou",
     ["MOCHILA"] = "BAG",
     ["MOV. CAMPO"] = "FIELD WAZA",
@@ -843,6 +872,7 @@ local LANG = {
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
+    ["No hay objetivo con esos filtros: sube fishSearch o quita filtros"] = "Sono filter de wa mokuhyou nashi: fishSearch wo agete ka filter wo hazusu",
     ["No pude caer en esa semilla. Prueba otras semillas o el Initial Seed Bot de FRLG_RNG_2.0"] = "Sono seed ni naranakatta. Betsu no seed ka FRLG_RNG_2.0 no Initial Seed Bot wo tameshite",
     ["No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."] = "Koko de hosei dekinakatta (console wo mite). Betsu no basho de tameshite.",
     ["No pude curar: la ida debe terminar DENTRO del Centro, frente a la enfermera (graba otra con 6)"] = "Kaifuku dekinakatta: iki wa Center no NAKA, Joy-san no mae de owaru hitsuyou (6 de kiroku shinaoshite)",
@@ -886,6 +916,17 @@ local LANG = {
     ["Partida nueva: nombra a tu personaje y a tu rival, y pulsa 7 cuando Oak siga hablando"] = "Saisho kara: shujinkou to rival no namae wo kimete, Oak ga hanashite iru aida ni 7 wo oshite",
     ["Paso %d de %d   intento %d"] = "%d ho me / %d   shikou %d",
     ["Pasos hasta el encuentro: %d%s"] = "Encount made: %d ho%s",
+    ["Pesca"] = "Tsuri",
+    ["Pesca RNG"] = "Tsuri RNG",
+    ["Pesca RNG: solo en Rojo Fuego / Verde Hoja USA (1.0 y 1.1). Usa el modo Pesca"] = "Tsuri RNG: FireRed / LeafGreen USA (1.0 / 1.1) nomi. Tsuri mode wo tsukau",
+    ["Pesca: %d lanzamientos sin que pique nada. Prueba otra orilla"] = "Tsuri: %d kai nagete nanimo kakaranai. Betsu no kishi de",
+    ["Pesca: no pica nada. Mira hacia el agua y registra la Cana en SELECT"] = "Tsuri: nanimo kakaranai. Mizu no hou wo muite, tsurizao wo SELECT ni touroku",
+    ["Pesca: no sale la cana. Mira hacia el agua y registra la Cana en SELECT"] = "Tsuri: tsurizao ga denai. Mizu no hou wo muite, tsurizao wo SELECT ni touroku",
+    ["Pesca: registra la Cana (Vieja, Buena o Super) en SELECT y mira hacia el agua"] = "Tsuri: tsurizao (Boro, Ii, Sugoi) wo SELECT ni touroku shite mizu no hou wo muku",
+    ["Pescando"] = "Tsuri chuu",
+    ["Pescando hasta que pique"] = "Kakaru made tsuri",
+    ["Pico algo con la Cana %s: estado guardado en el texto. Calibrando..."] = "%s tsurizao ni kakatta: text de state wo hozon. Calibration chuu...",
+    ["Pico! Esperando a que termine el texto"] = "Kakatta! Text no owari wo matsu",
     ["Planta"] = "Kusa",
     ["Pon tus semillas en initialSeeds del .json (ej. [\"BC75\"])"] = ".json no initialSeeds ni seed wo irete (rei: [\"BC75\"])",
     ["Preparando"] = "Junbi chuu",
@@ -896,8 +937,10 @@ local LANG = {
     ["Probando semilla"] = "Seed shikou",
     ["Psiquico"] = "Esper",
     ["Pulsa A"] = "A wo osu",
+    ["Pulsa B"] = "B wo osu",
     ["Pulsar A"] = "A wo osu",
     ["Pulsar A en %d frames   intento %d"] = "%d frame go ni A   shikou %d",
+    ["Pulsar B"] = "B wo osu",
     ["QUITAR"] = "AZUKARU",
     ["QUITAR CARTA"] = "MAIL WO AZUKARU",
     ["Quita los objetos (START > POKEMON > OBJETO > QUITAR): "] = "Dougu wo hazushite (START > POKEMON > MOCHIMONO > AZUKARU): ",
@@ -949,6 +992,7 @@ local LANG = {
     ["Sin shiny"] = "Irochigai nashi",
     ["Siniestro"] = "Aku",
     ["Stat"] = "Nouryoku",
+    ["Super"] = "Sugoi",
     ["TID %d   SID objetivo: %s"] = "TID %d   mokuhyo SID: %s",
     ["TID %d  SID %d"] = "TID %d  SID %d",
     ["TID %d  SID %d  (xor %04X)"] = "TID %d  SID %d  (xor %04X)",
@@ -973,6 +1017,7 @@ local LANG = {
     ["Usando Buscapelea"] = "Battle Searcher shiyou chuu",
     ["Vel"] = "S",
     ["Veneno"] = "Doku",
+    ["Vieja"] = "Boro",
     ["Volador"] = "Hikou",
     ["Volviendo al inicio"] = "Kaishi point ni modori chuu",
     ["Volviendo al punto"] = "Point ni modori chuu",
@@ -980,6 +1025,7 @@ local LANG = {
     ["Vuelta %d: ningun entrenador quiere revancha todavia"] = "Shuukai %d: mada saisen shitai trainer wa inai",
     ["Yendo al Centro"] = "Center e idou chuu",
     ["Zona: %s%s"] = "Basho: %s%s",
+    ["Zona: pesca con la Cana %s%s"] = "Zone: %s tsurizao de tsuri%s",
     ["[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s"] = "[%s] %s  PID %08X  %s  IVs %s  %d kai de hakken (%s mode)%s",
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X ni %d kai de seikou",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
@@ -1205,6 +1251,10 @@ local Game = (function()
     -- table's 18th header, so the right one per build matters
     G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
                        LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
+    -- Task_Fishing (pret symbols, +1: Thumb code), to find the fishing task in gTasks
+    local fishing = ({ FireRed0 = 0x0805D304, FireRed1 = 0x0805D318,
+                       LeafGreen0 = 0x0805D304, LeafGreen1 = 0x0805D318 })[build]
+    G.taskFishing = fishing and (fishing + 1)
   end
   -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
   -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
@@ -1684,8 +1734,8 @@ end
 
 -- ------------------------------ Estado -------------------------------
 local MODES = { "Salvaje", "Estatico", "Regalo", "Roamer", "Estatico RNG", "Regalo RNG", "Roamer RNG", "Salvaje RNG",  --@i18n
-                "Partida nueva", "Semilla inicial" }  --@i18n
--- 1 = wild, 2 = static, 3 = gift, 4 = roamer (RNG modes use the same type)
+                "Partida nueva", "Semilla inicial", "Pesca", "Pesca RNG" }  --@i18n
+-- 1 = wild, 2 = static, 3 = gift, 4 = roamer (RNG modes use the same type); 11/12 = fishing, 12 with RNG
 
 local bot = {
   mode = 1, running = false, found = false, st = "idle", t = 0,
@@ -1695,12 +1745,42 @@ local bot = {
   last = nil, panel = 1, msg = "",     -- panel: 1 compact, 2 full, 0 hidden
 }
 local queue = {}
-local walkToggle = false
+-- Walking for encounters: only between the tile where the hunt starts (the anchor) and ONE
+-- neighbour (walkAxis), always back to the anchor. Alternating blindly could drift to a third
+-- tile (after the preparation steps it may stand on the neighbour): surfing in a small pond
+-- that third tile can be the shore, and stepping on it ends the surfing.
+local WK = { AWAY = { horizontal = "left", vertical = "up", left = "left", right = "right", up = "up", down = "down" },
+             BACK = { left = "right", right = "left", up = "down", down = "up" } }
+function WK.away()
+  local d = WK.AWAY[CONFIG.walkAxis] or "left"
+  if WK.flip then d = WK.BACK[d] end
+  return d
+end
+function WK.pos()
+  local sb1 = read32(A.sb1)
+  if not validPtr(sb1) then return nil end
+  return read32(sb1)                    -- SaveBlock1 +0: x, y (16 bits each)
+end
+function WK.start() WK.anchor, WK.flip, WK.lastPos, WK.lastAway = WK.pos(), false, nil, nil end
+-- Next step from where the player stands now
+function WK.next()
+  local p = WK.pos()
+  if not p or not WK.anchor then return WK.away() end
+  if p == WK.anchor then
+    -- the step away didn't move it (a wall, the shore): use the other neighbour
+    if WK.lastAway and WK.lastPos == p then WK.flip = not WK.flip end
+    WK.lastAway, WK.lastPos = true, p
+    return WK.away()
+  end
+  WK.lastAway, WK.lastPos = false, p
+  return WK.BACK[WK.away()]
+end
 local stopBot   -- defined further down
 local function kind()
   if bot.mode == 8 then return 1 end
   if bot.mode == 9 then return 5 end
   if bot.mode == 10 then return 6 end
+  if bot.mode == 11 or bot.mode == 12 then return 1 end
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
@@ -1712,6 +1792,13 @@ local function afterSeedIndex()
   return nil
 end
 local function isWildRng() return bot.mode == 8 end
+local function isFishing() return bot.mode == 11 end
+-- Wild modes that hunt by species (walking, Wild RNG, fishing)
+local function huntsSpecies() return bot.mode == 1 or bot.mode == 8 or bot.mode == 11 or bot.mode == 12 end
+local function isFishRng() return bot.mode == 12 end
+-- Wild RNG and Fishing RNG: the target is a wild Pokemon (Method H-1) from a slot of the table
+local function wildTarget() return bot.mode == 8 or bot.mode == 12 end
+local FR = {}   -- fishing (modes 11 and 12); a table: the main chunk is at Lua 5.1's 200-local limit
 
 local function push(buttons, frames) queue[#queue + 1] = { b = buttons, n = frames } end
 local function wait(frames) if frames > 0 then push(nil, frames) end end
@@ -1737,7 +1824,7 @@ end
 
 -- shinyNeeded=false to check only the other filters
 local function passesFilters(mon)
-  if filt.species and mon.species and (bot.mode == 1 or bot.mode == 8) then
+  if filt.species and mon.species and huntsSpecies() then
     if not filt.species[simplify(speciesName(mon.species))] then return false end
   end
   if filt.natures and not filt.natures[natureOf(mon.pid)] then return false end
@@ -1815,11 +1902,7 @@ end
 
 -- ---------------------------- Wild mode ---------------------------
 local function pushWalk()
-  local d1, d2 = "left", "right"
-  if CONFIG.walkAxis == "vertical" then d1, d2 = "up", "down" end
-  walkToggle = not walkToggle
-  local dir = walkToggle and d1 or d2
-  local b = { [dir] = true }
+  local b = { [WK.next()] = true }
   if CONFIG.holdB then b.B = true end
   push(b, CONFIG.walkFrames)
   wait(math.random(0, 3))   -- variation so each instance gets different encounters
@@ -1840,6 +1923,24 @@ local function pushFleeCycle()
   end
 end
 
+-- Fishing (pret field_player_avatar.c): SELECT uses the registered rod; after the dots either
+-- "A POKeMON's on the hook!" (the wild Pokemon is created when it closes) or "Not even a
+-- nibble..." shows, both waiting for a button. FRLG has no reel-in timing. B closes them and,
+-- unlike A, does nothing on the map (A facing water would offer Surf). SELECT while the rod
+-- is out is ignored, so the cycle just repeats.
+FR.ROD = { [262] = true, [263] = true, [264] = true }      -- ITEM_OLD_ROD / GOOD_ROD / SUPER_ROD
+function FR.rodRegistered()
+  local sb1 = read32(A.sb1)
+  return validPtr(sb1) and FR.ROD[read16(sb1 + 0x296)] == true
+end
+function FR.pushFish()
+  push({ select = true }, 2); wait(10)
+  for _ = 1, 5 do push({ B = true }, 2); wait(12) end
+  wait(math.random(0, 3))   -- variation so each instance gets different encounters
+end
+FR.NOTHING = 6000      -- frames without a bite (~20 casts at 50% each): not facing water
+function FR.home() return isFishing() and "fish" or "walk" end
+
 local function enterFlee(sawBattle)
   queue = {}
   write8(A.battleOutcome, 0)         -- clear the previous battle's outcome
@@ -1847,14 +1948,25 @@ local function enterFlee(sawBattle)
 end
 
 local function stepWild()
-  if bot.st == "walk" then
+  if bot.st == "walk" or bot.st == "fish" then
     local mon = decodeMon(A.enemy)
     if mon then
       queue = {}
+      bot.idle = 0
       if evaluate(mon) then return end
       enterFlee(false)
     elseif inBattle() then
+      bot.idle = 0
       enterFlee(true)                  -- battle without a detected Pokemon: run anyway
+    elseif bot.st == "fish" then
+      bot.idle = (bot.idle or 0) + 1
+      if bot.idle > FR.NOTHING then
+        stopBot()
+        bot.msg = TX"Pesca: no pica nada. Mira hacia el agua y registra la Cana en SELECT"
+        print(bot.msg)
+        return
+      end
+      if #queue == 0 then FR.pushFish() end
     elseif #queue == 0 then
       pushWalk()
     end
@@ -1870,7 +1982,7 @@ local function stepWild()
       local back = (bot.sawBattle and bot.outFrames >= 20)
                 or (not bot.sawBattle and bot.t - bot.ranAt > 240)
       if back then
-        queue = {}; zeroEnemy(); bot.st = bot.returnState or "walk"
+        queue = {}; zeroEnemy(); bot.st = bot.returnState or FR.home()
       elseif #queue == 0 and (ib or not bot.sawBattle) then
         tap("B"); wait(10)
       end
@@ -1881,14 +1993,14 @@ local function stepWild()
       -- the battle ended without running (e.g. you ended it)
       queue = {}
       bot.outFrames = bot.outFrames + 1
-      if bot.outFrames >= 20 then zeroEnemy(); bot.st = bot.returnState or "walk" end
+      if bot.outFrames >= 20 then zeroEnemy(); bot.st = bot.returnState or FR.home() end
       return
     end
 
     if bot.t > 3000 then               -- safety net: something odd, go back to walking
       bot.msg = TX"Aviso: no se pudo confirmar la huida"
       print(bot.msg)
-      queue = {}; zeroEnemy(); bot.st = bot.returnState or "walk"
+      queue = {}; zeroEnemy(); bot.st = bot.returnState or FR.home()
       return
     end
     if #queue == 0 then pushFleeCycle() end
@@ -2131,6 +2243,10 @@ A.avatar   = (gameLang == 0x4A) and 0x02036FAC or 0x02037078   -- gPlayerAvatar.
 
 local LAND_T  = { 20, 40, 50, 60, 70, 80, 85, 90, 94, 98, 99, 100 }
 local WATER_T = { 60, 90, 95, 99, 100 }
+-- Fishing: Random() % 100 picks a slot of the rod's part of the 10-slot table
+-- (Old Rod slots 1-2, Good Rod 3-5, Super Rod 6-10)
+FR.T = { [0] = { 70, 100 }, [1] = { 60, 80, 100 }, [2] = { 40, 80, 95, 99, 100 } }
+FR.FIRST = { [0] = 1, [1] = 3, [2] = 6 }
 
 local wildTableBase = nil
 local function validHeaderTable(base)
@@ -2193,6 +2309,7 @@ local function findWildTable()
   return false
 end
 
+-- water: true (surfing), false (land) or "fish" (the 10 fishing slots)
 local function currentWildInfo(water)
   local base = findWildTable()
   if not base then return nil end
@@ -2204,11 +2321,11 @@ local function currentWildInfo(water)
     local mg = read8(a)
     if mg == 0xFF then return nil end
     if mg == g and read8(a + 1) == n then
-      local info = read32(a + (water and 8 or 4))
+      local info = read32(a + ((water == "fish") and 16 or (water and 8 or 4)))
       if info == 0 then return nil end
       local mons = read32(info + 4)
       local slots = {}
-      for k = 0, (water and 5 or 12) - 1 do
+      for k = 0, ((water == "fish") and 10 or (water and 5 or 12)) - 1 do
         local m = mons + k * 4
         local lo, hi = read8(m), read8(m + 1)
         if hi < lo then lo, hi = hi, lo end
@@ -2226,10 +2343,16 @@ local function slotSpecies(slot)
 end
 
 local function slotOfRoll(roll)
+  if wr.fish then
+    local th = FR.T[wr.fish]
+    for i, t in ipairs(th) do if roll < t then return FR.FIRST[wr.fish] + i - 1 end end
+    return FR.FIRST[wr.fish] + #th - 1
+  end
   local th = wr.water and WATER_T or LAND_T
   for i, t in ipairs(th) do if roll < t then return i end end
   return #th
 end
+function FR.slotCount() return wr.fish and 10 or (wr.water and 5 or 12) end
 
 -- Order of the Random() calls when generating a wild Pokemon. The normal one is
 -- Method H-1 (slot, level, nature, PID until the nature
@@ -2322,9 +2445,9 @@ local function startFar(from)
   while k < gs - 1 do s = nextSeed(s); k = k + 1 end
   far.bs, far.seed = math.max(from, 1), s          -- far.seed = seed at index gs - 1
   far.gs = gs
-  if bot.mode == 8 then
+  if wildTarget() then
     far.slotOk = {}
-    for slot = 1, (wr.water and 5 or 12) do
+    for slot = 1, FR.slotCount() do
       local sp = slotSpecies(slot)
       far.slotOk[slot] = (not filt.species) or (sp and filt.species[simplify(speciesName(sp))]) or false
     end
@@ -2351,7 +2474,7 @@ local function scanFarBlock()
   end
   local needShiny, tsv, natOk = filt.shiny, fast.tsv, fast.nat
   local best = far.best
-  if bot.mode == 8 then
+  if wildTarget() then
     local lay = wr.layout or LAYOUTS[1]
     local pre = lay.a + 1 + lay.b
     local slotOk = far.slotOk
@@ -2403,7 +2526,7 @@ local function scanFarBlock()
   rng.anchors = rng.anchors or {}
   rng.anchors[#rng.anchors + 1] = { base = rng.seed0, idx = far.gs - 1, seed = far.seed }
   far.bs, far.gs, far.seed = be + 1, be + 1 - M, nextSeedVal
-  local doneByBest = best and (bot.mode ~= 8 or be > best.E + M + 10)
+  local doneByBest = best and (not wildTarget() or be > best.E + M + 10)
   return doneByBest, be
 end
 
@@ -2446,8 +2569,13 @@ local function stepReseed()
   elseif bot.st == "rsettle" then
     if bot.t >= 60 then
       bot.selfReset = false
-      if bot.mode == 8 then
+      if isFishRng() then
         zeroEnemy()
+        rng.casts, rng.castT, rng.hookAt = 0, nil, nil
+        bot.st = "fcast"
+      elseif bot.mode == 8 then
+        zeroEnemy()
+        WK.start()                      -- the saved tile, just loaded
         bot.prepPos, bot.prepCnt, bot.prepSteps = nil, nil, 0
         bot.returnState = "prep"
         bot.st = "prep"
@@ -2477,11 +2605,12 @@ local function goToTarget(best)
   rng.target, rng.targetPid, rng.targetIvs, rng.targetSv, rng.targetSlot =
     best.E, best.pid, best.ivs, best.sv, best.slot
   rng.pressAt, rng.tries, rng.tried = best.E - rng.delay, 0, {}
-  local sp = (bot.mode == 8) and slotSpecies(best.slot) or nil
+  local sp = wildTarget() and slotSpecies(best.slot) or nil
   bot.msg = string.format(TX"Objetivo: avance %d%s  PID %08X  %s", best.E,
             sp and ("  " .. speciesName(sp)) or "", best.pid, natureOf(best.pid))
   print(bot.msg)
-  local useTv = CONFIG.teachy and (rng.pressAt - teachyMargin()) > CONFIG.teachyBeyond
+  -- (fishing: the base is the "on the hook!" text and SELECT holds the rod, so no Teachy TV)
+  local useTv = CONFIG.teachy and not isFishRng() and (rng.pressAt - teachyMargin()) > CONFIG.teachyBeyond
   if useTv and not teachyRegistered() then
     if not rng.tvWarned then
       print(TX"Aviso: registra la Tele Pokemon en SELECT (Mochila > Obj. clave > Tele Pokemon > Registrar)")
@@ -2496,7 +2625,7 @@ local function goToTarget(best)
     bot.st, bot.t = "tv_open", 0
     return
   end
-  if bot.mode == 8 and wr.built < rng.target + 3000 then
+  if wildTarget() and wr.built < rng.target + 3000 then
     bot.st = "wbuild2"           -- compute the RNG values up to the target
     return
   end
@@ -2506,15 +2635,17 @@ end
 
 local function stepFar()
   local done, be = scanFarBlock()
+  local limit = isFishRng() and CONFIG.fishSearch or CONFIG.farSearch
   bot.msg = string.format(TX"Buscando objetivo... avance %d", be)
   if done then
     goToTarget(far.best)
-  elseif be >= CONFIG.farSearch then
+  elseif be >= limit then
     if far.best then goToTarget(far.best); return end
     if CONFIG.reseed and not bot.noReseed and (bot.reseeds or 0) < CONFIG.maxReseeds then
-      startReseed(string.format(TX"sin objetivo en %d avances", CONFIG.farSearch)); return
+      startReseed(string.format(TX"sin objetivo en %d avances", limit)); return
     end
-    bot.msg = TX"No hay objetivo con esos filtros: sube farSearch o quita filtros"
+    bot.msg = isFishRng() and TX"No hay objetivo con esos filtros: sube fishSearch o quita filtros"
+              or TX"No hay objetivo con esos filtros: sube farSearch o quita filtros"
     print(bot.msg); bot.running = false; bot.st = "idle"
   end
 end
@@ -3067,10 +3198,12 @@ end
 --     RNG calls (calibration).
 --  3. Search for the target (up to millions of advances), get there with the Teachy
 --     TV if it is far, and start walking on the exact advance.
+-- i-th step from the base: away from the anchor and back, or the other way round when the
+-- base stands on the neighbour (rng.atAnchor0, read when the base was saved)
 local function stepDir(i)
-  local d1, d2 = "left", "right"
-  if CONFIG.walkAxis == "vertical" then d1, d2 = "up", "down" end
-  return (i % 2 == 1) and d1 or d2
+  local away, back = WK.away(), WK.BACK[WK.away()]
+  if rng.atAnchor0 == false then away, back = back, away end
+  return (i % 2 == 1) and away or back
 end
 
 -- The player is standing still (gPlayerAvatar.runningState and tileTransitionState = 0)
@@ -3120,6 +3253,7 @@ local function wildSetup()
   rng.calFails = 0
   rng.pressAt = rng.preDelay
   rng.base0State, rng.base0Seed, rng.base0Frame = rngState, rng.seed0, rng.baseFrame
+  rng.atAnchor0 = (WK.anchor == nil) or (WK.pos() == WK.anchor)
   rng.oneStep, rng.noOneStep, rng.approachK = false, false, nil
   wr.layout = nil
   wr.water = band(read8(A.avatar), 0x08) ~= 0
@@ -3332,6 +3466,185 @@ local function stepWildRng()
   end
 end
 
+-- =========================== Fishing RNG ===========================
+-- pret field_player_avatar.c, Task_Fishing: after the dots, Random() & 1 decides the bite. On a
+-- bite FRLG goes straight to "A POKeMON's on the hook!" (no reel-in timing) and that text waits
+-- for A or B as long as it takes, while VBlank keeps calling Random() once per frame. One frame
+-- after the press, FishingWildEncounter generates the Pokemon like a wild one (slot of the rod,
+-- level, nature, PID, IVs). So the bot casts until something bites, saves a state on that text
+-- (the base) and, like the Static RNG modes, presses B on the exact frame. The dots only decide
+-- whether it bites; the bot reads the task instead of predicting them.
+FR.TASKS = 0x03005090                -- gTasks: 16 x 40 bytes (func +0, isActive +4, data[16] +8)
+FR.HOOK_STEP = 10                    -- Fishing11: the "on the hook!" text
+FR.TEXT_WAIT = 240                   -- frames for that text to finish printing at any text speed
+FR.CAST_MAX = 40                     -- casts without a bite: no fishing Pokemon here
+FR.ROD_NAME = { [0] = "Vieja", [1] = "Buena", [2] = "Super" }  --@i18n
+
+function FR.task()
+  for i = 0, 15 do
+    local a = FR.TASKS + i * 40
+    if read8(a + 4) ~= 0 and read32(a) == Game.taskFishing then return a end
+  end
+  return nil
+end
+
+function FR.setup(rod)
+  rebaseHere()                         -- the base: the "on the hook!" text, waiting for B
+  rng.nextSearch = nil
+  rng.delay, rng.target, rng.tries, rng.tried = nil, nil, 0, {}
+  rng.stepsToEnc, rng.targetIvs, rng.targetSv, rng.failedTargets = nil, nil, nil, 0
+  rng.anchors, far, rng.near = nil, nil, nil
+  rng.calFails = 0
+  rng.pressAt = rng.preDelay
+  wr.layout = nil
+  wr.water, wr.fish = false, rod
+  wr.info = currentWildInfo("fish")
+  if filt.species and not wr.info then
+    local sb1 = read32(A.sb1)
+    if not findWildTable() then
+      bot.msg = TX"No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"
+    elseif validPtr(sb1) then
+      bot.msg = string.format(TX"Este mapa (%d.%d) no tiene Pokemon de pesca: quita el filtro 'species' o pesca en otro sitio",
+                              read8(sb1 + 4), read8(sb1 + 5))
+    else
+      bot.msg = TX"No pude leer la tabla de encuentros: quita el filtro 'species'"
+    end
+    print(bot.msg); bot.running = false; bot.st = "idle"; return
+  end
+  if filt.species and wr.info then
+    -- does this rod catch any of the wanted species here? (otherwise the search would run for nothing)
+    local any = false
+    for k = 0, #FR.T[rod] - 1 do
+      local sl = wr.info.slots[FR.FIRST[rod] + k]
+      if sl and filt.species[simplify(speciesName(sl.species))] then any = true end
+    end
+    if not any then
+      bot.msg = string.format(TX"Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio",
+                              TX(FR.ROD_NAME[rod]) or "?")
+      print(bot.msg); bot.running = false; bot.st = "idle"; return
+    end
+  end
+  bot.st = "wbuild"
+  print(string.format(TX"Pico algo con la Cana %s: estado guardado en el texto. Calibrando...", TX(FR.ROD_NAME[rod]) or "?"))
+end
+
+-- Casts until something bites. Closes "Not even a nibble" with B and casts again.
+function FR.cast()
+  bot.t = bot.t + 1
+  if decodeMon(A.enemy) then
+    -- a battle without the B press (should not happen): run, then cast again
+    bot.returnState = "fcast"; enterFlee(false); return
+  end
+  local tk = FR.task()
+  if tk then
+    rng.castSeen = true
+    local step = read16(tk + 8)
+    if step == FR.HOOK_STEP and read16(tk + 10) == 0 then
+      if not rng.hookAt then rng.hookAt = bot.t; queue = {} end
+      bot.msg = TX"Pico! Esperando a que termine el texto"
+      if bot.t - rng.hookAt >= FR.TEXT_WAIT then FR.setup(read16(tk + 38)) end
+    elseif step > FR.HOOK_STEP and #queue == 0 then
+      wait(10); tap("B")                -- "Not even a nibble..." / "It got away..."
+    end
+    return
+  end
+  rng.hookAt = nil
+  if #queue > 0 then return end
+  if rng.castT and not rng.castSeen then
+    -- SELECT gave no fishing: a message instead (not facing water?). Close it and count
+    rng.noTask = (rng.noTask or 0) + 1
+    if rng.noTask >= 3 then
+      stopBot()
+      bot.msg = TX"Pesca: no sale la cana. Mira hacia el agua y registra la Cana en SELECT"
+      print(bot.msg); return
+    end
+    wait(10); tap("B"); rng.castT = nil
+    return
+  end
+  if rng.casts >= FR.CAST_MAX then
+    stopBot()
+    bot.msg = string.format(TX"Pesca: %d lanzamientos sin que pique nada. Prueba otra orilla", rng.casts)
+    print(bot.msg); return
+  end
+  rng.casts = rng.casts + 1
+  bot.msg = string.format(TX"Lanzando la cana (%d)", rng.casts)
+  wait(20); push({ select = true }, 2); wait(60)
+  rng.castT, rng.castSeen = bot.t, false
+end
+
+function FR.step()
+  if isReseedState() then stepReseed(); return end
+  if bot.st == "flee" then stepWild(); return end
+  if bot.st == "far" then stepFar(); return end
+  if bot.st == "fcast" then FR.cast(); return end
+  if bot.st == "wbuild" or bot.st == "wbuild2" then
+    local need = (bot.st == "wbuild") and 40000 or (rng.target + 3000)
+    bot.msg = string.format(TX"Calculando avances... %d%%", floor(wr.built * 100 / need))
+    if buildR(need, 100000) then
+      if bot.st == "wbuild" then bot.msg = "Calibrando..." end
+      bot.st = "wait"
+      rngLoad()
+    end
+    return
+  end
+
+  bot.t = bot.t + 1
+  if not trackAdvances() then stopLostSeed(); return end
+
+  if bot.st == "wait" then
+    if rng.adv >= rng.pressAt then
+      rng.pressedAdv, bot.t = rng.adv, 0
+      queue = {}; push({ B = true }, 2)
+      bot.st = "fpressed"
+    elseif rng.target then
+      saveNear()
+    end
+  elseif bot.st == "fpressed" then
+    local mon = decodeMon(A.enemy)
+    if mon then
+      queue = {}
+      local level = read8(A.enemy + 0x54)
+      if wr.built < rng.pressedAdv + 30000 then buildR(rng.pressedAdv + 30000, 10000000) end
+      local expect = rng.delay and (rng.pressedAdv + rng.delay) or nil
+      local E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect, wr.layout)
+      if not E and wr.layout then E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect) end
+      if evaluate(mon) then return end
+      if not E then
+        rng.calFails = (rng.calFails or 0) + 1
+        print(string.format(TX"No ubique este encuentro en el RNG: %s Nv.%d PID %08X (%d)", speciesName(mon.species),
+              level, mon.pid, rng.calFails))
+        if rng.calFails >= 6 then
+          bot.msg = TX"No pude calibrar aqui (mira la consola). Prueba otra parte de la zona."
+          print(bot.msg); bot.running = false; bot.st = "idle"; return
+        end
+        rng.pressAt = rng.pressAt + 5      -- a different encounter
+        bot.st = "wait"; rngLoad(); return
+      end
+      if loose then
+        print(string.format(TX"Aviso: el RNG coincide pero la especie/nivel no (tabla de la zona?). %s Nv.%d",
+              speciesName(mon.species), level))
+      end
+      if not wr.layout or wr.layout ~= lay then
+        wr.layout = lay
+        if lay ~= LAYOUTS[1] then print(TX"Orden de llamadas detectado: " .. lay.name) end
+      end
+      local d = E - rng.pressedAdv
+      if not rng.delay then
+        rng.delay = d
+        print(string.format(TX"Calibrado: retraso = %d avances", d))
+        startFar(d + rng.preDelay + 10)
+        return
+      end
+      rng.delay = d
+      retryOrNext(E)
+    elseif bot.t > 600 then
+      -- B gave nothing (the text was still printing?): reload and press again
+      bot.timeouts = bot.timeouts + 1
+      bot.st = "wait"; rngLoad()
+    end
+  end
+end
+
 -- ------------------------------ Control ------------------------------
 local function startBot()
   if bot.cfgError then
@@ -3344,6 +3657,14 @@ local function startBot()
     print(bot.msg); return
   end
   bot.tid, bot.sid = tid, sid
+  if isFishRng() and not Game.taskFishing then
+    bot.msg = TX"Pesca RNG: solo en Rojo Fuego / Verde Hoja USA (1.0 y 1.1). Usa el modo Pesca"
+    print(bot.msg); return
+  end
+  if (isFishing() or isFishRng()) and not FR.rodRegistered() then
+    bot.msg = TX"Pesca: registra la Cana (Vieja, Buena o Super) en SELECT y mira hacia el agua"
+    print(bot.msg); return
+  end
   -- Initial seed: check now the mode it will hand over to, not after the seed is found
   local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
   if problem then
@@ -3361,7 +3682,9 @@ local function startBot()
   queue = {}
   bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried, bot.noReseed = nil, false, 0, 1, false
   if bot.mode == 1 then
-    zeroEnemy(); bot.st = "walk"
+    zeroEnemy(); bot.st = "walk"; WK.start()
+  elseif isFishing() then
+    zeroEnemy(); bot.st, bot.idle = "fish", 0
   elseif bot.mode == 9 then
     ngStart()
   elseif bot.mode == 10 then
@@ -3369,7 +3692,11 @@ local function startBot()
   elseif isWildRng() then
     zeroEnemy()
     bot.prepPos, bot.prepCnt, bot.prepSteps = nil, nil, 0
-    bot.st = "prep"
+    bot.st = "prep"; WK.start()
+  elseif isFishRng() then
+    zeroEnemy()
+    rng.casts, rng.castT, rng.hookAt, rng.noTask = 0, nil, nil, 0
+    bot.st = "fcast"
   elseif isRngMode() then
     rngStart()
   else
@@ -3462,7 +3789,7 @@ end
 local function filterSummary()
   local parts = {}
   parts[#parts + 1] = filt.shiny and "Shiny" or TX"Sin shiny"
-  if filt.species and (bot.mode == 1 or bot.mode == 8) then
+  if filt.species and huntsSpecies() then
     local t = {}
     for _, n in ipairs(toList(CONFIG.species) or {}) do t[#t + 1] = tostring(n) end
     parts[#parts + 1] = table.concat(t, "/")
@@ -3505,7 +3832,8 @@ local PHASE_SHORT = { prep = "Preparando", settle = "Preparando", wbuild = "Calc
   tv_settle = "Cerrando Tele", rboot = "Nueva semilla", rquest = "Nueva semilla", rsettle = "Nueva semilla",  --@i18n
   walk = "Caminando", reset = "Reset", boot = "Reset", idle = "Detenido", found = "ENCONTRADO",  --@i18n
   sb_reset = "Reiniciando", sb_find = "Buscando el titulo", sb_title = "Preparando titulo",  --@i18n
-  sb_try = "Probando semilla", approach = "Acercandose a un paso" }  --@i18n
+  sb_try = "Probando semilla", approach = "Acercandose a un paso", fish = "Pescando",  --@i18n
+  fcast = "Pescando hasta que pique", fpressed = "Comprobando" }  --@i18n
 
 local function drawCompact()
   local y = 1
@@ -3535,14 +3863,14 @@ local function drawCompact()
         line(string.format(TX"Pulsar A en %d frames   intento %d", math.max(rng.pressAt - (rng.adv or 0), 0), rng.tries or 0))
       elseif bot.st == "ngsearch" then line(bot.msg) end
     end
-  elseif m <= 4 then
-    local label = (m == 1) and "Encuentros" or "Resets"
+  elseif m <= 4 or m == 11 then
+    local label = (m == 1 or m == 11) and "Encuentros" or "Resets"
     local t = string.format("%s: %d", label, bot.encounters)
     if filt.shiny then t = t .. string.format(TX"   Prob: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100) end
     line(t)
   else
     if rng.target then
-      local sp = (m == 8) and slotSpecies(rng.targetSlot) or nil
+      local sp = (m == 8 or m == 12) and slotSpecies(rng.targetSlot) or nil
       local star = (rng.targetSv and rng.targetSv < 8) and " *" or ""
       line(string.format(TX"Objetivo: %s%s%s  avance %d", sp and (speciesName(sp) .. " ") or "",
            natureOf(rng.targetPid), star, rng.target), "green")
@@ -3550,7 +3878,7 @@ local function drawCompact()
         local left = math.max(rng.pressAt - teachyMargin() - rng.adv, 0)
         line(string.format(TX"Tele: faltan %d avances (~%d frames)", left, floor(left / 313)))
       elseif bot.st == "wait" and rng.pressAt then
-        line(string.format(TX"%s en %d frames", (m == 8) and "Caminar" or TX"Pulsar A",
+        line(string.format(TX"%s en %d frames", (m == 8) and "Caminar" or ((m == 12) and TX"Pulsar B" or TX"Pulsar A"),
              math.max(rng.pressAt - (rng.adv or 0), 0)))
       elseif bot.st == "walking" and rng.stepsToEnc then
         line(string.format(TX"Paso %d de %d   intento %d", rng.walkSteps or 0, rng.stepsToEnc, rng.tries or 0))
@@ -3590,17 +3918,17 @@ local function draw()
   line(string.format(TX"Frame: %s   (frame del emulador: %d)", frameText, emu.framecount()))
 
   local m = bot.mode
-  if m <= 4 then
+  if m <= 4 or m == 11 then
     -- Blind hunt: what matters is the attempt count and the cumulative probability
     local frames = emu.framecount() - bot.startFrame
     local perHour = 0
     if bot.encounters > 0 and frames > 0 then perHour = floor(bot.encounters * 216000 / frames) end
-    local label = (m == 1) and "Encuentros" or "Resets"
+    local label = (m == 1 or m == 11) and "Encuentros" or "Resets"
     line(string.format(TX"%s: %d   (%d por hora de juego)", label, bot.encounters, perHour))
     if filt.shiny then
       line(string.format(TX"Prob. de haber visto un shiny: %.1f%%", (1 - (8191 / 8192) ^ bot.encounters) * 100))
     end
-    if m == 1 then
+    if m == 1 or m == 11 then
       line(string.format(TX"Combate:%s Cursor:%d Res:%d%s", inBattle() and "1" or "0",
            band(read8(A.actionCursor), 3), read8(A.battleOutcome), gMainVerified and "" or " (?)"))
     elseif bot.timeouts > 0 then
@@ -3615,8 +3943,15 @@ local function draw()
       rsettle = TX"Nueva semilla (cargando)", far = TX"Buscando objetivo", wbuild2 = "Calculando",
       tv_open = TX"Abriendo la Tele", tv_run = TX"Tele Pokemon (avance rapido)", tv_exit = TX"Cerrando la Tele",
       tv_settle = TX"Cerrando la Tele", sb_reset = "Reiniciando", sb_find = TX"Buscando el titulo",
-      sb_title = TX"Preparando titulo", sb_try = TX"Probando semilla", approach = TX"Acercandose a un paso" })[bot.st] or bot.st
+      sb_title = TX"Preparando titulo", sb_try = TX"Probando semilla", approach = TX"Acercandose a un paso",
+      fcast = TX"Pescando hasta que pique", fpressed = "Comprobando" })[bot.st] or bot.st
     line(string.format(TX"Fase: %s   Intento: %d   Semilla #%d", phase, rng.tries or 0, bot.seedsTried or 1))
+    if m == 12 and wr.fish then
+      line(string.format(TX"Zona: pesca con la Cana %s%s", TX(FR.ROD_NAME[wr.fish]) or "?",
+           wr.info and string.format(TX"  (tasa %d)", wr.info.rate) or ""))
+    elseif m == 12 and bot.st == "fcast" then
+      line(string.format(TX"Lanzamientos: %d", rng.casts or 0))
+    end
     if m == 8 then
       if bot.st == "prep" or bot.st == "settle" then
         line(string.format(TX"Contador de pasos: %d   pasos sin cambio: %d/2", read8(A.wildData + 8), bot.prepSteps or 0))
@@ -3640,7 +3975,7 @@ local function draw()
       line(string.format(TX"TID %d  SID objetivo %d  en el avance %d", bot.tid or 0, rng.targetSid or 0, rng.target), "green")
     elseif rng.target then
       local sp = nil
-      if m == 8 then sp = slotSpecies(rng.targetSlot) end
+      if m == 8 or m == 12 then sp = slotSpecies(rng.targetSlot) end
       monLines(y, TX"Objetivo:", sp, rng.targetPid, rng.targetSv, rng.targetIvs, "green"); y = y + 18
       local absF = rng.baseFrame and (rng.baseFrame + rng.target) or nil
       line(string.format(TX"   en el avance %d%s", rng.target,
@@ -3651,7 +3986,7 @@ local function draw()
       end
       if bot.st == "wait" and rng.pressAt then
         local left = math.max(rng.pressAt - (rng.adv or 0), 0)
-        local verb = (m == 8) and TX"Empieza a caminar" or TX"Pulsa A"
+        local verb = (m == 8) and TX"Empieza a caminar" or ((m == 12) and TX"Pulsa B" or TX"Pulsa A")
         line(string.format(TX"%s en: %d frames (~%d s a 60 fps)", verb, left, floor(left / 60)), "green")
       end
     end
@@ -3712,7 +4047,8 @@ while true do
   handleHotkeys()
   checkStopFlag()
   if bot.running then
-    if bot.mode == 1 then stepWild() elseif isWildRng() then stepWildRng() elseif bot.mode == 9 then stepNewGame()
+    if bot.mode == 1 or isFishing() then stepWild() elseif isWildRng() then stepWildRng()
+    elseif isFishRng() then FR.step() elseif bot.mode == 9 then stepNewGame()
     elseif bot.mode == 10 then stepSeedBot()
     elseif isRngMode() then stepRng() else stepReset() end
     runQueue()

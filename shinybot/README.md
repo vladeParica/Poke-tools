@@ -30,6 +30,8 @@ The in-game mode names are in Spanish (shown in parentheses).
 | 8 | Wild RNG (*Salvaje RNG*) | Walks to one step before the encounter and takes the step on the exact frame |
 | 9 | New game (*Partida nueva*) | Restarts until it gets the TID/SID you want |
 | 10 | Initial seed (*Semilla inicial*) | Hits a seed on the title screen, then launches `afterSeedMode` |
+| 11 | Fishing (*Pesca*) | Fishes with the rod registered on SELECT (face the water) and runs from battles until the target appears |
+| 12 | Fishing RNG (*Pesca RNG*) | Casts until something bites, saves a state on "on the hook!" and presses B on the target's exact frame (USA FireRed/LeafGreen) |
 
 ### New game (mode 9): where to start the bot
 

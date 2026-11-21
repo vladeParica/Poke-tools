@@ -47,6 +47,10 @@ Approximate duration: Shiny Bot ~40 s, Train Bot ~50 s, configurator ~10 s.
 | `run_rng.py` | Roamer RNG | Calibrates and finds the target (`PAUSED`) |
 | `run_wild.py`, `run_far.py` | Wild RNG, near and far target (Teachy TV) | Gets one step away, calibrates and finds it (`PAUSED`) |
 | `run_cfg.py` | Valid JSON in several modes; invalid JSON | `PAUSED` for the valid ones; the invalid one doesn't start (`TIMEOUT` waiting for a fix) |
+| `run_seed.py` | Initial seed handing over to Gift RNG; full party; 7 on the title screen | `PAUSED` on the gift; the other two refuse to start and say why |
+| `run_fish.py` | Fishing: bites, no rod registered, not facing water | `PAUSED` on the shiny without pressing A on the map; the other two stop and say why |
+| `run_pond.py` | Wild RNG surfing in a two-tile pond (`walkAxis` left and right) | `PAUSED` without stepping on a third tile |
+| `run_fishrng.py` | Fishing RNG in `mock_fish.lua` (pret's `Task_Fishing`): Super/Old/Good Rod targets, a slow text, a species the rod can't catch, no rod, no water, a build without symbols | `PAUSED` on each target; the rest refuse and say why |
 | `trainbot/tests/run_train.py` | evs, record, pokerus, level, nolearn | Goal EVs and level; route recorded; no overshoot with Pokérus |
 | `run_learn.py` | Move learning (`auto`, `never`, `ask` with and without an answer) | Learns or forgets according to the configuration |
 | `run_want.py` | `wantedMoves` | Only learns the requested moves |
