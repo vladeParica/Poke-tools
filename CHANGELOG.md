@@ -67,6 +67,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Shiny Bot, *Semilla inicial* handing over to *Regalo RNG* (e.g. Eevee) with a full party: the gift
+  went to the PC, the bot never saw it and kept retrying ("Comprobando" forever). It now checks the
+  mode in `afterSeedMode` when you press 7 (a free party slot for a gift, the roamer not out yet),
+  and checks again, with the party read again, when it hands over after the seed.
 - Train Bot and Farm Bot: Bulbasaur had no game data (its row was stored under index 0), so a
   wild Bulbasaur counted as "no data" and a trained one had no types for the damage formula.
 - Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the

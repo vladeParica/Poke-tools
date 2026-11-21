@@ -575,6 +575,13 @@ local function kind()
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
+-- The mode the Initial seed mode hands over to (afterSeedMode), or nil
+local function afterSeedIndex()
+  local after = CONFIG.afterSeedMode
+  if not after then return nil end
+  for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then return i end end
+  return nil
+end
 local function isWildRng() return bot.mode == 8 end
 
 local function push(buttons, frames) queue[#queue + 1] = { b = buttons, n = frames } end
@@ -1425,7 +1432,32 @@ local function wantedTarget(pid, ivs, lo, hi)
   return isWanted({ pid = pid, ivs = ivs, sv = bxor(bxor(bot.tid, bot.sid), bxor(lo, hi)) })
 end
 
+-- What would stop `mode` from working here, or nil. A gift needs a free party slot (with a
+-- full party it goes to the PC, the bot never sees it and keeps retrying); the roamer must
+-- not be out yet. Also reads bot.baseParty, the party size the gift is detected against.
+local function modeProblem(mode)
+  local saved = bot.mode
+  bot.mode = mode or bot.mode
+  local k = kind()
+  bot.mode = saved
+  bot.baseParty = read8(A.partyCnt)
+  if k == 3 and bot.baseParty >= 6 then return TX"Equipo lleno: deja un espacio libre para el regalo" end
+  if k == 4 then
+    local r = readRoamer()
+    if r and r.active then return TX"El roamer ya esta activo: usa un save de ANTES del evento" end
+  end
+  return nil
+end
+
 local function rngStart()
+  -- also when the Initial seed mode hands over: the save was just loaded, read the party again
+  local problem = modeProblem()
+  if problem then
+    stopBot()
+    bot.msg = problem
+    print(bot.msg)
+    return
+  end
   rebaseHere()
   rng.nextSearch = nil
   rng.delay, rng.target, rng.targetPid, rng.tries = nil, nil, nil, 0
@@ -1845,9 +1877,7 @@ local function stepSeedBot()
         if seed == t then
           print(string.format(TX"Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
           logLine(string.format(TX"[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
-          local after = CONFIG.afterSeedMode
-          local idx = nil
-          if after then for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then idx = i end end end
+          local idx = afterSeedIndex()
           if idx and idx ~= 10 then
             bot.mode = idx
             bot.noReseed = true
@@ -2182,17 +2212,11 @@ local function startBot()
     print(bot.msg); return
   end
   bot.tid, bot.sid = tid, sid
-  bot.baseParty = read8(A.partyCnt)
-  if kind() == 3 and bot.baseParty >= 6 then
-    bot.msg = TX"Equipo lleno: deja un espacio libre para el regalo"
+  -- Initial seed: check now the mode it will hand over to, not after the seed is found
+  local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
+  if problem then
+    bot.msg = problem
     print(bot.msg); return
-  end
-  if kind() == 4 then
-    local r = readRoamer()
-    if r and r.active then
-      bot.msg = TX"El roamer ya esta activo: usa un save de ANTES del evento"
-      print(bot.msg); return
-    end
   end
   -- New game: the TID only exists once you name your character (the seed word is 0 before)
   if bot.mode == 9 and read16(0x02020000) == 0 then
