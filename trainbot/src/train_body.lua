@@ -934,7 +934,7 @@ local function halt(msg)
   bot.msg = msg
   logLine(msg)
   notify(msg)
-  pcall(emu.pause)            -- pause so you see it
+  Game.pauseSoon()            -- pause so you see it
 end
 local function leadOk()
   local m = lead()
@@ -1322,7 +1322,7 @@ local function stepBattle()
         bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
         notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
-        pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
+        Game.pauseSoon()        -- pause: unpause, finish the scene and the bot carries on by itself
         return
       end
       -- The animation advances by itself; only if it stays on a text for a long time, press A
@@ -1434,7 +1434,7 @@ local function stepAfter()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
     bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
-    pcall(emu.pause)
+    Game.pauseSoon()
     notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
@@ -1862,5 +1862,7 @@ while true do
     if not busy then runQueue() end
   end
   draw()
+  -- the pause the bot asked for (Game.pauseSoon), here at the top level, never inside pcall
+  if Game.pausePending then Game.pausePending = false; emu.pause() end
   emu.frameadvance()
 end

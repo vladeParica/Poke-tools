@@ -74,6 +74,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 - Shiny Bot: pressing 7 before the save was loaded (title screen, after a reset) read TID 0 / SID 0
   and kept them, so the panel showed them and the RNG modes checked shininess against them. IDs of
   0/0 now count as "load your save", and the RNG modes read the IDs again when they start.
+- Train Bot and Farm Bot: "can't call vba.frameadvance() from here" when the bot paused the
+  emulator (stopping with a message, training finished, evolution, items to take). `emu.pause()`
+  ran inside `pcall`, where VBA-rr can't yield; the bots now ask with `Game.pauseSoon()` and the
+  main loop pauses. The test mocks behave like VBA-rr here, so the error shows up in the tests.
 - Train Bot and Farm Bot: Bulbasaur had no game data (its row was stored under index 0), so a
   wild Bulbasaur counted as "no data" and a trained one had no types for the damage formula.
 - Train Bot and Farm Bot: when the lead fainted in a wild battle and running away failed, the

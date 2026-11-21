@@ -1204,6 +1204,11 @@ local Game = (function()
     G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
                        LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
   end
+  -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
+  -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
+  -- advance as pending, so the next emu.frameadvance() stops the script with "can't call
+  -- vba.frameadvance() from here". So the bots only ask here and the main loop pauses.
+  function G.pauseSoon() G.pausePending = true end
   return G
 end)()
 

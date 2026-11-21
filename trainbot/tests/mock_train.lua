@@ -344,8 +344,17 @@ local hotkeys = {}
 input = { get = function() return hotkeys[frame] or {} end }
 emu = {
   framecount = function() return frame end,
-  pause = function() error("PAUSED") end,
+  -- Like VBA-rr: emu.pause() marks a frame advance as pending and yields the script. From the
+  -- main loop (the chunk's top level) that is a normal frame for the test. Anywhere else it ends
+  -- the test (PAUSED); if a pcall swallows that, the mark stays and the next frameadvance fails
+  -- the way VBA-rr does.
+  pause = function()
+    if debug.getinfo(2, "S").what == "main" then return end
+    pauseWaiting = true
+    error("PAUSED")
+  end,
   frameadvance = function()
+    if pauseWaiting then error("can't call vba.frameadvance() from here") end
     prevHeld = held; held = pendingPad; pendingPad = {}
     if next(held) then lastInput = frame end
     if frame - (lastInput or 0) > 20000 then error("IDLE") end

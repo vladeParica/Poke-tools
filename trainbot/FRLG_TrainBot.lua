@@ -2348,6 +2348,11 @@ local Game = (function()
     G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
                        LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
   end
+  -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
+  -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
+  -- advance as pending, so the next emu.frameadvance() stops the script with "can't call
+  -- vba.frameadvance() from here". So the bots only ask here and the main loop pauses.
+  function G.pauseSoon() G.pausePending = true end
   return G
 end)()
 -- Pure decision rules (ADR-0015): they take data and never read memory, so they are unit
@@ -3257,7 +3262,7 @@ local function halt(msg)
   bot.msg = msg
   logLine(msg)
   notify(msg)
-  pcall(emu.pause)            -- pause so you see it
+  Game.pauseSoon()            -- pause so you see it
 end
 local function leadOk()
   local m = lead()
@@ -3429,7 +3434,7 @@ local Menus = (function()
       bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
       logLine(bot.msg)
       notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
-      pcall(emu.pause)
+      Game.pauseSoon()
       return
     end
     logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
@@ -3853,7 +3858,7 @@ local function stepBattle()
         bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
         notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
-        pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
+        Game.pauseSoon()        -- pause: unpause, finish the scene and the bot carries on by itself
         return
       end
       -- The animation advances by itself; only if it stays on a text for a long time, press A
@@ -3965,7 +3970,7 @@ local function stepAfter()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
     bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
-    pcall(emu.pause)
+    Game.pauseSoon()
     notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
@@ -4393,5 +4398,7 @@ while true do
     if not busy then runQueue() end
   end
   draw()
+  -- the pause the bot asked for (Game.pauseSoon), here at the top level, never inside pcall
+  if Game.pausePending then Game.pausePending = false; emu.pause() end
   emu.frameadvance()
 end

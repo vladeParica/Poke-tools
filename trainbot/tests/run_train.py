@@ -2,6 +2,7 @@ import lupa.lua51 as L, os, sys, tempfile, json, shutil
 here=os.path.dirname(os.path.abspath(__file__))
 src=open(os.path.join(here,'..','FRLG_TrainBot.lua')).read()
 mock=open(os.path.join(here,'mock_train.lua')).read()
+BAD=[]
 def run(scen, cfg, route=None, show=False):
     d=tempfile.mkdtemp()
     old=os.getcwd(); os.chdir(d)
@@ -15,6 +16,8 @@ def run(scen, cfg, route=None, show=False):
     os.chdir(old); shutil.rmtree(d)
     err,frame,battles,fought,ran,heals,learn,evs,lvl,printed,events,pos,growl=r
     print(f"[{scen}] err={err.split(chr(10))[0][:90]} frame={frame} battles={battles} fought={fought} ran={ran} heals={heals} learn={learn} evs={evs} lvl={lvl} pos={pos} growl={growl}")
+    if "can't call vba.frameadvance" in err:   # emu.pause() inside pcall (see mock_train.lua)
+        BAD.append(scen)
     if show:
         print('--- print ---'); print(printed[-1500:]); print('--- log ---'); print(log[-1500:]); print('--- events ---'); print(events[-800:])
     return r, routeTxt
@@ -28,3 +31,6 @@ if __name__=='__main__':
     run('pokerus', {"evs":{"atk":6},"healBelow":40}, route=route, show=show)
     run('level', {"evs":None,"targetLevel":8,"healBelow":40}, route=route, show=show)
     run('nolearn', {"evs":{"atk":2,"spe":3},"healBelow":40,"avoidSpecies":["Pidgey"]}, route=route, show=show)
+    if BAD:
+        print('FAIL: VBA-rr would stop the script in', BAD)
+        sys.exit(1)

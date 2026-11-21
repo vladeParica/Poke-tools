@@ -107,7 +107,7 @@ local Menus = (function()
       bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
       logLine(bot.msg)
       notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
-      pcall(emu.pause)
+      Game.pauseSoon()
       return
     end
     logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
