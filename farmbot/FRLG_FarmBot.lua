@@ -2435,6 +2435,23 @@ local Game = (function()
     local fishing = ({ FireRed0 = 0x0805D304, FireRed1 = 0x0805D318,
                        LeafGreen0 = 0x0805D304, LeafGreen1 = 0x0805D318 })[build]
     G.taskFishing = fishing and (fishing + 1)
+    -- VMap (the loaded map: width, height, pointer to one u16 per tile, top 4 bits = elevation) and
+    -- gPlayerAvatar (flags: 0x08 surfing); RAM, the same in the four USA builds
+    G.vmap, G.avatar = 0x03005040, 0x02037078
+  end
+  -- Elevation of a tile of the loaded map, in object coordinates (MAP_OFFSET included), or nil
+  function G.elevationAt(x, y)
+    if not G.vmap then return nil end
+    local w, h, map = read32(G.vmap), read32(G.vmap + 4), read32(G.vmap + 8)
+    if x < 0 or y < 0 or x >= w or y >= h or map < 0x02000000 or map >= 0x02040000 then return nil end
+    return math.floor(read16(map + 2 * (x + y * w)) / 4096)
+  end
+  -- On foot at (x, y) and the next tile (nx, ny) is water to surf on? As pret
+  -- IsPlayerFacingSurfableFishableWater: the tile ahead has another elevation; water is elevation 1.
+  function G.surfable(x, y, nx, ny)
+    if not G.vmap or math.floor(read8(G.avatar) / 8) % 2 == 1 then return false end
+    local here, ahead = G.elevationAt(x, y), G.elevationAt(nx, ny)
+    return ahead == 1 and here ~= nil and here ~= 1
   end
   -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
   -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
@@ -3170,7 +3187,6 @@ local function runQueue()
   if item.n <= 0 then table.remove(queue, 1) end
   return true
 end
-local function hold(dir) joypad.set(1, { [dir] = true }) end
 
 -- ------------------------- Route to the Center ----------------------------
 local route = { go = nil, back = nil }             -- to the Center (key 6)
@@ -3377,6 +3393,7 @@ local function navStep()
   if nav.lastMap and nav.lastMap ~= mapKey then nav.cool = 40 end   -- map change: release for a moment
   nav.lastMap = mapKey
   if nav.cool > 0 then nav.cool = nav.cool - 1; return nil end
+  if (nav.surfT or 0) > 0 then nav.surfT = nav.surfT - 1; return nil end   -- answering the Surf prompt
   local r = nav.r
   local j = navFind(p)
   local nxt
@@ -3405,6 +3422,15 @@ local function navStep()
     dir = DIR_KEY[nxt.d] or "up"      -- map change (door): the direction used when entering
   end
   nav.stuck = nav.stuck + 1
+  -- a route recorded while surfing: on foot, walking into the water only turns the player. Face it
+  -- and answer the Surf prompt (A talks to the water, A = YES, A closes "X used SURF!"), once per
+  -- route point; back on land, walking onto the shore gets off by itself.
+  if nav.stuck == 40 and nav.surfAt ~= nav.idx and nxt.g == cur.g and nxt.n == cur.n
+     and math.abs(nxt.x - cur.x) + math.abs(nxt.y - cur.y) == 1 and Game.surfable(cur.x, cur.y, nxt.x, nxt.y) then
+    nav.surfAt, nav.surfT = nav.idx, 200
+    for _ = 1, 4 do tap("A", 40) end
+    return nil
+  end
   if nav.stuck > 120 then
     -- stuck (NPC in the way or a sign open): release, close text and retry
     nav.stuck, nav.tries = 0, nav.tries + 1
@@ -3412,7 +3438,8 @@ local function navStep()
     tap("B", 20)
     return nil
   end
-  hold(dir)
+  -- B held too: with the Running Shoes the player runs along the route (no effect when surfing)
+  joypad.set(1, { [dir] = true, B = true })
   return nil
 end
 

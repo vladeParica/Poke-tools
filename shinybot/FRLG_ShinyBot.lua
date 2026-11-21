@@ -1260,6 +1260,23 @@ local Game = (function()
     local fishing = ({ FireRed0 = 0x0805D304, FireRed1 = 0x0805D318,
                        LeafGreen0 = 0x0805D304, LeafGreen1 = 0x0805D318 })[build]
     G.taskFishing = fishing and (fishing + 1)
+    -- VMap (the loaded map: width, height, pointer to one u16 per tile, top 4 bits = elevation) and
+    -- gPlayerAvatar (flags: 0x08 surfing); RAM, the same in the four USA builds
+    G.vmap, G.avatar = 0x03005040, 0x02037078
+  end
+  -- Elevation of a tile of the loaded map, in object coordinates (MAP_OFFSET included), or nil
+  function G.elevationAt(x, y)
+    if not G.vmap then return nil end
+    local w, h, map = read32(G.vmap), read32(G.vmap + 4), read32(G.vmap + 8)
+    if x < 0 or y < 0 or x >= w or y >= h or map < 0x02000000 or map >= 0x02040000 then return nil end
+    return math.floor(read16(map + 2 * (x + y * w)) / 4096)
+  end
+  -- On foot at (x, y) and the next tile (nx, ny) is water to surf on? As pret
+  -- IsPlayerFacingSurfableFishableWater: the tile ahead has another elevation; water is elevation 1.
+  function G.surfable(x, y, nx, ny)
+    if not G.vmap or math.floor(read8(G.avatar) / 8) % 2 == 1 then return false end
+    local here, ahead = G.elevationAt(x, y), G.elevationAt(nx, ny)
+    return ahead == 1 and here ~= nil and here ~= 1
   end
   -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
   -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame

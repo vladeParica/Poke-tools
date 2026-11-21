@@ -99,9 +99,22 @@ local W = { g = 3, n = 20, x = 8, y = 10, face = 3, walkT = 0, cool = 0, dialog 
 local stats = { battles = 0, fought = 0, ran = 0, heals = 0, learnPrompts = 0, maxY = 0, events = {} }
 local function ev(s) stats.events[#stats.events + 1] = frame .. ":" .. s end
 
+-- "surf": a river (rows y 5 and 6 of the route map) crosses the way to the Center; only surfing
+-- gets over it. VMap (0x03005040: width, height, map pointer) holds each tile's elevation in its top
+-- 4 bits as in pret: 1 water, 3 land. gPlayerAvatar.flags: 0x01 on foot, 0x08 surfing.
+local VMAP, VMAP_DATA, VMAP_W, VMAP_H = 0x03005040, 0x02030000, 40, 30
+local function isWater(g, x, y) return SCEN == "surf" and g == 3 and (y == 5 or y == 6) end
+local function writeVMap()
+  w32(VMAP, VMAP_W); w32(VMAP + 4, VMAP_H); w32(VMAP + 8, VMAP_DATA)
+  for y = 0, VMAP_H - 1 do
+    for x = 0, VMAP_W - 1 do w16(VMAP_DATA + 2 * (x + y * VMAP_W), isWater(W.g, x, y) and 0x1000 or 0x3000) end
+  end
+end
 local function writePos()
   w8(SB1 + 4, W.g); w8(SB1 + 5, W.n)
   w16(OBJ + 0x10, W.x); w16(OBJ + 0x12, W.y); w8(OBJ + 0x18, W.face)
+  w8(AVATAR, W.surf and 0x08 or 0x01)
+  if W.vmapG ~= W.g then W.vmapG = W.g; writeVMap() end
 end
 writePos()
 
@@ -273,6 +286,7 @@ local function battleFrame()
 end
 
 local function passable(g, n, x, y)
+  if isWater(g, x, y) and not W.surf then return false end      -- on foot: water blocks
   if g == 3 then return x >= 0 and x <= 30 and y >= 3 and y <= 20 end
   return x >= 1 and x <= 9 and y >= 3 and y <= 8
 end
@@ -311,6 +325,22 @@ local function worldFrame()
     return
   end
   if W.g == 4 and W.x == 5 and W.y == 3 and W.face == 2 and edge("A") then W.dialog = { step = 1, t = 0 }; return end
+  local FDX, FDY = ({ 0, 0, -1, 1 })[W.face], ({ 1, -1, 0, 0 })[W.face]
+  if W.surfDlg then
+    -- pret EventScript_UseSurf: "Want to SURF?" (YES/NO, YES first), then "X used SURF!", then the jump
+    local d = W.surfDlg
+    d.t = d.t + 1
+    if d.t > 10 and edge("A") then
+      d.step, d.t = d.step + 1, 0
+      if d.step == 3 then
+        W.surfDlg, W.surf = nil, true
+        W.x, W.y, W.walkT = W.x + FDX, W.y + FDY, 16
+        stats.surfs = (stats.surfs or 0) + 1; ev("surf")
+      end
+    end
+    return
+  end
+  if not W.surf and edge("A") and isWater(W.g, W.x + FDX, W.y + FDY) then W.surfDlg = { step = 1, t = 0 }; return end
   local dir
   for _, k in ipairs({ "up", "down", "left", "right" }) do if held[k] then dir = k end end
   if not dir then return end
@@ -328,6 +358,7 @@ local function worldFrame()
   end
   local nx, ny = W.x + dx, W.y + dy
   if passable(W.g, W.n, nx, ny) then
+    if W.surf and not isWater(W.g, nx, ny) then W.surf = false; ev("land") end    -- onto the shore: off the water
     W.x, W.y = nx, ny; W.walkT = 16
     if SCEN == "tile" and W.g == 4 and nx == 5 and ny == 5 then
       leadM.hp = leadM.maxHP
@@ -405,5 +436,6 @@ return function(chunk)
   local ok, err = pcall(chunk)
   return tostring(err), frame, stats.battles, stats.fought, stats.ran, stats.heals, stats.learnPrompts,
     table.concat(leadM.evs, ","), leadM.level, table.concat(printed, "\n"), table.concat(stats.events, " "),
-    string.format("%d,%d,%d", W.g, W.x, W.y), (stats.usedGrowl or 0) .. " learned=" .. (stats.learned or "") .. " evo=" .. tostring(stats.evo)
+    string.format("%d,%d,%d", W.g, W.x, W.y), (stats.usedGrowl or 0) .. " learned=" .. (stats.learned or "") .. " evo=" .. tostring(stats.evo) ..
+      ((SCEN == "surf") and (" surfs=" .. (stats.surfs or 0)) or "")
 end

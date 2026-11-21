@@ -196,6 +196,7 @@ per build — table in `farm_body.lua`):
 | sPartyMenuInternal (ptr) | 0x0203B09C | actions[8] at +0x0F, numActions +0x17; ITEM = 3, TAKE = 5 |
 | sMenu (menu.c) | 0x0203ADE4 | cursorPos at +2 |
 | gTasks | 0x03005090 | 16 x 40 bytes: func +0, isActive +4 |
+| VMap | 0x03005040 | loaded map: width, height, u16 per tile (object coords); elevation = top 4 bits, water = 1 |
 | Task_Fishing | FR/LG 1.0 0x0805D304, 1.1 0x0805D318 | data[] at +8: step +8 (10 = "on the hook!" text), rod +38 |
 | gBattleTypeFlags | enemy − 0x14E0 | TRAINER 0x08, DOUBLE 0x01 |
 | SaveBlock1 | +0x290 money, +0x296 registered item, +0x310 bag, +0x638 VS Seeker charge | money/bag XOR SaveBlock2+0xF20 |

@@ -77,6 +77,11 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Train Bot and Farm Bot: a route that crosses water (recorded while surfing) stopped at the shore
+  ("No pude seguir la ruta al Centro"): walking into water only turns the player. On foot in front
+  of water the route goes on into, the bot now faces it and answers the Surf prompt; it gets off
+  by walking onto the shore. USA versions (it reads the loaded map, `VMap`). Routes are also
+  followed holding B, so the player runs with the Running Shoes.
 - Shiny Bot, *Salvaje RNG*: when it hits the target's advance and PID but the game interrupts that
   generation (other IVs), it says so, logs the IVs and stops after a second try with what to
   change, instead of repeating the same result. Discarded shinies are logged with their IVs.
