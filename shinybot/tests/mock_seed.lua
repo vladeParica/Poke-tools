@@ -38,15 +38,19 @@ memory = { readdwordunsigned = r32, readwordunsigned = r16, readbyte = r8, write
 local ENEMY, PARTY, PCNT, SB1P, SB2P, INB = 0x0202402C, 0x02024284, 0x02024029, 0x03005008, 0x0300500C, 0x03003529
 local SB1, SB2 = 0x0202552C, 0x02024588
 local TID, SID = 12345, 54321
+-- party size in the save (6 = full: a gift goes to the PC and the party doesn't change)
+local PARTY_N = rawget(_G, "PARTY_N") or 2
 
 local function bootRAM()
   w8(0x080000AE, 0x52); w8(0x080000AF, 0x45); w8(0x080000BC, 0)
 end
 local function loadSave()
-  w32(SB1P, SB1); w32(SB2P, SB2); w32(SB2 + 0xA, TID + SID * 65536); w8(PCNT, 2)
+  w32(SB1P, SB1); w32(SB2P, SB2); w32(SB2 + 0xA, TID + SID * 65536); w8(PCNT, PARTY_N)
   w8(0x02037078, 1); w16(SB1 + 0x296, REG_ITEM or 366)
 end
 bootRAM(); loadSave()
+-- START_AT_TITLE: 7 is pressed before the save is loaded (pointer valid, IDs still 0)
+if rawget(_G, "START_AT_TITLE") then w32(SB2 + 0xA, 0) end
 
 local function growthOff(o) if o <= 5 then return 0 elseif o % 6 <= 1 then return 12 elseif o % 2 == 0 then return 24 else return 36 end end
 local function miscOff(o) if o >= 18 then return 0 elseif o % 6 >= 4 then return 12 elseif o % 2 == 1 then return 24 else return 36 end end
@@ -102,7 +106,8 @@ local function gameFrame()
       g.made = g.made + 1
       stats.lastPid = pid
       if MODE_TO_TEST == "static" then createMon(ENEMY, pid, 150, i1 + i2*32768)
-      elseif MODE_TO_TEST == "gift" or MODE_TO_TEST == "seed" then createMon(PARTY + 2 * 0x64, pid, 133, i1 + i2*32768); w8(PCNT, 3)
+      elseif MODE_TO_TEST == "gift" or MODE_TO_TEST == "seed" then
+        if PARTY_N < 6 then createMon(PARTY + PARTY_N * 0x64, pid, 133, i1 + i2*32768); w8(PCNT, PARTY_N + 1) end
       else local r = SB1 + 0x30D0; w32(r, i1 % 256); w32(r + 4, pid); w16(r + 8, 243); w8(r + 0x13, 1) end
     end
   end
@@ -141,7 +146,7 @@ local function gameFrame()
     if frame >= g.loadAt then
       loadSave(); g.loadAt = nil
       w8(SB1 + 0x30D0 + 0x13, 0)        -- roamer inactive in the save
-      w8(PCNT, 2)
+      w8(PCNT, PARTY_N)
     end
     return
   end

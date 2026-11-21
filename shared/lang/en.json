@@ -257,6 +257,7 @@
   " (el bot no lo aprenderia)": " (the bot wouldn't learn it)",
   "PS muy bajos": "very low HP",
   "sin ataques utiles": "no useful moves",
+  "%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7": "%s has no move that damages %s: teach it one and press 7",
   "Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues": "It's evolving: finish it yourself (new moves, texts). The bot carries on by itself after",
   "Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo": "Your Pokemon is evolving: finish the scene and the bot carries on by itself",
   "Aviso: no se pudo volver al mapa tras el combate": "Warning: couldn't get back to the map after the battle",

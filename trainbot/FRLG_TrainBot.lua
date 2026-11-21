@@ -103,6 +103,7 @@ local LANG = {
     ["%s evoluciono a %s"] = "%s evolved into %s",
     ["%s llego al Nv.%d"] = "%s reached Lv.%d",
     ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s won't let you run (%s) and fighting would give too many %s EVs: finish it yourself (catching it gives no EVs) and press 7",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s has no move that damages %s: teach it one and press 7",
     ["%s quiere aprender %s: decide tu"] = "%s wants to learn %s: you decide",
     ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s fainted: sending out %s (Lv.%d) to run away",
     ["%s subio al Nv.%d"] = "%s grew to Lv.%d",
@@ -609,6 +610,7 @@ local LANG = {
     ["%s evoluciono a %s"] = "%s ga %s ni shinka shita",
     ["%s llego al Nv.%d"] = "%s ga Lv.%d ni natta",
     ["%s no te deja huir (%s) y pelear daria EVs de %s de mas: terminalo tu (capturarlo no da EVs) y pulsa 7"] = "%s kara nigerarenai (%s), tatakau to %s no EV ga oosugiru: jibun de owarasete (tsukamaeru to EV nashi), 7 wo oshite",
+    ["%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7"] = "%s ni %s ni kiku waza ga nai: waza wo oboesasete 7 wo osu",
     ["%s quiere aprender %s: decide tu"] = "%s ga %s wo oboetagatte iru: kimete",
     ["%s se debilito: saco a %s (Nv.%d) para huir"] = "%s ga taoreta: nigeru tame ni %s (Lv.%d) wo dasu",
     ["%s subio al Nv.%d"] = "%s ga Lv.%d ni agatta",
@@ -2348,6 +2350,11 @@ local Game = (function()
     G.wildHeaders = ({ FireRed0 = 0x083C9CB8, FireRed1 = 0x083C9D28,
                        LeafGreen0 = 0x083C9AF4, LeafGreen1 = 0x083C9B64 })[build]
   end
+  -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
+  -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
+  -- advance as pending, so the next emu.frameadvance() stops the script with "can't call
+  -- vba.frameadvance() from here". So the bots only ask here and the main loop pauses.
+  function G.pauseSoon() G.pausePending = true end
   return G
 end)()
 -- Pure decision rules (ADR-0015): they take data and never read memory, so they are unit
@@ -2885,8 +2892,26 @@ local function bestMove(blocked)
   return best, bestScore
 end
 
--- PP left in damaging moves (outside battle, from the party)
-local function usefulPP(mon)
+-- Can a move of type `mtype` hurt species `sp` at all? Type immunity, or an ability that
+-- blocks it whichever of its abilities the species has (Levitate on Gastly / Haunter...)
+local IMMUNE_ABIL = { [ABIL_LEVITATE] = 4, [ABIL_VOLT] = 13, [ABIL_WATER] = 11, [ABIL_FLASHFIRE] = 10 }
+local function hitsSpecies(mtype, sp)
+  local t = TT_SPEC[sp]
+  if not t then return true end
+  local mult = typeMult(mtype, t[1], t[2])
+  if mult == 0 then return false end
+  local x = TT_SPECX[sp]
+  if not x then return true end
+  local a1, a2 = x[1], (x[2] ~= 0) and x[2] or x[1]
+  if IMMUNE_ABIL[a1] == mtype and IMMUNE_ABIL[a2] == mtype then return false end
+  if a1 == ABIL_WONDERGUARD and a2 == ABIL_WONDERGUARD and mult <= 1 then return false end
+  return true
+end
+
+-- PP left in damaging moves (outside battle, from the party). With a 'species' list, only moves
+-- that can hurt one of them count: Normal moves don't touch Gastly, so with only those PP left
+-- it must go and heal instead of running from every battle. full: count max PP (as after healing).
+local function usefulPP(mon, full)
   local total = 0
   for i = 1, 4 do
     local mv = TT_MOVE[mon.moves[i]]
@@ -2894,7 +2919,16 @@ local function usefulPP(mon)
        or mv[4] == EF.SONICBOOM or mv[4] == EF.SUPER_FANG or mv[4] == EF.PSYWAVE or mv[4] == EF.HIDDEN_POWER
        or mv[4] == EF.RETURN or mv[4] == EF.FRUSTRATION or mv[4] == EF.FLAIL or mv[4] == EF.ERUPTION
        or mv[4] == EF.LOW_KICK or mv[4] == EF.MAGNITUDE) then
-      total = total + mon.pp[i]
+      local hits = true
+      if tcfg.only then
+        local mtype = mv[2]
+        if mv[4] == EF.HIDDEN_POWER and mon.ivWord then mtype = hiddenPower(mon.ivWord) end
+        hits = false
+        for sp in pairs(tcfg.only) do if hitsSpecies(mtype, sp) then hits = true; break end end
+      end
+      if hits then
+        total = total + (full and floor(mv[5] * (5 + band(rshift(mon.ppBonuses or 0, (i - 1) * 2), 3)) / 5) or mon.pp[i])
+      end
     end
   end
   return total
@@ -3257,7 +3291,7 @@ local function halt(msg)
   bot.msg = msg
   logLine(msg)
   notify(msg)
-  pcall(emu.pause)            -- pause so you see it
+  Game.pauseSoon()            -- pause so you see it
 end
 local function leadOk()
   local m = lead()
@@ -3308,6 +3342,16 @@ local function startWalk()
 end
 
 local function beginHeal(reason)
+  -- not even full PP would be enough (no move that hurts the 'species' list): healing won't help
+  local lead1 = lead()
+  if lead1 and usefulPP(lead1, true) < CONFIG.minPP then
+    local names = {}
+    for sp in pairs(tcfg.only or {}) do names[#names + 1] = speciesName(sp) end
+    table.sort(names)
+    halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+      speciesName(lead1.species), table.concat(names, "/")))
+    return
+  end
   if not route.go then
     halt(TX"Necesita curarse (" .. reason .. TX"): cura, vuelve al punto y pulsa 7. (Graba la ruta con 6)")
     return
@@ -3429,7 +3473,7 @@ local Menus = (function()
       bot.msg = TX"Quita los objetos (START > POKEMON > OBJETO > QUITAR): " .. table.concat(names, ", ") .. TX". Luego pulsa 7"
       logLine(bot.msg)
       notify(TX"Quita los objetos del equipo: " .. table.concat(names, ", "))
-      pcall(emu.pause)
+      Game.pauseSoon()
       return
     end
     logLine(TX"Guardando en la mochila: " .. table.concat(names, ", "))
@@ -3597,6 +3641,9 @@ end
 -- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
 -- or many battles in a row had no useful opponent. Returns the message, or nil.
 PK.USELESS_LIMIT = 40
+-- Battles in a row against a wanted opponent the lead can't hurt with any move (e.g. only Normal
+-- moves against Gastly): it would run from all of them forever, so it stops and says why
+PK.NOMOVE_LIMIT = 3
 function PK.phaseDone(m)
   if not tcfg.target then return nil end
   -- 510 in total: the missing EVs can't fit any more
@@ -3767,7 +3814,7 @@ local function startBot()
   pcall(function() bot.startTime = os.time() end)
   bot.startLevel = m.level
   bot.pkSeen, bot.pkItems, bot.pkFound = {}, 0, 0
-  bot.useless, bot.finishHealed = 0, nil
+  bot.useless, bot.finishHealed, PK.noMove = 0, nil, 0
   if tcfg.pickup then
     local n = #PK.slots()
     if n == 0 then logLine(TX"pickup activado, pero no hay Pokemon con Recogida en los puestos 2 a 6")
@@ -3816,6 +3863,7 @@ local function stepBattle()
     if foe then
       bot.foe = foe
       bot.lastFoe = foe
+      bot.noMoveCounted = false
       if foe.sv < 8 and CONFIG.stopOnShiny then
         stopBot()
         bot.msg = TX"SHINY SALVAJE: " .. speciesName(foe.species) .. TX"! Capturalo tu (juego en pausa)"
@@ -3853,7 +3901,7 @@ local function stepBattle()
         bot.msg = TX"Evoluciono: termina tu la escena (textos / ataque nuevo). El bot sigue solo despues"
         notify(TX"Tu Pokemon evoluciono a " .. speciesName(m.species) .. TX": termina la escena y el bot sigue solo")
         print(bot.msg)
-        pcall(emu.pause)        -- pause: unpause, finish the scene and the bot carries on by itself
+        Game.pauseSoon()        -- pause: unpause, finish the scene and the bot carries on by itself
         return
       end
       -- The animation advances by itself; only if it stays on a text for a long time, press A
@@ -3909,7 +3957,19 @@ local function stepBattle()
     local me = battleMon(0)
     local run = not bot.fight or bot.forceRun
     if not run and me.maxHP > 0 and me.hp * 100 < me.maxHP * CONFIG.fleeBelow then run = true; bot.lastWhy = TX"PS muy bajos" end
-    if not run and not bestMove(bot.blocked) then run = true; bot.lastWhy = TX"sin ataques utiles" end
+    if not run and not bestMove(bot.blocked) then
+      run = true; bot.lastWhy = TX"sin ataques utiles"
+      if not bot.noMoveCounted then            -- once per battle
+        bot.noMoveCounted = true
+        PK.noMove = (PK.noMove or 0) + 1
+        local l = lead()
+        if PK.noMove >= PK.NOMOVE_LIMIT and l then
+          halt(string.format(TX"%s no tiene ningun ataque que le haga dano a %s: ensenale uno y pulsa 7",
+            speciesName(l.species), speciesName(bot.foe.species)))
+          return
+        end
+      end
+    elseif not run then PK.noMove = 0 end
     -- Can't run (trapping ability or move, or RUN keeps coming back): fight instead of looping
     if run and not bot.trapped then
       local why = Menus.trapped()
@@ -3965,7 +4025,7 @@ local function stepAfter()
   if CONFIG.evolve and m and m.species ~= bot.leadSpecies then
     bot.st, bot.manualFrom = "manual", "evolve"
     bot.msg = TX"Esta evolucionando: termina tu (ataques nuevos, textos). El bot sigue solo despues"
-    pcall(emu.pause)
+    Game.pauseSoon()
     notify(TX"Tu Pokemon esta evolucionando: termina la escena y el bot sigue solo")
     return
   end
@@ -4393,5 +4453,7 @@ while true do
     if not busy then runQueue() end
   end
   draw()
+  -- the pause the bot asked for (Game.pauseSoon), here at the top level, never inside pcall
+  if Game.pausePending then Game.pausePending = false; emu.pause() end
   emu.frameadvance()
 end
