@@ -46,6 +46,13 @@ w32(BSTRUCT, 0x02030000); w8(0x02030010, 0)
 local LEARN_LIST = { 53, 108, 232, 53 }
 w8(0x080000AE, 0x52); w8(0x080000AF, 0x45); w8(0x080000BC, 0)
 w8(OP_TEXT, 0x10); w8(OP_5A, 0x5A); w8(OP_5B, 0x5B)
+-- "learnloop" (pret BattleScript_AskToLearnMove): "Stop learning X?" needs no button; the script waits
+-- for it (waitstate 0x3A, setbyte 0x2E) and only then shows the YES/NO box (0x5B). A B that lands on
+-- the box's first frame is NO, and NO asks the whole question again ("is trying to learn...").
+-- STOP_WAIT = frames of that text (the runner tries every phase of the bot's B rhythm).
+local OP_WAIT = 0x08100030
+w8(OP_WAIT, 0x3A); w8(OP_WAIT + 1, 0x2E); w32(OP_WAIT + 2, 0x02023E80); w8(OP_WAIT + 6, 0); w8(OP_WAIT + 7, 0x5B)
+local STOP_WAIT = rawget(_G, "STOP_WAIT") or 45
 w32(SB1P, SB1); w32(SB2P, SB2)
 local TID, SID = 12345, 54321
 w32(SB2 + 0xA, TID + SID * 65536)
@@ -236,9 +243,12 @@ local function battleFrame()
   elseif b.phase == "5A" then
     if b.t < b.ready then return end
     if edge("A") and r8(YN) == 0 then b.phase = "sumfade"; b.ready = b.t + 20
-    elseif edge("A") then b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t + 10
-    elseif edge("down") then w8(YN, 1) elseif edge("up") then w8(YN, 0)
-    elseif edge("B") then b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t + 10 end
+    elseif edge("A") or edge("B") then
+      if SCEN == "learnloop" then b.phase = "stopwait"; w32(SPTR, OP_WAIT); b.ready = b.t + STOP_WAIT
+      else b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t + 10 end
+    elseif edge("down") then w8(YN, 1) elseif edge("up") then w8(YN, 0) end
+  elseif b.phase == "stopwait" then
+    if b.t >= b.ready then b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t end
   elseif b.phase == "sumfade" then
     if b.t >= b.ready then b.phase = "sum"; w32(CB2, CB_SUM); w8(SUMCUR, 0); b.ready = b.t + 70 end
   elseif b.phase == "sum" then
@@ -269,7 +279,9 @@ local function battleFrame()
       else b.loops = b.loops + 1; b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 10 end
     elseif edge("B") then
       b.loops = b.loops + 1; if b.loops > 3 then error("LEARN LOOP") end
-      b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 10
+      if SCEN == "learnloop" then
+        textPhase(2, function() b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 5 end)   -- "is trying to learn" again
+      else b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 10 end
     end
   elseif b.phase == "ending" and (SCEN == "evo" or SCEN == "evono") and leadM.level >= 7 and not W.evoDone and b.t - b.endT == 10 then
     b.phase = "evo"; b.evoT = 0; w32(CB2, 0x080CE001)

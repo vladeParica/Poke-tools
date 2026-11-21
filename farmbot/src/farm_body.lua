@@ -1517,7 +1517,9 @@ local function stepBattle()
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
   end
-  -- Battle texts: B (never picks YES by mistake nor enters menus)
+  -- Battle texts: B (never picks YES by mistake nor enters menus), but not right before a
+  -- learn-move YES/NO box (see Menus.learnBoxAhead)
+  if Menus.learnBoxAhead(sp) then return end
   tap("B", 10)
 end
 

@@ -77,6 +77,10 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Train Bot and Farm Bot: refusing a move could loop forever ("But, X can't learn more than four
+  moves" again and again). The B pressed for battle texts could land on the first frame of the
+  "Stop learning X?" box, which is NO and asks the whole question again, and the same way every
+  time. The bots no longer press anything while the battle script waits for that box.
 - Train Bot and Farm Bot: a route that crosses water (recorded while surfing) stopped at the shore
   ("No pude seguir la ruta al Centro"): walking into water only turns the player. On foot in front
   of water the route goes on into, the bot now faces it and answers the Surf prompt; it gets off

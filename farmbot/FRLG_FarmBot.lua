@@ -3703,6 +3703,21 @@ local Menus = (function()
       if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
     end
   end
+  -- pret BattleScript_AskToLearnMove: "Delete a move to make room for X?" and "Stop learning X?" need
+  -- no button; the script waits for them (waitstate 0x3A, setbyte 0x2E) and then shows the YES/NO
+  -- box (0x5A / 0x5B). A B pressed for "the text" can land on the box's first frame: NO, and NO on
+  -- "Stop learning?" asks the whole question again, the same way every time (an endless loop).
+  -- True while the battle script is in that wait, so the bots press nothing.
+  function M.learnBoxAhead(sp)
+    if sp < 0x08000000 or sp >= 0x0A000000 then return false end
+    local p = sp
+    for _ = 1, 4 do
+      local op = read8(p)
+      if op == 0x5A or op == 0x5B then return p ~= sp end
+      if op == 0x3A then p = p + 1 elseif op == 0x2E then p = p + 6 else return false end
+    end
+    return false
+  end
   return M
 end)()
 
@@ -4126,7 +4141,9 @@ local function stepBattle()
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
   end
-  -- Battle texts: B (never picks YES by mistake nor enters menus)
+  -- Battle texts: B (never picks YES by mistake nor enters menus), but not right before a
+  -- learn-move YES/NO box (see Menus.learnBoxAhead)
+  if Menus.learnBoxAhead(sp) then return end
   tap("B", 10)
 end
 

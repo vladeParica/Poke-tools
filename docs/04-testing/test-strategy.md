@@ -54,6 +54,7 @@ Approximate duration: Shiny Bot ~40 s, Train Bot ~50 s, configurator ~10 s.
 | `run_fishrng.py` | Fishing RNG in `mock_fish.lua` (pret's `Task_Fishing`): Super/Old/Good Rod targets, a slow text, a species the rod can't catch, no rod, no water, a build without symbols | `PAUSED` on each target; the rest refuse and say why |
 | `trainbot/tests/run_train.py` | evs, record, pokerus, level, nolearn, ghost, ghostpp, surf (a river on the route to the Center) | Goal EVs and level; route recorded; no overshoot with Pokérus; the river is crossed surfing both ways |
 | `run_learn.py` | Move learning (`auto`, `never`, `ask` with and without an answer) | Learns or forgets according to the configuration |
+| `run_learnloop.py` | A move it doesn't want, with "Stop learning X?" shown for 40–51 frames before its box (every phase of the bot's B rhythm) | It answers YES and goes on; never loops |
 | `run_want.py` | `wantedMoves` | Only learns the requested moves |
 
 ## Critical paths (always tested)
