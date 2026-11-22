@@ -52,9 +52,8 @@ local CONFIG = {
   reseed        = true,         -- soft reset and another seed if there is no target / several fail
   reseedAfterFailedTargets = 3,
   maxReseeds    = 10,
-  newGameTSV    = nil,
+  newGameTSV    = nil,          -- New game: TID xor SID ranges (nil = the ones for a shiny 6x31 Ditto)
   initialSeeds  = nil,          -- Initial seed: list in hex, e.g. {"BC75","0A16"}
-  afterSeedMode = nil,          -- mode to launch when the seed is hit, e.g. "Regalo RNG"          -- New game: TID xor SID ranges (nil = the ones for a shiny 6x31 Ditto)
   rngMaxSearch  = nil,          -- (obsolete, ignored)
   wildMaxSearch = nil,          -- (obsolete, ignored)
   wildOneStep   = true,         -- Wild RNG: get one step away from the encounter before looking for the frame
@@ -198,6 +197,7 @@ local LANG = {
     ["Carga tu partida (en el mapa) antes de iniciar"] = "Load your game (on the map) before starting",
     ["Carga tu partida antes de grabar"] = "Load your game before recording",
     ["Cargando Buscapelea"] = "Charging VS Seeker",
+    ["Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s"] = "Hit the target (PID %08X) but the game interrupted the generation: it came out with IVs %s",
     ["Cerrando Tele"] = "Closing TV",
     ["Cerrando la Tele"] = "Closing the TV",
     ["Combate"] = "Battle",
@@ -244,10 +244,12 @@ local LANG = {
     ["El Buscapelea no termino (revisa que este registrado en SELECT)"] = "The VS Seeker didn't finish (check it's registered on SELECT)",
     ["El PID no es Metodo 1: usa el modo con soft reset"] = "The PID is not Method 1: use the soft reset mode",
     ["El encuentro sale en el paso %d: me acerco a un paso"] = "The encounter comes on step %d: getting one step away",
+    ["El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7"] = "The game interrupts the target on this tile: stand on another tile (or change walkAxis) and press 7",
     ["El juego se reinicio: bot detenido"] = "The game was reset: bot stopped",
     ["El personaje no esta en el punto de entreno: llevalo alli y pulsa 7"] = "The character is not at the training spot: take it there and press 7",
     ["El personaje no esta en el punto de inicio: llevalo alli y pulsa 7"] = "The character is not at the start point: take it there and press 7",
     ["El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"] = "The first party Pokemon needs Thief or Covet",
+    ["El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver"] = "The route's training spot is %d tiles away (x %+d, y %+d): the route ends where you pressed 6 on the way back",
     ["El roamer ya esta activo: usa un save de ANTES del evento"] = "The roamer is already active: use a save from BEFORE the event",
     ["Electrico"] = "Electric",
     ["Empieza a caminar"] = "Start walking",
@@ -322,6 +324,7 @@ local LANG = {
     ["LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"] = "DONE! Game paused: save a state (Shift+F1) and keep playing",
     ["La Tele se paso del objetivo: busco el siguiente"] = "The Teachy TV overshot the target: looking for the next one",
     ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "The tile didn't heal the party: the way there must end INSIDE the healing zone (record another with 6)",
+    ["La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6"] = "The route ends on another map (%d.%d) and you are on %d.%d: check routeFile or record a route from here with 6",
     ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "The seed changed (you loaded a state or reset). Bot stopped.",
     ["Lanzamientos: %d"] = "Casts: %d",
     ["Lanzando la cana (%d)"] = "Casting the rod (%d)",
@@ -342,6 +345,7 @@ local LANG = {
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
     ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "Couldn't find the encounter table in the ROM: reload the script with the game already running",
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
+    ["No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6"] = "You are not at the route's training spot (see the console): go there or record another with 6",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
     ["No hay objetivo con esos filtros: sube fishSearch o quita filtros"] = "No target with those filters: raise fishSearch or remove filters",
@@ -453,12 +457,11 @@ local LANG = {
     ["Salvaje RNG"] = "Wild RNG",
     ["Savestate listo. Zona: %s%s"] = "Savestate ready. Area: %s%s",
     ["Se repite: dejo de revisar antes del paso"] = "It happens again: I stop checking before the step",
-    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X ready: continue the game and use the RNG mode",
+    ["Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG"] = "Seed %04X ready: continue, save a state (Shift+F1) and choose the RNG mode",
     ["Semilla inicial"] = "Initial seed",
     ["Semilla inicial %04X conseguida (%d pruebas)"] = "Initial seed %04X hit (%d tries)",
     ["Semilla inicial: %04X   Actual: %08X"] = "Initial seed: %04X   Current: %08X",
-    ["Semilla lista: cargando la partida para "] = "Seed ready: loading the game for ",
-    ["Shiny descartado por filtros: %s PID %08X"] = "Shiny skipped by filters: %s PID %08X",
+    ["Shiny descartado por filtros: %s PID %08X  IVs %s"] = "Shiny skipped by filters: %s PID %08X  IVs %s",
     ["Sin ataques utiles contra un entrenador: terminalo tu"] = "No useful moves against a trainer: finish it yourself",
     ["Sin respuesta: el bot decide solo si aprende el ataque"] = "No answer: the bot decides by itself whether to learn the move",
     ["Sin shiny"] = "No shiny",
@@ -502,6 +505,7 @@ local LANG = {
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X hit after %d tries",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
+    ["afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON"] = "afterSeedMode is no longer used (Initial seed ends paused): you can remove it from the JSON",
     ["ataque desconocido en "] = "unknown move in ",
     ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
@@ -728,6 +732,7 @@ local LANG = {
     ["Carga tu partida (en el mapa) antes de iniciar"] = "Kaishi mae ni game wo yomikonde (map de)",
     ["Carga tu partida antes de grabar"] = "Kiroku mae ni game wo yomikonde",
     ["Cargando Buscapelea"] = "Battle Searcher juuden chuu",
+    ["Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s"] = "Mokuhyou (PID %08X) ni atatta ga game ga seisei wo warikonda: IV %s ni natta",
     ["Cerrando Tele"] = "TV wo tojiru",
     ["Cerrando la Tele"] = "TV wo tojite iru",
     ["Combate"] = "Battle",
@@ -774,10 +779,12 @@ local LANG = {
     ["El Buscapelea no termino (revisa que este registrado en SELECT)"] = "Battle Searcher ga owaranakatta (SELECT ni touroku sarete iru ka kakunin)",
     ["El PID no es Metodo 1: usa el modo con soft reset"] = "PID ga Method 1 dewa nai: soft reset mode wo tsukatte",
     ["El encuentro sale en el paso %d: me acerco a un paso"] = "%d ho me de encount: ippo mae made chikazukimasu",
+    ["El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7"] = "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu",
     ["El juego se reinicio: bot detenido"] = "Game ga reset sareta: bot teishi",
     ["El personaje no esta en el punto de entreno: llevalo alli y pulsa 7"] = "Shujinkou ga tokkun point ni inai: tsurete itte 7 wo oshite",
     ["El personaje no esta en el punto de inicio: llevalo alli y pulsa 7"] = "Shujinkou ga kaishi point ni inai: tsurete itte 7 wo oshite",
     ["El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"] = "Sentou no Pokemon ni Dorobou ka Hoshigaru ga hitsuyou",
+    ["El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver"] = "Route no training spot wa %d masu saki (x %+d, y %+d): kaeri de 6 wo oshita basho ga route no owari",
     ["El roamer ya esta activo: usa un save de ANTES del evento"] = "Haikai Pokemon wa mou ugoite iru: event MAE no save wo tsukatte",
     ["Electrico"] = "Denki",
     ["Empieza a caminar"] = "Arukihajimeru",
@@ -852,6 +859,7 @@ local LANG = {
     ["LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"] = "KANRYO! Ichiji teishi: state wo hozon (Shift+F1) shite tsuzukete",
     ["La Tele se paso del objetivo: busco el siguiente"] = "TV ga mokuhyo wo koeta: tsugi wo sagashimasu",
     ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "Kaifuku masu de kaifuku shinakatta: iki wa kaifuku zone no NAKA de owaru hitsuyou (6 de kiroku shinaoshite)",
+    ["La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6"] = "Route wa betsu no map (%d.%d) de owaru; anata wa %d.%d: routeFile wo kakunin ka koko kara 6 de route wo rokuga",
     ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "Seed ga kawatta (state load ka reset). Bot teishi.",
     ["Lanzamientos: %d"] = "Nageta kaisuu: %d",
     ["Lanzando la cana (%d)"] = "Tsurizao wo nageru (%d)",
@@ -872,6 +880,7 @@ local LANG = {
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
     ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "ROM ni deai table ga nai: game wo kidou shite kara script wo saiyomikomi shite",
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
+    ["No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6"] = "Route no training spot ni inai (console wo miru): soko e iku ka 6 de betsu no route wo rokuga",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
     ["No hay objetivo con esos filtros: sube fishSearch o quita filtros"] = "Sono filter de wa mokuhyou nashi: fishSearch wo agete ka filter wo hazusu",
@@ -983,12 +992,11 @@ local LANG = {
     ["Salvaje RNG"] = "Yasei RNG",
     ["Savestate listo. Zona: %s%s"] = "Savestate junbi kanryo. Basho: %s%s",
     ["Se repite: dejo de revisar antes del paso"] = "Mata okita: ippo mae no check wo yamemasu",
-    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X junbi kanryo: tsuzuki kara hajimete RNG mode wo tsukatte",
+    ["Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG"] = "Seed %04X junbi OK: tsuzukete, savestate wo hozon (Shift+F1) shite RNG mode wo erabu",
     ["Semilla inicial"] = "Shoki seed",
     ["Semilla inicial %04X conseguida (%d pruebas)"] = "Shoki seed %04X ni seikou (%d kai)",
     ["Semilla inicial: %04X   Actual: %08X"] = "Shoki seed: %04X   Genzai: %08X",
-    ["Semilla lista: cargando la partida para "] = "Seed junbi kanryo: game wo yomikomi chuu: ",
-    ["Shiny descartado por filtros: %s PID %08X"] = "Irochigai wo jouken de miokuri: %s PID %08X",
+    ["Shiny descartado por filtros: %s PID %08X  IVs %s"] = "Irochigai wo jouken de miokuri: %s PID %08X  IVs %s",
     ["Sin ataques utiles contra un entrenador: terminalo tu"] = "Trainer ni tsukaeru waza nashi: jibun de owarasete",
     ["Sin respuesta: el bot decide solo si aprende el ataque"] = "Henji nashi: waza wo oboeru ka bot ga kimemasu",
     ["Sin shiny"] = "Irochigai nashi",
@@ -1032,6 +1040,7 @@ local LANG = {
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X ni %d kai de seikou",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
+    ["afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON"] = "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK",
     ["ataque desconocido en "] = "fumei na waza: ",
     ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
@@ -1257,6 +1266,23 @@ local Game = (function()
     local fishing = ({ FireRed0 = 0x0805D304, FireRed1 = 0x0805D318,
                        LeafGreen0 = 0x0805D304, LeafGreen1 = 0x0805D318 })[build]
     G.taskFishing = fishing and (fishing + 1)
+    -- VMap (the loaded map: width, height, pointer to one u16 per tile, top 4 bits = elevation) and
+    -- gPlayerAvatar (flags: 0x08 surfing); RAM, the same in the four USA builds
+    G.vmap, G.avatar = 0x03005040, 0x02037078
+  end
+  -- Elevation of a tile of the loaded map, in object coordinates (MAP_OFFSET included), or nil
+  function G.elevationAt(x, y)
+    if not G.vmap then return nil end
+    local w, h, map = read32(G.vmap), read32(G.vmap + 4), read32(G.vmap + 8)
+    if x < 0 or y < 0 or x >= w or y >= h or map < 0x02000000 or map >= 0x02040000 then return nil end
+    return math.floor(read16(map + 2 * (x + y * w)) / 4096)
+  end
+  -- On foot at (x, y) and the next tile (nx, ny) is water to surf on? As pret
+  -- IsPlayerFacingSurfableFishableWater: the tile ahead has another elevation; water is elevation 1.
+  function G.surfable(x, y, nx, ny)
+    if not G.vmap or math.floor(read8(G.avatar) / 8) % 2 == 1 then return false end
+    local here, ahead = G.elevationAt(x, y), G.elevationAt(nx, ny)
+    return ahead == 1 and here ~= nil and here ~= 1
   end
   -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
   -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
@@ -1502,8 +1528,12 @@ local function loadConfig()
     if type(cfg) ~= "table" then error(TX"el archivo debe ser un objeto { ... }", 0) end
     for k, v in pairs(cfg) do
       local optional = { species = 1, natures = 1, minIVs = 1, maxIVs = 1, minIVTotal = 1, hiddenPower = 1,
-        mode = 1, sharedDir = 1, savestateSlot = 1, newGameTSV = 1, initialSeeds = 1, afterSeedMode = 1, rngMaxSearch = 1, wildMaxSearch = 1, reseedBeyond = 1, teachyMargin = 1 }
-      if CONFIG[k] == nil and not optional[k] then
+        mode = 1, sharedDir = 1, savestateSlot = 1, newGameTSV = 1, initialSeeds = 1, rngMaxSearch = 1, wildMaxSearch = 1, reseedBeyond = 1, teachyMargin = 1 }
+      -- options that were removed: said once, never an error (old JSON files keep working)
+      local retired = { afterSeedMode = TX"afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON" }
+      if retired[k] then
+        print(retired[k])
+      elseif CONFIG[k] == nil and not optional[k] then
         problems[#problems + 1] = TX"opcion desconocida: " .. k
       end
       CONFIG[k] = v
@@ -1786,13 +1816,6 @@ local function kind()
   return bot.mode <= 4 and bot.mode or bot.mode - 3
 end
 local function isRngMode() return bot.mode >= 5 and bot.mode <= 7 end
--- The mode the Initial seed mode hands over to (afterSeedMode), or nil
-local function afterSeedIndex()
-  local after = CONFIG.afterSeedMode
-  if not after then return nil end
-  for i, mname in ipairs(MODES) do if simplify(mname) == simplify(after) then return i end end
-  return nil
-end
 local function isWildRng() return bot.mode == 8 end
 local function isFishing() return bot.mode == 11 end
 -- Wild modes that hunt by species (walking, Wild RNG, fishing)
@@ -1898,7 +1921,10 @@ local function evaluate(mon)
   mon.shiny = mon.sv < 8
   bot.last = mon
   if isWanted(mon) then onShiny(mon); return true end
-  if mon.shiny then logLine(string.format(TX"Shiny descartado por filtros: %s PID %08X", speciesName(mon.species), mon.pid)) end
+  if mon.shiny then
+    logLine(string.format(TX"Shiny descartado por filtros: %s PID %08X  IVs %s", speciesName(mon.species), mon.pid,
+            mon.ivs and table.concat(mon.ivs, "/") or "?"))
+  end
   return false
 end
 
@@ -2661,7 +2687,7 @@ local function stepFar()
     goToTarget(far.best)
   elseif be >= limit then
     if far.best then goToTarget(far.best); return end
-    if CONFIG.reseed and not bot.noReseed and (bot.reseeds or 0) < CONFIG.maxReseeds then
+    if CONFIG.reseed and (bot.reseeds or 0) < CONFIG.maxReseeds then
       startReseed(string.format(TX"sin objetivo en %d avances", limit)); return
     end
     bot.msg = isFishRng() and TX"No hay objetivo con esos filtros: sube fishSearch o quita filtros"
@@ -2730,7 +2756,7 @@ local function modeProblem(mode)
 end
 
 local function rngStart()
-  -- also when the Initial seed mode hands over: the save was just loaded, read the party again
+  -- also after a new seed (soft reset): the save was just loaded, read the party again
   local problem = modeProblem()
   if problem then
     stopBot()
@@ -2775,7 +2801,7 @@ local function retryOrNext(hit)
   rng.pressAt = cand
   if rng.tries >= CONFIG.triesPerTarget or rng.pressAt < rng.preDelay then
     rng.failedTargets = (rng.failedTargets or 0) + 1
-    if CONFIG.reseed and not bot.noReseed and bot.mode ~= 9 and rng.failedTargets >= CONFIG.reseedAfterFailedTargets then
+    if CONFIG.reseed and bot.mode ~= 9 and rng.failedTargets >= CONFIG.reseedAfterFailedTargets then
       startReseed(TX"objetivos inalcanzables"); return
     end
     if rng.nextSearch then rng.nextSearch(rng.target + 1) else startFar(rng.target + 1) end
@@ -3160,17 +3186,12 @@ local function stepSeedBot()
         if seed == t then
           print(string.format(TX"Semilla inicial %04X conseguida (%d pruebas)", seed, sb.tries))
           logLine(string.format(TX"[SEMILLA] %04X conseguida tras %d pruebas", seed, sb.tries))
-          local idx = afterSeedIndex()
-          if idx and idx ~= 10 then
-            bot.mode = idx
-            bot.noReseed = true
-            bot.st, bot.t = "rboot", 0
-            bot.msg = TX"Semilla lista: cargando la partida para " .. TX(MODES[idx])
-          else
-            bot.found, bot.running, bot.st, bot.selfReset = true, false, "found", false
-            bot.msg = string.format(TX"Semilla %04X lista: continua la partida y usa el modo RNG", seed)
-            emu.pause()
-          end
+          -- this mode only gets the seed: the player continues, saves a state and starts
+          -- the RNG mode they want from it
+          bot.found, bot.running, bot.st, bot.selfReset = true, false, "found", false
+          bot.msg = string.format(TX"Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG", seed)
+          print(bot.msg)
+          emu.pause()
           return
         end
       end
@@ -3417,6 +3438,22 @@ local function stepWildRng()
       local E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect, wr.layout)
       if not E and wr.layout then E, lay, loose = findWildE(mon, level, rng.pressedAdv, expect) end
       if evaluate(mon) then return end
+      if E and rng.target and E == rng.target and mon.pid == rng.targetPid then
+        -- The right advance and the right PID, but other IVs: VBlank's Random() landed in the
+        -- middle of this very generation. The emulator is deterministic, so the same attempt
+        -- gives the same thing again: what the game does on that frame has to change (another
+        -- tile shows other parts of the map and other people), not the RNG.
+        rng.interrupted = (rng.interrupted or 0) + 1
+        logLine(string.format(TX"Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s",
+                mon.pid, table.concat(mon.ivs, "/")))
+        if rng.interrupted >= 2 then
+          stopBot()
+          bot.msg = TX"El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7"
+          logLine(bot.msg)
+          return
+        end
+        bot.st = "wait"; rngLoad(); return
+      end
       if not E and rng.delay and rng.target then
         -- at the target: that frame gave an encounter that doesn't match (the game
         -- interrupted itself mid-generation). Try the neighboring frame.
@@ -3679,8 +3716,7 @@ local function startBot()
     bot.msg = TX"Pesca: registra la Cana (Vieja, Buena o Super) en SELECT y mira hacia el agua"
     print(bot.msg); return
   end
-  -- Initial seed: check now the mode it will hand over to, not after the seed is found
-  local problem = modeProblem(bot.mode == 10 and afterSeedIndex() or bot.mode)
+  local problem = modeProblem(bot.mode)
   if problem then
     bot.msg = problem
     print(bot.msg); return
@@ -3694,7 +3730,7 @@ local function startBot()
   bot.encounters, bot.timeouts, bot.startFrame = 0, 0, emu.framecount()
   bot.startTime = now_time()
   queue = {}
-  bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried, bot.noReseed = nil, false, 0, 1, false
+  bot.returnState, bot.selfReset, bot.reseeds, bot.seedsTried = nil, false, 0, 1
   if bot.mode == 1 then
     zeroEnemy(); bot.st = "walk"; WK.start()
   elseif isFishing() then

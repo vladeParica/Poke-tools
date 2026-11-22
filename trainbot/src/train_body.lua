@@ -746,7 +746,6 @@ local function runQueue()
   if item.n <= 0 then table.remove(queue, 1) end
   return true
 end
-local function hold(dir) joypad.set(1, { [dir] = true }) end
 
 -- ------------------------- Route to the Center ----------------------------
 local route = { go = nil, back = nil }
@@ -914,6 +913,7 @@ local function navStep()
   if nav.lastMap and nav.lastMap ~= mapKey then nav.cool = 40 end   -- map change: release for a moment
   nav.lastMap = mapKey
   if nav.cool > 0 then nav.cool = nav.cool - 1; return nil end
+  if (nav.surfT or 0) > 0 then nav.surfT = nav.surfT - 1; return nil end   -- answering the Surf prompt
   local r = nav.r
   local j = navFind(p)
   local nxt
@@ -942,6 +942,15 @@ local function navStep()
     dir = DIR_KEY[nxt.d] or "up"      -- map change (door): the direction used when entering
   end
   nav.stuck = nav.stuck + 1
+  -- a route recorded while surfing: on foot, walking into the water only turns the player. Face it
+  -- and answer the Surf prompt (A talks to the water, A = YES, A closes "X used SURF!"), once per
+  -- route point; back on land, walking onto the shore gets off by itself.
+  if nav.stuck == 40 and nav.surfAt ~= nav.idx and nxt.g == cur.g and nxt.n == cur.n
+     and math.abs(nxt.x - cur.x) + math.abs(nxt.y - cur.y) == 1 and Game.surfable(cur.x, cur.y, nxt.x, nxt.y) then
+    nav.surfAt, nav.surfT = nav.idx, 200
+    for _ = 1, 4 do tap("A", 40) end
+    return nil
+  end
   if nav.stuck > 120 then
     -- stuck (NPC in the way or a sign open): release, close text and retry
     nav.stuck, nav.tries = 0, nav.tries + 1
@@ -949,7 +958,8 @@ local function navStep()
     tap("B", 20)
     return nil
   end
-  hold(dir)
+  -- B held too: with the Running Shoes the player runs along the route (no effect when surfing)
+  joypad.set(1, { [dir] = true, B = true })
   return nil
 end
 
@@ -1103,6 +1113,19 @@ end
 -- then Speed elsewhere). Either no species in the 'species' list gives a missing EV any more,
 -- or many battles in a row had no useful opponent. Returns the message, or nil.
 PK.USELESS_LIMIT = 40
+-- The training spot is where the recorded way back ends (route.back). More than 2 tiles away?
+function PK.awayFrom(p, spot)
+  return not (p.g == spot.g and p.n == spot.n and math.abs(p.x - spot.x) <= 2 and math.abs(p.y - spot.y) <= 2)
+end
+-- Where that spot is, for the player: same map (how far) or another map
+function PK.whereSpot(p, spot)
+  if p.g == spot.g and p.n == spot.n then
+    return string.format(TX"El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver",
+      math.abs(spot.x - p.x) + math.abs(spot.y - p.y), spot.x - p.x, spot.y - p.y)
+  end
+  return string.format(TX"La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6",
+    spot.g, spot.n, p.g, p.n)
+end
 -- Battles in a row against a wanted opponent the lead can't hurt with any move (e.g. only Normal
 -- moves against Gastly): it would run from all of them forever, so it stops and says why
 PK.NOMOVE_LIMIT = 3
@@ -1210,13 +1233,13 @@ PK.AFTER = {
   -- 6. not at the training spot (e.g. it lost and woke up at the Center)
   function()
     local p = playerPos()
-    if not (bot.spot and p and not (p.g == bot.spot.g and p.n == bot.spot.n and math.abs(p.x - bot.spot.x) <= 2
-       and math.abs(p.y - bot.spot.y) <= 2)) then return false end
+    if not (bot.spot and p and PK.awayFrom(p, bot.spot)) then return false end
     if route.back then
       for k = 1, #route.back do
         if samePos(p, route.back[k]) then navStart(route.back); nav.idx = k; bot.st, bot.t = "heal_back", 0; return true end
       end
     end
+    logLine(PK.whereSpot(p, bot.spot))
     halt(TX"El personaje no esta en el punto de entreno: llevalo alli y pulsa 7")
     return true
   end,
@@ -1267,6 +1290,12 @@ local function startBot()
   bot.cbOW = read32(A.callback2)
   bot.leadSpecies = m.species
   bot.spot = route.back and route.back[#route.back] or p
+  if route.back and PK.awayFrom(p, bot.spot) then
+    -- say it now, not after the first battle
+    print(PK.whereSpot(p, bot.spot))
+    bot.msg = TX"No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6"
+    print(bot.msg); return
+  end
   bot.running, bot.done, bot.msg = true, false, ""
   bot.battles, bot.fought, bot.fled, bot.heals = 0, 0, 0, 0
   bot.startEvs = { m.evs[1], m.evs[2], m.evs[3], m.evs[4], m.evs[5], m.evs[6] }
@@ -1476,7 +1505,9 @@ local function stepBattle()
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
   end
-  -- Battle texts: B (never picks YES by mistake nor enters menus)
+  -- Battle texts: B (never picks YES by mistake nor enters menus), but not right before a
+  -- learn-move YES/NO box (see Menus.learnBoxAhead)
+  if Menus.learnBoxAhead(sp) then return end
   tap("B", 10)
 end
 

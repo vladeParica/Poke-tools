@@ -180,6 +180,7 @@ local LANG = {
     ["Carga tu partida (en el mapa) antes de iniciar"] = "Load your game (on the map) before starting",
     ["Carga tu partida antes de grabar"] = "Load your game before recording",
     ["Cargando Buscapelea"] = "Charging VS Seeker",
+    ["Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s"] = "Hit the target (PID %08X) but the game interrupted the generation: it came out with IVs %s",
     ["Cerrando Tele"] = "Closing TV",
     ["Cerrando la Tele"] = "Closing the TV",
     ["Combate"] = "Battle",
@@ -226,10 +227,12 @@ local LANG = {
     ["El Buscapelea no termino (revisa que este registrado en SELECT)"] = "The VS Seeker didn't finish (check it's registered on SELECT)",
     ["El PID no es Metodo 1: usa el modo con soft reset"] = "The PID is not Method 1: use the soft reset mode",
     ["El encuentro sale en el paso %d: me acerco a un paso"] = "The encounter comes on step %d: getting one step away",
+    ["El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7"] = "The game interrupts the target on this tile: stand on another tile (or change walkAxis) and press 7",
     ["El juego se reinicio: bot detenido"] = "The game was reset: bot stopped",
     ["El personaje no esta en el punto de entreno: llevalo alli y pulsa 7"] = "The character is not at the training spot: take it there and press 7",
     ["El personaje no esta en el punto de inicio: llevalo alli y pulsa 7"] = "The character is not at the start point: take it there and press 7",
     ["El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"] = "The first party Pokemon needs Thief or Covet",
+    ["El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver"] = "The route's training spot is %d tiles away (x %+d, y %+d): the route ends where you pressed 6 on the way back",
     ["El roamer ya esta activo: usa un save de ANTES del evento"] = "The roamer is already active: use a save from BEFORE the event",
     ["Electrico"] = "Electric",
     ["Empieza a caminar"] = "Start walking",
@@ -304,6 +307,7 @@ local LANG = {
     ["LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"] = "DONE! Game paused: save a state (Shift+F1) and keep playing",
     ["La Tele se paso del objetivo: busco el siguiente"] = "The Teachy TV overshot the target: looking for the next one",
     ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "The tile didn't heal the party: the way there must end INSIDE the healing zone (record another with 6)",
+    ["La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6"] = "The route ends on another map (%d.%d) and you are on %d.%d: check routeFile or record a route from here with 6",
     ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "The seed changed (you loaded a state or reset). Bot stopped.",
     ["Lanzamientos: %d"] = "Casts: %d",
     ["Lanzando la cana (%d)"] = "Casting the rod (%d)",
@@ -324,6 +328,7 @@ local LANG = {
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "The SID didn't appear: press 7 right after naming your rival, while Oak is talking",
     ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "Couldn't find the encounter table in the ROM: reload the script with the game already running",
     ["No encontre un SID valido: revisa newGameTSV"] = "I didn't find a valid SID: check newGameTSV",
+    ["No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6"] = "You are not at the route's training spot (see the console): go there or record another with 6",
     ["No hay "] = "No ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "No target with those filters: raise farSearch or remove filters",
     ["No hay objetivo con esos filtros: sube fishSearch o quita filtros"] = "No target with those filters: raise fishSearch or remove filters",
@@ -435,12 +440,11 @@ local LANG = {
     ["Salvaje RNG"] = "Wild RNG",
     ["Savestate listo. Zona: %s%s"] = "Savestate ready. Area: %s%s",
     ["Se repite: dejo de revisar antes del paso"] = "It happens again: I stop checking before the step",
-    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X ready: continue the game and use the RNG mode",
+    ["Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG"] = "Seed %04X ready: continue, save a state (Shift+F1) and choose the RNG mode",
     ["Semilla inicial"] = "Initial seed",
     ["Semilla inicial %04X conseguida (%d pruebas)"] = "Initial seed %04X hit (%d tries)",
     ["Semilla inicial: %04X   Actual: %08X"] = "Initial seed: %04X   Current: %08X",
-    ["Semilla lista: cargando la partida para "] = "Seed ready: loading the game for ",
-    ["Shiny descartado por filtros: %s PID %08X"] = "Shiny skipped by filters: %s PID %08X",
+    ["Shiny descartado por filtros: %s PID %08X  IVs %s"] = "Shiny skipped by filters: %s PID %08X  IVs %s",
     ["Sin ataques utiles contra un entrenador: terminalo tu"] = "No useful moves against a trainer: finish it yourself",
     ["Sin respuesta: el bot decide solo si aprende el ataque"] = "No answer: the bot decides by itself whether to learn the move",
     ["Sin shiny"] = "No shiny",
@@ -484,6 +488,7 @@ local LANG = {
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X hit after %d tries",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "actions ",
+    ["afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON"] = "afterSeedMode is no longer used (Initial seed ends paused): you can remove it from the JSON",
     ["ataque desconocido en "] = "unknown move in ",
     ["atrapado por un ataque"] = "trapped by a move",
     ["calculando... (%d)"] = "computing... (%d)",
@@ -710,6 +715,7 @@ local LANG = {
     ["Carga tu partida (en el mapa) antes de iniciar"] = "Kaishi mae ni game wo yomikonde (map de)",
     ["Carga tu partida antes de grabar"] = "Kiroku mae ni game wo yomikonde",
     ["Cargando Buscapelea"] = "Battle Searcher juuden chuu",
+    ["Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s"] = "Mokuhyou (PID %08X) ni atatta ga game ga seisei wo warikonda: IV %s ni natta",
     ["Cerrando Tele"] = "TV wo tojiru",
     ["Cerrando la Tele"] = "TV wo tojite iru",
     ["Combate"] = "Battle",
@@ -756,10 +762,12 @@ local LANG = {
     ["El Buscapelea no termino (revisa que este registrado en SELECT)"] = "Battle Searcher ga owaranakatta (SELECT ni touroku sarete iru ka kakunin)",
     ["El PID no es Metodo 1: usa el modo con soft reset"] = "PID ga Method 1 dewa nai: soft reset mode wo tsukatte",
     ["El encuentro sale en el paso %d: me acerco a un paso"] = "%d ho me de encount: ippo mae made chikazukimasu",
+    ["El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7"] = "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu",
     ["El juego se reinicio: bot detenido"] = "Game ga reset sareta: bot teishi",
     ["El personaje no esta en el punto de entreno: llevalo alli y pulsa 7"] = "Shujinkou ga tokkun point ni inai: tsurete itte 7 wo oshite",
     ["El personaje no esta en el punto de inicio: llevalo alli y pulsa 7"] = "Shujinkou ga kaishi point ni inai: tsurete itte 7 wo oshite",
     ["El primero del equipo necesita Ladron (Thief) o Antojo (Covet)"] = "Sentou no Pokemon ni Dorobou ka Hoshigaru ga hitsuyou",
+    ["El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver"] = "Route no training spot wa %d masu saki (x %+d, y %+d): kaeri de 6 wo oshita basho ga route no owari",
     ["El roamer ya esta activo: usa un save de ANTES del evento"] = "Haikai Pokemon wa mou ugoite iru: event MAE no save wo tsukatte",
     ["Electrico"] = "Denki",
     ["Empieza a caminar"] = "Arukihajimeru",
@@ -834,6 +842,7 @@ local LANG = {
     ["LISTO! Juego en pausa: guarda un estado (Shift+F1) y sigue jugando"] = "KANRYO! Ichiji teishi: state wo hozon (Shift+F1) shite tsuzukete",
     ["La Tele se paso del objetivo: busco el siguiente"] = "TV ga mokuhyo wo koeta: tsugi wo sagashimasu",
     ["La casilla no curo al equipo: la ida debe terminar DENTRO de la zona que cura (graba otra con 6)"] = "Kaifuku masu de kaifuku shinakatta: iki wa kaifuku zone no NAKA de owaru hitsuyou (6 de kiroku shinaoshite)",
+    ["La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6"] = "Route wa betsu no map (%d.%d) de owaru; anata wa %d.%d: routeFile wo kakunin ka koko kara 6 de route wo rokuga",
     ["La semilla cambio (cargaste un estado o reiniciaste). Bot detenido."] = "Seed ga kawatta (state load ka reset). Bot teishi.",
     ["Lanzamientos: %d"] = "Nageta kaisuu: %d",
     ["Lanzando la cana (%d)"] = "Tsurizao wo nageru (%d)",
@@ -854,6 +863,7 @@ local LANG = {
     ["No aparecio el SID: pulsa 7 justo despues de nombrar a tu rival, con Oak hablando"] = "SID ga denakatta: rival no namae wo kimeta chokugo, Oak ga hanashite iru aida ni 7 wo oshite",
     ["No encontre la tabla de encuentros en la ROM: recarga el script con el juego ya cargado"] = "ROM ni deai table ga nai: game wo kidou shite kara script wo saiyomikomi shite",
     ["No encontre un SID valido: revisa newGameTSV"] = "Yuukou na SID ga nai: newGameTSV wo kakunin shite",
+    ["No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6"] = "Route no training spot ni inai (console wo miru): soko e iku ka 6 de betsu no route wo rokuga",
     ["No hay "] = "Nai: ",
     ["No hay objetivo con esos filtros: sube farSearch o quita filtros"] = "Sono jouken de wa mokuhyo nashi: farSearch wo agete ka jouken wo hazushite",
     ["No hay objetivo con esos filtros: sube fishSearch o quita filtros"] = "Sono filter de wa mokuhyou nashi: fishSearch wo agete ka filter wo hazusu",
@@ -965,12 +975,11 @@ local LANG = {
     ["Salvaje RNG"] = "Yasei RNG",
     ["Savestate listo. Zona: %s%s"] = "Savestate junbi kanryo. Basho: %s%s",
     ["Se repite: dejo de revisar antes del paso"] = "Mata okita: ippo mae no check wo yamemasu",
-    ["Semilla %04X lista: continua la partida y usa el modo RNG"] = "Seed %04X junbi kanryo: tsuzuki kara hajimete RNG mode wo tsukatte",
+    ["Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG"] = "Seed %04X junbi OK: tsuzukete, savestate wo hozon (Shift+F1) shite RNG mode wo erabu",
     ["Semilla inicial"] = "Shoki seed",
     ["Semilla inicial %04X conseguida (%d pruebas)"] = "Shoki seed %04X ni seikou (%d kai)",
     ["Semilla inicial: %04X   Actual: %08X"] = "Shoki seed: %04X   Genzai: %08X",
-    ["Semilla lista: cargando la partida para "] = "Seed junbi kanryo: game wo yomikomi chuu: ",
-    ["Shiny descartado por filtros: %s PID %08X"] = "Irochigai wo jouken de miokuri: %s PID %08X",
+    ["Shiny descartado por filtros: %s PID %08X  IVs %s"] = "Irochigai wo jouken de miokuri: %s PID %08X  IVs %s",
     ["Sin ataques utiles contra un entrenador: terminalo tu"] = "Trainer ni tsukaeru waza nashi: jibun de owarasete",
     ["Sin respuesta: el bot decide solo si aprende el ataque"] = "Henji nashi: waza wo oboeru ka bot ga kimemasu",
     ["Sin shiny"] = "Irochigai nashi",
@@ -1014,6 +1023,7 @@ local LANG = {
     ["[SEMILLA] %04X conseguida tras %d pruebas"] = "[SEED] %04X ni %d kai de seikou",
     ["[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s"] = "[TID/SID] TID %d  SID %d  (TID xor SID = %04X) -> %s",
     ["acciones "] = "koudou ",
+    ["afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON"] = "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK",
     ["ataque desconocido en "] = "fumei na waza: ",
     ["atrapado por un ataque"] = "waza de tsukamatta",
     ["calculando... (%d)"] = "keisan chuu... (%d)",
@@ -2431,6 +2441,23 @@ local Game = (function()
     local fishing = ({ FireRed0 = 0x0805D304, FireRed1 = 0x0805D318,
                        LeafGreen0 = 0x0805D304, LeafGreen1 = 0x0805D318 })[build]
     G.taskFishing = fishing and (fishing + 1)
+    -- VMap (the loaded map: width, height, pointer to one u16 per tile, top 4 bits = elevation) and
+    -- gPlayerAvatar (flags: 0x08 surfing); RAM, the same in the four USA builds
+    G.vmap, G.avatar = 0x03005040, 0x02037078
+  end
+  -- Elevation of a tile of the loaded map, in object coordinates (MAP_OFFSET included), or nil
+  function G.elevationAt(x, y)
+    if not G.vmap then return nil end
+    local w, h, map = read32(G.vmap), read32(G.vmap + 4), read32(G.vmap + 8)
+    if x < 0 or y < 0 or x >= w or y >= h or map < 0x02000000 or map >= 0x02040000 then return nil end
+    return math.floor(read16(map + 2 * (x + y * w)) / 4096)
+  end
+  -- On foot at (x, y) and the next tile (nx, ny) is water to surf on? As pret
+  -- IsPlayerFacingSurfableFishableWater: the tile ahead has another elevation; water is elevation 1.
+  function G.surfable(x, y, nx, ny)
+    if not G.vmap or math.floor(read8(G.avatar) / 8) % 2 == 1 then return false end
+    local here, ahead = G.elevationAt(x, y), G.elevationAt(nx, ny)
+    return ahead == 1 and here ~= nil and here ~= 1
   end
   -- Pausing the emulator. In VBA-rr emu.pause() yields the script like emu.frameadvance(), and
   -- Lua 5.1 can't yield inside pcall: the yield fails, but VBA-rr has already marked a frame
@@ -3166,7 +3193,6 @@ local function runQueue()
   if item.n <= 0 then table.remove(queue, 1) end
   return true
 end
-local function hold(dir) joypad.set(1, { [dir] = true }) end
 
 -- ------------------------- Route to the Center ----------------------------
 local route = { go = nil, back = nil }             -- to the Center (key 6)
@@ -3373,6 +3399,7 @@ local function navStep()
   if nav.lastMap and nav.lastMap ~= mapKey then nav.cool = 40 end   -- map change: release for a moment
   nav.lastMap = mapKey
   if nav.cool > 0 then nav.cool = nav.cool - 1; return nil end
+  if (nav.surfT or 0) > 0 then nav.surfT = nav.surfT - 1; return nil end   -- answering the Surf prompt
   local r = nav.r
   local j = navFind(p)
   local nxt
@@ -3401,6 +3428,15 @@ local function navStep()
     dir = DIR_KEY[nxt.d] or "up"      -- map change (door): the direction used when entering
   end
   nav.stuck = nav.stuck + 1
+  -- a route recorded while surfing: on foot, walking into the water only turns the player. Face it
+  -- and answer the Surf prompt (A talks to the water, A = YES, A closes "X used SURF!"), once per
+  -- route point; back on land, walking onto the shore gets off by itself.
+  if nav.stuck == 40 and nav.surfAt ~= nav.idx and nxt.g == cur.g and nxt.n == cur.n
+     and math.abs(nxt.x - cur.x) + math.abs(nxt.y - cur.y) == 1 and Game.surfable(cur.x, cur.y, nxt.x, nxt.y) then
+    nav.surfAt, nav.surfT = nav.idx, 200
+    for _ = 1, 4 do tap("A", 40) end
+    return nil
+  end
   if nav.stuck > 120 then
     -- stuck (NPC in the way or a sign open): release, close text and retry
     nav.stuck, nav.tries = 0, nav.tries + 1
@@ -3408,7 +3444,8 @@ local function navStep()
     tap("B", 20)
     return nil
   end
-  hold(dir)
+  -- B held too: with the Running Shoes the player runs along the route (no effect when surfing)
+  joypad.set(1, { [dir] = true, B = true })
   return nil
 end
 
@@ -3671,6 +3708,21 @@ local Menus = (function()
       if not onMap and bot.t % 20 == 0 then tap("B", 10) end
       if bot.t > 1200 then fail(TX"no pude cerrar los menus") end
     end
+  end
+  -- pret BattleScript_AskToLearnMove: "Delete a move to make room for X?" and "Stop learning X?" need
+  -- no button; the script waits for them (waitstate 0x3A, setbyte 0x2E) and then shows the YES/NO
+  -- box (0x5A / 0x5B). A B pressed for "the text" can land on the box's first frame: NO, and NO on
+  -- "Stop learning?" asks the whole question again, the same way every time (an endless loop).
+  -- True while the battle script is in that wait, so the bots press nothing.
+  function M.learnBoxAhead(sp)
+    if sp < 0x08000000 or sp >= 0x0A000000 then return false end
+    local p = sp
+    for _ = 1, 4 do
+      local op = read8(p)
+      if op == 0x5A or op == 0x5B then return p ~= sp end
+      if op == 0x3A then p = p + 1 elseif op == 0x2E then p = p + 6 else return false end
+    end
+    return false
   end
   return M
 end)()
@@ -4095,7 +4147,9 @@ local function stepBattle()
     else tap(band(want, 2) == 2 and "down" or "up", 4) end
     return
   end
-  -- Battle texts: B (never picks YES by mistake nor enters menus)
+  -- Battle texts: B (never picks YES by mistake nor enters menus), but not right before a
+  -- learn-move YES/NO box (see Menus.learnBoxAhead)
+  if Menus.learnBoxAhead(sp) then return end
   tap("B", 10)
 end
 

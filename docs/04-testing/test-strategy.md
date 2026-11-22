@@ -12,7 +12,7 @@
 | Farm Bot simulator | Whole Farm Bot against `farmbot/tests/mock_farm.lua` | Python + lupa (`farmbot/tests/run_farm.py`, fails on its own) | Every mode to its goal, take-items menus (also with a field move), full bag, pause mode, refusals to start, shipped configs load |
 | Configurator unit | `configurator/js/core.js` | Node `node:test` (`configurator/tests/core.test.js`) | Parsing, name normalization, validation rules, serialization format, route checks (bundled routes clean), log parsing for the three bots |
 | Configurator integration | Exported JSON → real bots | Python + lupa (`configurator/tests/test_bots_accept.py`) | Option parity with the bots' `CONFIG`; every exported example prints "Config cargada" in both bots |
-| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 48 interaction checks: no page scroll at 1366×768, section tabs and badges, modes, chips, IVs, EVs, routes, ntfy, skins (only the kept ones listed), background artwork and picker, route viewer, log stats, language switch (es/en/ja), skin sanitizer |
+| Configurator UI | The page in a browser | Headless Chrome/Edge (`configurator/tests/ui-smoke.html`) | 46 interaction checks: no page scroll at 1366×768, section tabs and badges, modes, chips, IVs, EVs, routes, ntfy, skins (only the kept ones listed), background artwork and picker, route viewer, log stats, language switch (es/en/ja), skin sanitizer |
 | Real game | Bot in VBA-rr with the ROM | Manual | What the simulator doesn't imitate: real timings, languages, emulator quirks |
 
 ## How to run them
@@ -47,13 +47,14 @@ Approximate duration: Shiny Bot ~40 s, Train Bot ~50 s, configurator ~10 s.
 | `run_rng.py` | Roamer RNG | Calibrates and finds the target (`PAUSED`) |
 | `run_wild.py`, `run_far.py` | Wild RNG, near and far target (Teachy TV) | Gets one step away, calibrates and finds it (`PAUSED`) |
 | `run_cfg.py` | Valid JSON in several modes; invalid JSON | `PAUSED` for the valid ones; the invalid one doesn't start (`TIMEOUT` waiting for a fix) |
-| `run_seed.py` | Initial seed handing over to Gift RNG; full party; 7 on the title screen | `PAUSED` on the gift; the other two refuse to start and say why |
+| `run_seed.py` | Initial seed; 7 on the title screen; an old JSON with `afterSeedMode` | `PAUSED` on the seed; the title one refuses and says why; the old key is ignored with a note |
 | `run_fish.py` | Fishing: bites, no rod registered, not facing water | `PAUSED` on the shiny without pressing A on the map; the other two stop and say why |
-| `run_interrupt.py` | Wild RNG whose calibration encounter got an extra RNG call (VBlank, looks like H-4) | `PAUSED`: the search stays on H-1 |
+| `run_interrupt.py` | Wild RNG: the calibration encounter, or the target itself, gets an extra RNG call (VBlank, looks like H-4) | `PAUSED` with the search on H-1; on the target it says so and stops |
 | `run_pond.py` | Wild RNG surfing in a two-tile pond (`walkAxis` left and right) | `PAUSED` without stepping on a third tile |
 | `run_fishrng.py` | Fishing RNG in `mock_fish.lua` (pret's `Task_Fishing`): Super/Old/Good Rod targets, a slow text, a species the rod can't catch, no rod, no water, a build without symbols | `PAUSED` on each target; the rest refuse and say why |
-| `trainbot/tests/run_train.py` | evs, record, pokerus, level, nolearn | Goal EVs and level; route recorded; no overshoot with Pokérus |
+| `trainbot/tests/run_train.py` | evs, record, pokerus, level, nolearn, ghost, ghostpp, surf (a river on the route to the Center), farspot (7 far from the route's spot) | Goal EVs and level; route recorded; no overshoot with Pokérus; the river is crossed surfing both ways |
 | `run_learn.py` | Move learning (`auto`, `never`, `ask` with and without an answer) | Learns or forgets according to the configuration |
+| `run_learnloop.py` | A move it doesn't want, with "Stop learning X?" shown for 40–51 frames before its box (every phase of the bot's B rhythm) | It answers YES and goes on; never loops |
 | `run_want.py` | `wantedMoves` | Only learns the requested moves |
 
 ## Critical paths (always tested)

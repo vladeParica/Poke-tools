@@ -28,7 +28,7 @@
   " | corrida iniciada ": " | kaishi ",
   "[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s": "[%s] %s  PID %08X  %s  IVs %s  %d kai de hakken (%s mode)%s",
   "ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo": "HAKKEN! Ichiji teishi: state wo hozon (Shift+F1) shite tsukamaete",
-  "Shiny descartado por filtros: %s PID %08X": "Irochigai wo jouken de miokuri: %s PID %08X",
+  "Shiny descartado por filtros: %s PID %08X  IVs %s": "Irochigai wo jouken de miokuri: %s PID %08X  IVs %s",
   "Aviso: no se pudo confirmar la huida": "Chui: nigeta ka kakunin dekinakatta",
   "Nueva semilla (%s)": "Atarashii seed (%s)",
   "no volvio al mapa": "map ni modoranakatta",
@@ -65,8 +65,6 @@
   "Probada por el bot: semilla %04X (arranque %d, frame %d)": "Bot ga tameshita: seed %04X (kidou %d, frame %d)",
   "Semilla inicial %04X conseguida (%d pruebas)": "Shoki seed %04X ni seikou (%d kai)",
   "[SEMILLA] %04X conseguida tras %d pruebas": "[SEED] %04X ni %d kai de seikou",
-  "Semilla lista: cargando la partida para ": "Seed junbi kanryo: game wo yomikomi chuu: ",
-  "Semilla %04X lista: continua la partida y usa el modo RNG": "Seed %04X junbi kanryo: tsuzuki kara hajimete RNG mode wo tsukatte",
   "ninguno": "nashi",
   "sin objetivo con este arranque": "kono kidou de wa mokuhyo nashi",
   "prediccion fallida": "yosoku shippai",
@@ -526,5 +524,12 @@
   "Zona: pesca con la Cana %s%s": "Zone: %s tsurizao de tsuri%s",
   "Lanzamientos: %d": "Nageta kaisuu: %d",
   "Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio": "%s tsurizao de wa koko ni 'species' no Pokemon wa denai: sao ka basho wo kaeru",
-  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Yobun na call no aru sougu (%s): warikomi to minashite H-1 de sagasu"
+  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Yobun na call no aru sougu (%s): warikomi to minashite H-1 de sagasu",
+  "Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s": "Mokuhyou (PID %08X) ni atatta ga game ga seisei wo warikonda: IV %s ni natta",
+  "El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7": "Kono masu de wa game ga mokuhyou wo warikomu: betsu no masu ni ugoite (ka walkAxis wo kaete) 7 wo osu",
+  "Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG": "Seed %04X junbi OK: tsuzukete, savestate wo hozon (Shift+F1) shite RNG mode wo erabu",
+  "afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON": "afterSeedMode wa mou tsukawanai (Shoki seed wa pause de owaru): JSON kara kesete OK",
+  "El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver": "Route no training spot wa %d masu saki (x %+d, y %+d): kaeri de 6 wo oshita basho ga route no owari",
+  "La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6": "Route wa betsu no map (%d.%d) de owaru; anata wa %d.%d: routeFile wo kakunin ka koko kara 6 de route wo rokuga",
+  "No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6": "Route no training spot ni inai (console wo miru): soko e iku ka 6 de betsu no route wo rokuga"
 }

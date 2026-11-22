@@ -84,6 +84,7 @@ jobs:
         run: |
           python trainbot/tests/run_train.py
           python trainbot/tests/run_learn.py
+          python trainbot/tests/run_learnloop.py
           python trainbot/tests/run_want.py
           python trainbot/tests/run_pickup.py
           python trainbot/tests/run_faint.py

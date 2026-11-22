@@ -1,6 +1,7 @@
 REG_ITEM = rawget(_G, "REG_ITEM")
 POND = rawget(_G, "POND")
 INTERRUPT_FIRST = rawget(_G, "INTERRUPT_FIRST")
+INTERRUPT_SHINY = rawget(_G, "INTERRUPT_SHINY")
 USER_RESET_AT = rawget(_G, "USER_RESET_AT")
 -- Minimal VBA-rr + FRLG game simulator to test the bot logic
 local MODE_TO_TEST, SHINY_AT, CLEAR_ON_RESET, RNG = ...
@@ -193,6 +194,11 @@ local function gameFrame()
             local i1 = Rand() % 32768
             -- INTERRUPT_FIRST: the first encounter gets VBlank's Random() between the IVs (H-4)
             if INTERRUPT_FIRST and not interruptedOnce then interruptedOnce = true; Rand() end
+            -- INTERRUPT_SHINY: every shiny encounter (the target) is interrupted the same way, as a
+            -- frame that always overruns would be: same PID, the second IV call one later
+            if INTERRUPT_SHINY and bit.bxor(bit.bxor(TID, SID), bit.bxor(pid % 65536, math.floor(pid / 65536))) < 8 then
+              stats.interrupts = (stats.interrupts or 0) + 1; Rand()
+            end
             local i2 = Rand() % 32768
             local sp = ((slot - 1) % 4 == 0) and 25 or (16 + slot - 1)
             stats.encounters = stats.encounters + 1

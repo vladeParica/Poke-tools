@@ -46,6 +46,13 @@ w32(BSTRUCT, 0x02030000); w8(0x02030010, 0)
 local LEARN_LIST = { 53, 108, 232, 53 }
 w8(0x080000AE, 0x52); w8(0x080000AF, 0x45); w8(0x080000BC, 0)
 w8(OP_TEXT, 0x10); w8(OP_5A, 0x5A); w8(OP_5B, 0x5B)
+-- "learnloop" (pret BattleScript_AskToLearnMove): "Stop learning X?" needs no button; the script waits
+-- for it (waitstate 0x3A, setbyte 0x2E) and only then shows the YES/NO box (0x5B). A B that lands on
+-- the box's first frame is NO, and NO asks the whole question again ("is trying to learn...").
+-- STOP_WAIT = frames of that text (the runner tries every phase of the bot's B rhythm).
+local OP_WAIT = 0x08100030
+w8(OP_WAIT, 0x3A); w8(OP_WAIT + 1, 0x2E); w32(OP_WAIT + 2, 0x02023E80); w8(OP_WAIT + 6, 0); w8(OP_WAIT + 7, 0x5B)
+local STOP_WAIT = rawget(_G, "STOP_WAIT") or 45
 w32(SB1P, SB1); w32(SB2P, SB2)
 local TID, SID = 12345, 54321
 w32(SB2 + 0xA, TID + SID * 65536)
@@ -96,12 +103,27 @@ syncParty()
 local frame, held, prevHeld = 0, {}, {}
 local function edge(b) return held[b] and not prevHeld[b] end
 local W = { g = 3, n = 20, x = 8, y = 10, face = 3, walkT = 0, cool = 0, dialog = nil, battle = nil, auto = nil }
+-- "farspot": the player stands 12 tiles away from where the recorded route ends (8,10)
+if SCEN == "farspot" then W.x = 20 end
 local stats = { battles = 0, fought = 0, ran = 0, heals = 0, learnPrompts = 0, maxY = 0, events = {} }
 local function ev(s) stats.events[#stats.events + 1] = frame .. ":" .. s end
 
+-- "surf": a river (rows y 5 and 6 of the route map) crosses the way to the Center; only surfing
+-- gets over it. VMap (0x03005040: width, height, map pointer) holds each tile's elevation in its top
+-- 4 bits as in pret: 1 water, 3 land. gPlayerAvatar.flags: 0x01 on foot, 0x08 surfing.
+local VMAP, VMAP_DATA, VMAP_W, VMAP_H = 0x03005040, 0x02030000, 40, 30
+local function isWater(g, x, y) return SCEN == "surf" and g == 3 and (y == 5 or y == 6) end
+local function writeVMap()
+  w32(VMAP, VMAP_W); w32(VMAP + 4, VMAP_H); w32(VMAP + 8, VMAP_DATA)
+  for y = 0, VMAP_H - 1 do
+    for x = 0, VMAP_W - 1 do w16(VMAP_DATA + 2 * (x + y * VMAP_W), isWater(W.g, x, y) and 0x1000 or 0x3000) end
+  end
+end
 local function writePos()
   w8(SB1 + 4, W.g); w8(SB1 + 5, W.n)
   w16(OBJ + 0x10, W.x); w16(OBJ + 0x12, W.y); w8(OBJ + 0x18, W.face)
+  w8(AVATAR, W.surf and 0x08 or 0x01)
+  if W.vmapG ~= W.g then W.vmapG = W.g; writeVMap() end
 end
 writePos()
 
@@ -223,9 +245,12 @@ local function battleFrame()
   elseif b.phase == "5A" then
     if b.t < b.ready then return end
     if edge("A") and r8(YN) == 0 then b.phase = "sumfade"; b.ready = b.t + 20
-    elseif edge("A") then b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t + 10
-    elseif edge("down") then w8(YN, 1) elseif edge("up") then w8(YN, 0)
-    elseif edge("B") then b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t + 10 end
+    elseif edge("A") or edge("B") then
+      if SCEN == "learnloop" then b.phase = "stopwait"; w32(SPTR, OP_WAIT); b.ready = b.t + STOP_WAIT
+      else b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t + 10 end
+    elseif edge("down") then w8(YN, 1) elseif edge("up") then w8(YN, 0) end
+  elseif b.phase == "stopwait" then
+    if b.t >= b.ready then b.phase = "5B"; w32(SPTR, OP_5B); w8(YN, 0); b.ready = b.t end
   elseif b.phase == "sumfade" then
     if b.t >= b.ready then b.phase = "sum"; w32(CB2, CB_SUM); w8(SUMCUR, 0); b.ready = b.t + 70 end
   elseif b.phase == "sum" then
@@ -256,7 +281,9 @@ local function battleFrame()
       else b.loops = b.loops + 1; b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 10 end
     elseif edge("B") then
       b.loops = b.loops + 1; if b.loops > 3 then error("LEARN LOOP") end
-      b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 10
+      if SCEN == "learnloop" then
+        textPhase(2, function() b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 5 end)   -- "is trying to learn" again
+      else b.phase = "5A"; w32(SPTR, OP_5A); b.ready = b.t + 10 end
     end
   elseif b.phase == "ending" and (SCEN == "evo" or SCEN == "evono") and leadM.level >= 7 and not W.evoDone and b.t - b.endT == 10 then
     b.phase = "evo"; b.evoT = 0; w32(CB2, 0x080CE001)
@@ -273,6 +300,7 @@ local function battleFrame()
 end
 
 local function passable(g, n, x, y)
+  if isWater(g, x, y) and not W.surf then return false end      -- on foot: water blocks
   if g == 3 then return x >= 0 and x <= 30 and y >= 3 and y <= 20 end
   return x >= 1 and x <= 9 and y >= 3 and y <= 8
 end
@@ -311,6 +339,22 @@ local function worldFrame()
     return
   end
   if W.g == 4 and W.x == 5 and W.y == 3 and W.face == 2 and edge("A") then W.dialog = { step = 1, t = 0 }; return end
+  local FDX, FDY = ({ 0, 0, -1, 1 })[W.face], ({ 1, -1, 0, 0 })[W.face]
+  if W.surfDlg then
+    -- pret EventScript_UseSurf: "Want to SURF?" (YES/NO, YES first), then "X used SURF!", then the jump
+    local d = W.surfDlg
+    d.t = d.t + 1
+    if d.t > 10 and edge("A") then
+      d.step, d.t = d.step + 1, 0
+      if d.step == 3 then
+        W.surfDlg, W.surf = nil, true
+        W.x, W.y, W.walkT = W.x + FDX, W.y + FDY, 16
+        stats.surfs = (stats.surfs or 0) + 1; ev("surf")
+      end
+    end
+    return
+  end
+  if not W.surf and edge("A") and isWater(W.g, W.x + FDX, W.y + FDY) then W.surfDlg = { step = 1, t = 0 }; return end
   local dir
   for _, k in ipairs({ "up", "down", "left", "right" }) do if held[k] then dir = k end end
   if not dir then return end
@@ -328,6 +372,7 @@ local function worldFrame()
   end
   local nx, ny = W.x + dx, W.y + dy
   if passable(W.g, W.n, nx, ny) then
+    if W.surf and not isWater(W.g, nx, ny) then W.surf = false; ev("land") end    -- onto the shore: off the water
     W.x, W.y = nx, ny; W.walkT = 16
     if SCEN == "tile" and W.g == 4 and nx == 5 and ny == 5 then
       leadM.hp = leadM.maxHP
@@ -405,5 +450,6 @@ return function(chunk)
   local ok, err = pcall(chunk)
   return tostring(err), frame, stats.battles, stats.fought, stats.ran, stats.heals, stats.learnPrompts,
     table.concat(leadM.evs, ","), leadM.level, table.concat(printed, "\n"), table.concat(stats.events, " "),
-    string.format("%d,%d,%d", W.g, W.x, W.y), (stats.usedGrowl or 0) .. " learned=" .. (stats.learned or "") .. " evo=" .. tostring(stats.evo)
+    string.format("%d,%d,%d", W.g, W.x, W.y), (stats.usedGrowl or 0) .. " learned=" .. (stats.learned or "") .. " evo=" .. tostring(stats.evo) ..
+      ((SCEN == "surf") and (" surfs=" .. (stats.surfs or 0)) or "")
 end

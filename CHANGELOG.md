@@ -16,7 +16,7 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   the Static RNG modes, calibrates the B press and presses it on the exact frame of the target,
   with the fishing slots of the registered rod and the map's fishing table. USA FireRed/LeafGreen
   1.0/1.1 only (it reads the fishing task by its address). New option `fishSearch` (default
-  1000000): no Teachy TV while fishing. `afterSeedMode` can hand over to it.
+  1000000): no Teachy TV while fishing.
 - **Farm Bot 1.0** (`farmbot/`): farms levels, items with Pickup, items stolen with Thief/Covet,
   and money from trainer rematches with the VS Seeker; takes held items through the party menu
   on USA versions. Separate script; the Shiny Bot and Train Bot are unchanged.
@@ -77,6 +77,21 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
   them in the bag (USA versions), or pauses and notifies. Off by default (ADR-0011 amended).
 
 ### Fixed
+- Train Bot: away from the route's training spot (where the recorded way back ends) it said so
+  only after the first battle, without saying where. It now refuses at 7 and tells how far the
+  spot is, or that the route ends on another map.
+- Train Bot and Farm Bot: refusing a move could loop forever ("But, X can't learn more than four
+  moves" again and again). The B pressed for battle texts could land on the first frame of the
+  "Stop learning X?" box, which is NO and asks the whole question again, and the same way every
+  time. The bots no longer press anything while the battle script waits for that box.
+- Train Bot and Farm Bot: a route that crosses water (recorded while surfing) stopped at the shore
+  ("No pude seguir la ruta al Centro"): walking into water only turns the player. On foot in front
+  of water the route goes on into, the bot now faces it and answers the Surf prompt; it gets off
+  by walking onto the shore. USA versions (it reads the loaded map, `VMap`). Routes are also
+  followed holding B, so the player runs with the Running Shoes.
+- Shiny Bot, *Salvaje RNG*: when it hits the target's advance and PID but the game interrupts that
+  generation (other IVs), it says so, logs the IVs and stops after a second try with what to
+  change, instead of repeating the same result. Discarded shinies are logged with their IVs.
 - Shiny Bot, *Salvaje RNG* / *Pesca RNG*: one calibration encounter with an extra RNG call (VBlank's
   `Random()` landing mid-generation, which looks like H-4) made the bot search every target with
   that call order, so exact IV targets were never found ("No hay objetivo con esos filtros"). The
@@ -153,6 +168,9 @@ are the contract with users ([contracts](docs/02-design/api-contracts.md)).
 
 ### Removed
 - Notes from a specific save file (computed seeds, team plan).
+- Shiny Bot: `afterSeedMode`. Each mode does one job: *Semilla inicial* hits the seed and pauses;
+  you continue, save a state and start the RNG mode you need from it (with `"reseed": false`).
+  An old JSON that still has the key keeps working: the bot says it is no longer used.
 
 ## Shiny Bot 4.3 — Train Bot 1.10
 First version published in this repository.

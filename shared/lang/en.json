@@ -28,7 +28,7 @@
   " | corrida iniciada ": " | run started ",
   "[%s] %s  PID %08X  %s  IVs %s  tras %d intentos (modo %s)%s": "[%s] %s  PID %08X  %s  IVs %s  after %d attempts (%s mode)%s",
   "ENCONTRADO! Juego en pausa: guarda un estado (Shift+F1) y capturalo": "FOUND! Game paused: save a state (Shift+F1) and catch it",
-  "Shiny descartado por filtros: %s PID %08X": "Shiny skipped by filters: %s PID %08X",
+  "Shiny descartado por filtros: %s PID %08X  IVs %s": "Shiny skipped by filters: %s PID %08X  IVs %s",
   "Aviso: no se pudo confirmar la huida": "Warning: couldn't confirm the escape",
   "Nueva semilla (%s)": "New seed (%s)",
   "no volvio al mapa": "didn't return to the map",
@@ -65,8 +65,6 @@
   "Probada por el bot: semilla %04X (arranque %d, frame %d)": "Tried by the bot: seed %04X (boot %d, frame %d)",
   "Semilla inicial %04X conseguida (%d pruebas)": "Initial seed %04X hit (%d tries)",
   "[SEMILLA] %04X conseguida tras %d pruebas": "[SEED] %04X hit after %d tries",
-  "Semilla lista: cargando la partida para ": "Seed ready: loading the game for ",
-  "Semilla %04X lista: continua la partida y usa el modo RNG": "Seed %04X ready: continue the game and use the RNG mode",
   "ninguno": "none",
   "sin objetivo con este arranque": "no target with this boot",
   "prediccion fallida": "prediction failed",
@@ -526,5 +524,12 @@
   "Zona: pesca con la Cana %s%s": "Zone: fishing with the %s Rod%s",
   "Lanzamientos: %d": "Casts: %d",
   "Con la Cana %s aqui no sale ninguna especie de 'species': cambia de cana o de sitio": "With the %s Rod no species from 'species' shows up here: change rod or spot",
-  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Encounter with an extra call (%s): taken as an interruption, searching with H-1"
+  "Encuentro con una llamada extra (%s): lo tomo por una interrupcion y busco con H-1": "Encounter with an extra call (%s): taken as an interruption, searching with H-1",
+  "Cayo en el objetivo (PID %08X) pero el juego interrumpio la generacion: salieron IVs %s": "Hit the target (PID %08X) but the game interrupted the generation: it came out with IVs %s",
+  "El juego interrumpe el objetivo en esta casilla: ponte en otra casilla (o cambia walkAxis) y pulsa 7": "The game interrupts the target on this tile: stand on another tile (or change walkAxis) and press 7",
+  "Semilla %04X lista: continua, guarda un savestate (Shift+F1) y elige el modo RNG": "Seed %04X ready: continue, save a state (Shift+F1) and choose the RNG mode",
+  "afterSeedMode ya no se usa (Semilla inicial termina en pausa): puedes quitarla del JSON": "afterSeedMode is no longer used (Initial seed ends paused): you can remove it from the JSON",
+  "El punto de entreno de la ruta esta a %d casillas de ti (x %+d, y %+d): la ruta termina donde pulsaste 6 al volver": "The route's training spot is %d tiles away (x %+d, y %+d): the route ends where you pressed 6 on the way back",
+  "La ruta termina en otro mapa (%d.%d) y tu estas en el %d.%d: revisa routeFile o graba una ruta desde aqui con 6": "The route ends on another map (%d.%d) and you are on %d.%d: check routeFile or record a route from here with 6",
+  "No estas en el punto de entreno de la ruta (mira la consola): ve alli o graba otra con 6": "You are not at the route's training spot (see the console): go there or record another with 6"
 }

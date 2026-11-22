@@ -39,6 +39,15 @@ if __name__=='__main__':
     r,_=run('ghostpp', {"evs":{"spa":3},"species":["Gastly"],"healBelow":40}, route=route, show=show)
     if r[5] < 1 or 'no tiene ningun ataque' in r[9] or r[3] < 2:
         print('FAIL: ghostpp, heals=%d fought=%d'%(r[5],r[3])); print(r[9][-600:]); BAD.append('ghostpp')
+    # a river crosses the way to the Center (route recorded on foot or surfing): face the water, answer
+    # the Surf prompt, cross, and get off on the other shore, both ways
+    r,_=run('surf', {"evs":None,"targetLevel":8,"healBelow":40}, route=route, show=show)
+    if r[5] < 1 or 'No pude seguir la ruta' in r[9] or 'surfs=' not in r[12] or int(r[12].split('surfs=')[1]) < 2:
+        print('FAIL: surf, heals=%d %s'%(r[5],r[12])); print(r[9][-600:]); print(r[10][-600:]); BAD.append('surf')
+    # 7 away from the route's training spot: say so at once, and how far, instead of after a battle
+    r,_=run('farspot', {"evs":{"atk":6},"healBelow":40}, route=route, show=show)
+    if 'No estas en el punto de entreno' not in r[9] or 'a 12 casillas' not in r[9] or r[2] > 0:
+        print('FAIL: farspot, battles=%d'%r[2]); print(r[9][-600:]); BAD.append('farspot')
     if BAD:
         print('FAIL:', BAD)
         sys.exit(1)

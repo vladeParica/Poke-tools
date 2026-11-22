@@ -23,7 +23,8 @@ say **what** they are looking for and let the bot get it.
    advances, wait (or use the Teachy TV if it's far) and press on the exact frame; on a
    miss, correct by ±1, ±2… up to `triesPerTarget`.
 5. **Initial seed**: tries timings on the title screen until it hits one of
-   `initialSeeds`, loads the save and chains `afterSeedMode`.
+   `initialSeeds` and pauses; the player continues, saves a state and starts an RNG mode
+   from it. Each mode does one job: no mode launches another.
 6. **New game**: restarts the new-game creation until `TID xor SID` falls in `newGameTSV`.
 7. On a match: writes the log, tells the other instances (`stopOthers`) and **pauses the
    game** so the player can save the state.

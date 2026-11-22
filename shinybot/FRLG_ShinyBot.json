@@ -47,11 +47,10 @@
   "newGameTSV": null,
 
   // Semilla inicial: el bot reinicia y prueba tiempos en la pantalla de
-  // titulo hasta caer en una de estas semillas (hex). Luego carga la
-  // partida y lanza "afterSeedMode" sin cambiar de semilla.
+  // titulo hasta caer en una de estas semillas (hex) y pausa. Continua la
+  // partida, guarda un savestate (Shift+F1) y lanza desde ahi el modo RNG.
   // Las semillas dependen de tu TID/SID: calculalas con tools/rng/. Ej. ["BC75", "0A16"]
   "initialSeeds": null,
-  "afterSeedMode": null,        // ej. "Regalo RNG" o "Salvaje RNG"
 
   // ---------------------- CAMINAR ---------------------------------
   "walkAxis": "horizontal",     // "horizontal" (izq/der) o "vertical" (arriba/abajo)
